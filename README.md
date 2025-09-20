@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # UEFA Champions League Website - 3-Tier Architecture
 
 ## 🏗️ Architecture Overview
@@ -286,3 +287,6 @@ For technical support or questions about the architecture:
 - Email: dev-team@uefa.com
 - Documentation: `/docs`
 - API Documentation: `/api/docs`
+=======
+# ChampionLeagueManagement
+>>>>>>> df085cfff729d0191a42a1358632fb64414c851d
