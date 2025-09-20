@@ -1,5 +1,9 @@
-<<<<<<< HEAD
-# UEFA Champions League Website - 3-Tier Architecture
+
+# UEFA Champions League Website 
+
+## Demo
+[https://champion-league-management.vercel.app/](https://champion-league-management.vercel.app/)
+
 
 ## 🏗️ Architecture Overview
 
