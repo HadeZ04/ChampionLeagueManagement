@@ -1,0 +1,447 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply text-uefa-black bg-uefa-white;
+    font-family: 'Inter', Arial, Helvetica, sans-serif;
+    line-height: 1.6;
+  }
+  
+  * {
+    @apply border-gray-200;
+  }
+}
+
+@layer components {
+  .uefa-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .uefa-btn-primary {
+    @apply bg-uefa-blue hover:bg-uefa-dark text-white font-semibold py-2 px-4 rounded-uefa transition-all duration-300;
+  }
+  
+  .uefa-btn-secondary {
+    @apply bg-uefa-light-gray hover:bg-uefa-medium-gray text-uefa-dark font-semibold py-2 px-4 rounded-uefa transition-all duration-300;
+  }
+  
+  .uefa-card {
+    @apply bg-white rounded-uefa-lg shadow-uefa border border-gray-100 transition-all duration-300;
+  }
+  
+  .uefa-card:hover {
+    @apply shadow-uefa-lg transform -translate-y-1;
+  }
+  
+  .uefa-input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-uefa focus:outline-none focus:ring-2 focus:ring-uefa-blue focus:border-transparent;
+  }
+  
+  .uefa-select {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-uefa focus:outline-none focus:ring-2 focus:ring-uefa-blue focus:border-transparent bg-white;
+  }
+  
+  .uefa-table-container {
+    @apply overflow-x-auto bg-white rounded-uefa-lg shadow-uefa;
+  }
+  
+  .uefa-table {
+    @apply min-w-full divide-y divide-gray-200;
+  }
+  
+  .uefa-table-header {
+    @apply bg-uefa-light-gray;
+  }
+  
+  .uefa-table-header th {
+    @apply px-6 py-3 text-left text-xs font-medium text-uefa-dark-gray uppercase tracking-wider;
+  }
+  
+  .uefa-table-body {
+    @apply bg-white divide-y divide-gray-200;
+  }
+  
+  .uefa-table-row {
+    @apply hover:bg-uefa-light-gray transition-colors duration-200;
+  }
+  
+  .uefa-table-cell {
+    @apply px-6 py-4 whitespace-nowrap text-sm;
+  }
+  
+  .uefa-badge {
+    @apply inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white;
+  }
+  
+  .uefa-badge-qualified {
+    @apply bg-uefa-green;
+  }
+  
+  .uefa-badge-playoff {
+    @apply bg-uefa-yellow text-uefa-black;
+  }
+  
+  .uefa-badge-eliminated {
+    @apply bg-uefa-red;
+  }
+  
+  .uefa-team-logo {
+    @apply w-8 h-8 rounded object-cover;
+  }
+  
+  .uefa-nav {
+    @apply bg-white shadow-sm border-b border-gray-200;
+  }
+  
+  .uefa-nav-item {
+    @apply text-uefa-dark-gray hover:text-uefa-blue font-medium transition-colors duration-200;
+  }
+  
+  .uefa-nav-item.active {
+    @apply text-uefa-blue border-b-2 border-uefa-blue;
+  }
+  
+  .uefa-dropdown {
+    @apply absolute top-full left-0 mt-1 w-48 bg-white rounded-uefa-lg shadow-uefa-lg border border-gray-200 py-1 z-50;
+  }
+  
+  .uefa-dropdown-item {
+    @apply block px-4 py-2 text-sm text-uefa-dark-gray hover:bg-uefa-light-gray hover:text-uefa-blue transition-colors duration-200;
+  }
+  
+  .uefa-stats-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6;
+  }
+  
+  .uefa-stats-card {
+    @apply bg-white rounded-uefa-xl shadow-uefa p-6 text-center hover:shadow-uefa-lg transition-all duration-300;
+  }
+  
+  .uefa-stats-icon {
+    @apply w-12 h-12 mx-auto mb-4 p-3 rounded-full bg-uefa-blue text-white;
+  }
+  
+  .uefa-stats-number {
+    @apply text-3xl font-bold text-uefa-dark mb-2;
+  }
+  
+  .uefa-stats-label {
+    @apply text-uefa-gray text-sm uppercase tracking-wide;
+  }
+  
+  .uefa-match-card {
+    @apply bg-white rounded-uefa-lg shadow-uefa border border-gray-100 p-6 mb-4 hover:shadow-uefa-lg transition-all duration-300;
+  }
+  
+  .uefa-live-badge {
+    @apply bg-uefa-red text-white px-2 py-1 rounded text-xs font-bold uppercase animate-pulse;
+  }
+  
+  .uefa-score {
+    @apply text-2xl font-bold text-uefa-dark;
+  }
+  
+  .uefa-team-name {
+    @apply font-semibold text-uefa-dark;
+  }
+  
+  .uefa-match-time {
+    @apply text-uefa-gray text-sm;
+  }
+  
+  .uefa-progress-bar {
+    @apply w-full bg-uefa-light-gray rounded-full h-2 overflow-hidden;
+  }
+  
+  .uefa-progress-fill {
+    @apply h-full bg-gradient-to-r from-uefa-blue to-uefa-light-blue rounded-full transition-all duration-500;
+  }
+  
+  .uefa-mobile-menu {
+    @apply lg:hidden fixed inset-x-0 top-16 bg-white border-t border-gray-200 shadow-uefa-lg z-40;
+  }
+  
+  .uefa-mobile-menu-item {
+    @apply block px-4 py-3 text-uefa-dark-gray hover:bg-uefa-light-gray hover:text-uefa-blue transition-colors duration-200;
+  }
+  
+  .uefa-breadcrumb {
+    @apply flex items-center space-x-2 text-sm text-uefa-gray mb-6;
+  }
+  
+  .uefa-breadcrumb-item {
+    @apply hover:text-uefa-blue transition-colors duration-200;
+  }
+  
+  .uefa-breadcrumb-separator {
+    @apply text-uefa-gray;
+  }
+  
+  .uefa-section-title {
+    @apply text-3xl font-bold text-uefa-dark mb-8;
+  }
+  
+  .uefa-section-subtitle {
+    @apply text-xl text-uefa-gray mb-6;
+  }
+  
+  .uefa-filter-tabs {
+    @apply flex flex-wrap gap-2 mb-6;
+  }
+  
+  .uefa-filter-tab {
+    @apply px-4 py-2 rounded-uefa font-medium transition-all duration-200;
+  }
+  
+  .uefa-filter-tab.active {
+    @apply bg-uefa-blue text-white;
+  }
+  
+  .uefa-filter-tab:not(.active) {
+    @apply bg-uefa-light-gray text-uefa-dark-gray hover:bg-uefa-medium-gray;
+  }
+  
+  .uefa-loading {
+    @apply animate-spin rounded-full h-8 w-8 border-b-2 border-uefa-blue;
+  }
+  
+  .uefa-tooltip {
+    @apply absolute z-50 px-2 py-1 text-xs text-white bg-uefa-dark rounded shadow-lg;
+  }
+  
+  .uefa-modal-overlay {
+    @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50;
+  }
+  
+  .uefa-modal {
+    @apply bg-white rounded-uefa-lg shadow-uefa-xl max-w-lg w-full mx-4;
+  }
+  
+  .uefa-modal-header {
+    @apply px-6 py-4 border-b border-gray-200;
+  }
+  
+  .uefa-modal-body {
+    @apply px-6 py-4;
+  }
+  
+  .uefa-modal-footer {
+    @apply px-6 py-4 border-t border-gray-200 flex justify-end space-x-3;
+  }
+}
+
+@layer utilities {
+  .uefa-text-gradient {
+    background: linear-gradient(135deg, #003399 0%, #0066cc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .uefa-bg-gradient {
+    background: linear-gradient(135deg, #003399 0%, #0066cc 100%);
+  }
+  
+  .uefa-shadow-glow {
+    box-shadow: 0 0 20px rgba(0, 51, 153, 0.3);
+  }
+  
+  .uefa-border-gradient {
+    border-image: linear-gradient(135deg, #003399 0%, #0066cc 100%) 1;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #003399;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #0066cc;
+}
+
+/* Line clamp utilities */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* Enhanced hover effects */
+.uefa-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.uefa-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 51, 153, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.uefa-card:hover::before {
+  left: 100%;
+}
+
+/* Loading animations */
+.uefa-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Enhanced table styles */
+.uefa-table tbody tr:nth-child(odd) {
+  background-color: rgba(248, 249, 250, 0.5);
+}
+
+.uefa-table tbody tr:hover {
+  background-color: rgba(0, 51, 153, 0.05);
+  transform: scale(1.01);
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .uefa-match-card {
+    padding: 16px;
+  }
+  
+  .uefa-team-name {
+    font-size: 16px;
+  }
+  
+  .uefa-score {
+    font-size: 24px;
+  }
+}
+
+/* Focus styles for accessibility */
+button:focus,
+input:focus,
+select:focus {
+  outline: 2px solid #003399;
+  outline-offset: 2px;
+}
+
+/* Smooth transitions */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Responsive utilities */
+@media (max-width: 640px) {
+  .uefa-container {
+    @apply px-4;
+  }
+  
+  .uefa-table-cell {
+    @apply px-3 py-2;
+  }
+  
+  .uefa-stats-card {
+    @apply p-4;
+  }
+  
+  .uefa-match-card {
+    @apply p-4;
+  }
+}
+
+/* Animation classes */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.bounce-subtle {
+  animation: bounceSubtle 2s infinite;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { 
+    transform: translateY(-10px); 
+    opacity: 0; 
+  }
+  to { 
+    transform: translateY(0); 
+    opacity: 1; 
+  }
+}
+
+@keyframes bounceSubtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* Print styles */
+@media print {
+  .uefa-nav,
+  .uefa-mobile-menu,
+  .uefa-dropdown {
+    display: none !important;
+  }
+  
+  .uefa-table {
+    font-size: 12px;
+  }
+  
+  .uefa-card {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+}

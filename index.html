@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiMwMDMzOTkiLz4KPHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4KPC9zdmc+" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UEFA Champions League | Official Website</title>
+    <meta name="description" content="Official UEFA Champions League website. Get the latest news, fixtures, results, and standings from Europe's premier club competition." />
+    <meta name="keywords" content="UEFA, Champions League, Football, Soccer, Europe, Tournament, Standings, Fixtures, Results" />
+    <meta property="og:title" content="UEFA Champions League | Official Website" />
+    <meta property="og:description" content="Official UEFA Champions League website with latest news, fixtures, results and standings." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://uefa.com/uefachampionsleague/" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: 'Inter', Arial, Helvetica, sans-serif;
+        background: #ffffff;
+        color: #000000;
+        line-height: 1.5;
+      }
+      
+      .uefa-gradient {
+        background: linear-gradient(135deg, #003399 0%, #0066cc 100%);
+      }
+      
+      .uefa-text-gradient {
+        background: linear-gradient(135deg, #003399 0%, #0066cc 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      
+      .uefa-shadow {
+        box-shadow: 0 4px 12px rgba(0, 51, 153, 0.15);
+      }
+      
+      .uefa-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 51, 153, 0.2);
+        transition: all 0.3s ease;
+      }
+      
+      .uefa-card {
+        background: #ffffff;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+      }
+      
+      .uefa-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+      }
+      
+      .uefa-button {
+        background: linear-gradient(135deg, #003399 0%, #0066cc 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      
+      .uefa-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 51, 153, 0.3);
+      }
+      
+      .uefa-nav {
+        background: #ffffff;
+        border-bottom: 1px solid #e9ecef;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+      
+      .uefa-table {
+        background: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      
+      .uefa-table-header {
+        background: #f8f9fa;
+        border-bottom: 2px solid #e9ecef;
+      }
+      
+      .uefa-table-row {
+        border-bottom: 1px solid #e9ecef;
+        transition: background-color 0.2s ease;
+      }
+      
+      .uefa-table-row:hover {
+        background-color: #f8f9fa;
+      }
+      
+      .uefa-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        font-size: 12px;
+        font-weight: bold;
+        color: white;
+      }
+      
+      .uefa-badge-qualified {
+        background: #28a745;
+      }
+      
+      .uefa-badge-playoff {
+        background: #ffc107;
+        color: #000;
+      }
+      
+      .uefa-badge-eliminated {
+        background: #dc3545;
+      }
+      
+      .uefa-logo {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+      
+      .uefa-team-logo {
+        width: 32px;
+        height: 32px;
+        border-radius: 4px;
+        object-fit: cover;
+      }
+      
+      .uefa-stats-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+        transition: all 0.3s ease;
+      }
+      
+      .uefa-stats-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      }
+      
+      .uefa-progress-bar {
+        background: #e9ecef;
+        border-radius: 10px;
+        height: 8px;
+        overflow: hidden;
+      }
+      
+      .uefa-progress-fill {
+        background: linear-gradient(90deg, #003399 0%, #0066cc 100%);
+        height: 100%;
+        border-radius: 10px;
+        transition: width 0.8s ease;
+      }
+      
+      .uefa-match-card {
+        background: #ffffff;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+        transition: all 0.3s ease;
+      }
+      
+      .uefa-match-card:hover {
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+      }
+      
+      .uefa-live-indicator {
+        background: #dc3545;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+        animation: pulse 2s infinite;
+      }
+      
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+      }
+      
+      .uefa-dropdown {
+        background: #ffffff;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+      }
+      
+      .uefa-mobile-menu {
+        background: #ffffff;
+        border-top: 1px solid #e9ecef;
+        box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+      }
+      
+      @media (max-width: 768px) {
+        .uefa-table {
+          font-size: 14px;
+        }
+        
+        .uefa-team-logo {
+          width: 24px;
+          height: 24px;
+        }
+        
+        .uefa-stats-card {
+          padding: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
