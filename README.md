@@ -1,9 +1,13 @@
 
+
 # UEFA Champions League Website 
 
 ## Demo
 [https://champion-league-management.vercel.app/](https://champion-league-management.vercel.app/)
 
+
+# UEFA Champions League Website - 3-Tier Architecture
+ 3b2587c (Updated full database and feature admin)
 
 ## 🏗️ Architecture Overview
 
@@ -26,273 +30,143 @@ This project implements a **3-Tier Architecture** with **Dual-Frontend** design 
 - **DAO** - Database access objects
 - **Migrations** - Database schema management
 - **Config** - Database configuration
-- 
+
+
+
+
 #### 4. Enviroment
 npm install @radix-ui/react-slot @radix-ui/react-toggle-group @radix-ui/react-toggle canvas-confetti class-variance-authority date-fns framer-motion lucide-react react-dom react-intersection-observer react-router-dom react react-hot-toast
+ 
+>>>>>>> 3b2587c (Updated full database and feature admin)
 ## 📁 Project Structure
 
 ```
 src/
+├── apps/
+│   ├── admin/
+│   │   ├── components/
+│   │   │   ├── AdminHeader.jsx
+│   │   │   ├── AdminSidebar.jsx
+│   │   │   ├── SeasonForm.jsx              # (Mới) Module 2.1 - Form quản lý mùa giải
+│   │   │   ├── RulesetForm.jsx             # (Mới) Module 2.7 - Form quản lý bộ điều lệ
+│   │   │   ├── TeamApprovalConsole.jsx     # (Mới) Module 2.2 - Giao diện phê duyệt đội bóng
+│   │   │   ├── ScheduleGenerator.jsx       # (Mới) Module 2.3 - Component tạo lịch tự động
+│   │   │   └── LiveMatchUpdater.jsx        # (Mới) Module 2.4 - Giao diện cập nhật trận đấu live
+│   │   │
+│   │   ├── pages/
+│   │   │   ├── DashboardPage.jsx
+│   │   │   ├── LoginPage.jsx
+│   │   │   ├── MatchesManagement.jsx     # (Cần mở rộng) Module 2.4 - Quản lý trận đấu
+│   │   │   ├── NewsManagement.jsx        # (Cần mở rộng) Module 2.8 - Quản lý tin tức, media
+│   │   │   ├── PlayersManagement.jsx     # (Cần mở rộng) Module 2.2 - Quản lý cầu thủ
+│   │   │   ├── ReportsPage.jsx           # (Cần mở rộng) Module 2.6 - Báo cáo, thống kê
+│   │   │   ├── SettingsPage.jsx
+│   │   │   ├── TeamsManagement.jsx       # (Cần mở rộng) Module 2.2 - Quản lý đội bóng
+│   │   │   ├── SeasonManagement.jsx      # (Mới) Module 2.1 - Quản lý mùa giải
+│   │   │   ├── RulesetManagement.jsx     # (Mới) Module 2.7 - Quản lý bộ điều lệ
+│   │   │   ├── ScheduleManagement.jsx    # (Mới) Module 2.3 - Lập và quản lý lịch
+│   │   │   ├── UserManagement.jsx        # (Mới) Module 2.7 - Quản lý người dùng
+│   │   │   └── AuditLog.jsx              # (Mới) Module 2.7 - Nhật ký hoạt động
+│   │   │
+│   │   └── AdminApp.jsx
+│   │
+│   └── public/
+│       ├── components/
+│       │   ├── LiveTicker.jsx
+│       │   ├── MatchCard.jsx
+│       │   ├── MatchPreview.jsx
+│       │   ├── NewsCard.jsx
+│       │   ├── PublicFooter.jsx
+│       │   ├── PublicHeader.jsx
+│       │   ├── StandingsTable.jsx
+│       │   ├── TopScorers.jsx
+│       │   ├── UpcomingMatches.jsx
+│       │   └── WeatherWidget.jsx
+│       │
+│       ├── pages/
+│       │   ├── GamingPage.jsx            # (Cần mở rộng) Module 2.8 - Bình chọn, dự đoán
+│       │   ├── HomePage.jsx
+│       │   ├── MatchesPage.jsx
+│       │   ├── NewsPage.jsx
+│       │   ├── StandingsPage.jsx
+│       │   ├── StatsPage.jsx
+│       │   ├── TeamsPage.jsx
+│       │   ├── VideoPage.jsx
+│       │   ├── PlayerProfilePage.jsx     # (Mới) Module 2.5 - Trang hồ sơ cầu thủ
+│       │   ├── TeamProfilePage.jsx       # (Mới) Module 2.5 - Trang hồ sơ đội bóng
+│       │   └── ArticleDetailPage.jsx     # (Mới) Module 2.8 - Trang đọc tin chi tiết
+│       │
+│       └── PublicApp.jsx
+│
 ├── config/
-│   └── app.config.js              # Application configuration
+│   └── app.config.js
+│
 ├── layers/
-│   ├── presentation/              # Presentation Layer
-│   │   └── index.js               # Layer exports
-│   ├── application/               # Application Layer
-│   │   ├── services/              # API services
+│   ├── application/
+│   │   ├── logic/
+│   │   │   └── TournamentLogic.js
+│   │   ├── services/
 │   │   │   ├── ApiService.js
 │   │   │   ├── AuthService.js
+│   │   │   ├── MatchesService.js
 │   │   │   ├── TeamsService.js
-│   │   │   └── MatchesService.js
-│   │   ├── logic/                 # Business logic
-│   │   │   └── TournamentLogic.js
-│   │   ├── store/                 # State management
+│   │   │   ├── SeasonService.js          # (Mới) Logic cho mùa giải, điều lệ
+│   │   │   ├── ContentService.js         # (Mới) Logic cho CMS, tin tức
+│   │   │   └── UserService.js            # (Mới) Logic cho người dùng
+│   │   ├── store/
 │   │   │   └── AppStore.js
-│   │   ├── utils/                 # Utilities
-│   │   │   └── DataValidator.js
-│   │   └── index.js               # Layer exports
-│   └── data/                      # Data Layer
-│       ├── models/                # Data models
-│       │   ├── TeamModel.js
-│       │   └── MatchModel.js
-│       ├── dao/                   # Data access objects
-│       │   └── TeamDAO.js
-│       ├── migrations/            # Database migrations
-│       │   ├── 001_create_teams_table.sql
-│       │   ├── 002_create_matches_table.sql
-│       │   └── 003_create_players_table.sql
-│       ├── config/                # Database config
+│   │   └── utils/
+│   │       └── index.js
+│   │
+│   └── data/
+│       ├── config/
 │       │   └── DatabaseConfig.js
-│       └── index.js               # Layer exports
-├── apps/
-│   ├── public/                    # Public Portal
-│   │   ├── PublicApp.jsx
-│   │   ├── components/
-│   │   │   ├── PublicHeader.jsx
-│   │   │   ├── PublicFooter.jsx
-│   │   │   ├── StandingsTable.jsx
-│   │   │   ├── MatchCard.jsx
-│   │   │   ├── NewsCard.jsx
-│   │   │   ├── TopScorers.jsx
-│   │   │   ├── UpcomingMatches.jsx
-│   │   │   └── LiveTicker.jsx
-│   │   └── pages/
-│   │       ├── HomePage.jsx
-│   │       ├── StandingsPage.jsx
-│   │       ├── MatchesPage.jsx
-│   │       ├── TeamsPage.jsx
-│   │       ├── StatsPage.jsx
-│   │       ├── NewsPage.jsx
-│   │       ├── VideoPage.jsx
-│   │       └── GamingPage.jsx
-│   └── admin/                     # Admin Dashboard
-│       ├── AdminApp.jsx
-│       ├── components/
-│       │   ├── AdminHeader.jsx
-│       │   ├── AdminSidebar.jsx
-│       │   ├── StatCard.jsx           *
-│       │   ├── TopPerformerCard.jsx   *
-│       │   └── PlaceholderReport.jsx  *
-│       └── pages/
-│           ├── LoginPage.jsx
-│           ├── DashboardPage.jsx
-│           ├── TeamsManagement.jsx
-│           ├── MatchesManagement.jsx
-│           ├── PlayersManagement.jsx
-│           ├── NewsManagement.jsx
-│           ├── UsersManagement.jsx
-│           ├── SettingsPage.jsx
-│           └── ReportsPage.jsx        *
-├── shared/
-│   ├── components/                # Shared components
-│   │   ├── ErrorBoundary.jsx
-│   │   └── LoadingSpinner.jsx
-│   └── utils/                     # Shared utilities
-│       └── constants.js
-└── App.jsx                        # Main application entry
-
+│       ├── dao/
+│       │   └── TeamDAO.js
+│       ├── migrations/
+│       │   ├── ... (các file sql)
+│       └── models/
+│           ├── MatchModel.js
+│           ├── TeamModel.js
+│           ├── PlayerModel.js            # (Mới)
+│           ├── SeasonModel.js            # (Mới)
+│           └── RulesetModel.js           # (Mới)
+│
+└── shared/
+    ├── components/
+    │   ├── ErrorBoundary.jsx
+    │   └── LoadingSpinner.jsx
+    └── utils/
+        └── constants.js
 ## 🚀 Getting Started
 
-### Prerequisites
-- Node.js 18+
-- npm or yarn
-- PostgreSQL/MySQL (for production)
 
-### Installation
-```bash
-npm install
-npm run dev
-```
+### Module 2.7 - System Administration Data Schema
 
-### Environment Variables
-Create a `.env` file:
-```env
-REACT_APP_API_URL=http://localhost:3001/api
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=uefa_champions_league
-DB_USER=uefa_admin
-DB_PASS=uefa2025
-JWT_SECRET=uefa_champions_league_secret_2025
-```
+The database artefacts for ruleset governance, user administration, and audit logging are documented under:
 
-## 🔧 Configuration
+- src/data/migrations/20250125_module_2_7.sql - executable DDL for new tables.
+- src/data/models/module_2_7_tables.md - tabular breakdown of every column and constraint.
 
-### Application Configuration (`src/config/app.config.js`)
-- API endpoints and settings
-- Database connection
-- Security configuration
-- Feature flags
-- UI settings
+Key entities:
 
-### Layer Configuration
-Each layer has its own configuration:
-- **Presentation**: Routes and UI settings
-- **Application**: Business rules and validation
-- **Data**: Database schema and relationships
+- **Rulesets**: rulesets, ruleset_player_constraints, ruleset_scoring_rules, ruleset_ranking_rules, ruleset_audit_log, season_ruleset_assignments.
+- **User Administration**: user_accounts, roles, permissions, role_permissions, user_role_assignments, user_session_lockouts.
+- **Audit Trail**: audit_events capturing high-level administrative actions with severity metadata and JSON payload snapshots.
 
-## 🏛️ Architecture Benefits
+### Backend (Module 2.7)
 
-### Separation of Concerns
-- **Presentation**: UI/UX only
-- **Application**: Business logic only  
-- **Data**: Database operations only
+A Node.js/Express TypeScript backend skeleton lives in ackend/. It covers database connectivity, auth/session flow, user & role management, ruleset governance, and audit logging with MSSQL.
 
-### Scalability
-- Easy to add new features
-- Independent layer scaling
-- Microservices ready
+**Key entry points**
+- ackend/src/server.ts - bootstraps the Express server.
+- ackend/src/db/sqlServer.ts - shared SQL Server connection + helpers.
+- ackend/src/routes/ - route handlers for auth, users, roles, rulesets, audit events.
 
-### Maintainability
-- Clear code organization
-- Easy testing
-- Independent deployments
+**Getting started**
+1. cd backend`n2. 
+pm install`n3. Copy .env.example to .env and update connection credentials.
+4. 
+pm run dev`n
+The services assume the SQL schema created by src/data/migrations/20250125_module_2_7.sql. Adjust permissions strings (manage_users, manage_rulesets, iew_audit_logs) to align with your seed data.
 
-### Security
-- Role-based access control
-- Input validation at multiple layers
-- Secure authentication
-
-## 🔐 Authentication
-
-### Public Portal
-- No authentication required
-- Guest access to all content
-
-### Admin Dashboard
-- Secure login required
-- Role-based permissions
-- Session management
-
-**Demo Credentials:**
-- Username: `admin`
-- Password: `uefa2025`
-
-## 📊 Database Schema
-
-### Core Tables
-- `teams` - Team information and standings
-- `matches` - Match fixtures and results
-- `players` - Player profiles and statistics
-- `news` - News articles and content
-- `users` - Admin users and permissions
-
-### Relationships
-- Teams → Players (One-to-Many)
-- Matches → Teams (Many-to-Many)
-- Users → Roles (Many-to-Many)
-
-## 🔄 Data Flow
-
-1. **User Interaction** (Presentation Layer)
-2. **Business Logic** (Application Layer)
-3. **Data Persistence** (Data Layer)
-
-### Example: View Standings
-1. User clicks "Standings" → `StandingsPage.jsx`
-2. Component calls → `TeamsService.getAllTeams()`
-3. Service calls → `TeamDAO.findAll()`
-4. DAO queries → Database
-5. Data flows back through layers
-6. UI updates with standings
-
-## 🧪 Testing Strategy
-
-### Unit Tests
-- Models validation
-- Business logic functions
-- Utility functions
-
-### Integration Tests
-- API service calls
-- Database operations
-- Component interactions
-
-### E2E Tests
-- User workflows
-- Admin workflows
-- Cross-browser testing
-
-## 🚀 Deployment
-
-### Development
-```bash
-npm run dev
-```
-
-### Production Build
-```bash
-npm run build
-```
-
-### Environment-Specific Configs
-- Development: Mock data, debug logging
-- Staging: Test database, limited features
-- Production: Live database, full features
-
-## 📈 Monitoring & Analytics
-
-### Error Tracking
-- Error boundaries
-- API error logging
-- User action tracking
-
-### Performance Monitoring
-- Page load times
-- API response times
-- Database query performance
-
-## 🔮 Future Enhancements
-
-### Microservices Migration
-- Split application layer into microservices
-- API Gateway implementation
-- Service mesh architecture
-
-### Real-time Features
-- WebSocket integration
-- Live match updates
-- Push notifications
-
-### Advanced Analytics
-- Machine learning predictions
-- Advanced statistics
-- Performance analytics
-
-## 📝 Contributing
-
-1. Follow the 3-tier architecture
-2. Add new features in appropriate layers
-3. Update configuration files
-4. Add tests for new functionality
-5. Update documentation
-
-## 📞 Support
-
-For technical support or questions about the architecture:
-- Email: dev-team@uefa.com
-- Documentation: `/docs`
-- API Documentation: `/api/docs`
-=======
-# ChampionLeagueManagement
->>>>>>> df085cfff729d0191a42a1358632fb64414c851d

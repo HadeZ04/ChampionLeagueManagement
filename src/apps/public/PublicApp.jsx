@@ -16,6 +16,8 @@ import GamingPage from './pages/GamingPage';
 import PlayerProfilePage from './pages/PlayerProfilePage';
 import TeamProfilePage from './pages/TeamProfilePage'; // <-- Đã sửa lỗi import
 import LineupSubmissionPage from './pages/LineupSubmissionPage';
+import SignUpPage from './pages/SignUpPage';
+import ProfilePage from './pages/ProfilePage';
 
 const PublicApp = () => {
   return (
@@ -31,6 +33,8 @@ const PublicApp = () => {
         <Route path="video" element={<VideoPage />} />
         <Route path="gaming" element={<GamingPage />} />
         <Route path="submit-lineup" element={<LineupSubmissionPage />} />
+        <Route path="signup" element={<SignUpPage />} />
+        <Route path="profile" element={<ProfilePage />} />
 
         {/* Thêm các Route động cho trang chi tiết */}
         <Route path="teams/:teamId" element={<TeamProfilePage />} />

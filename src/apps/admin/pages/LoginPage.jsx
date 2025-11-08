@@ -20,15 +20,13 @@ const LoginPage = ({ onLogin, isAuthenticated }) => {
     setIsLoading(true)
     setError('')
 
-    // Simulate login process
-    setTimeout(() => {
-      if (formData.username === 'admin' && formData.password === 'uefa2025') {
-        onLogin()
-      } else {
-        setError('Invalid username or password')
-      }
+    try {
+      await onLogin(formData)
+    } catch (err) {
+      setError(err?.message || 'Authentication failed. Please check your credentials.')
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   const handleChange = (e) => {
@@ -145,10 +143,10 @@ const LoginPage = ({ onLogin, isAuthenticated }) => {
                 <Shield size={16} className="text-gray-500" />
                 <span className="text-gray-700 font-medium text-sm">Demo Credentials</span>
               </div>
-              <div className="text-sm text-gray-600">
-                <div>Username: <code className="bg-gray-200 px-1 rounded">admin</code></div>
-                <div>Password: <code className="bg-gray-200 px-1 rounded">uefa2025</code></div>
-              </div>
+            <div className="text-sm text-gray-600">
+              <div>Username: <code className="bg-gray-200 px-1 rounded">admin</code></div>
+              <div>Password: <code className="bg-gray-200 px-1 rounded">uefa2025</code></div>
+            </div>
             </div>
           </div>
         </div>

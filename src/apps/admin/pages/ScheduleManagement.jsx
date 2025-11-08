@@ -3,26 +3,26 @@ import { generateRoundRobinSchedule } from '../../../lib/scheduleGenerator';
 import { CalendarCheck, ListRestart, Save } from 'lucide-react';
 
 // Giả lập danh sách đội đã được phê duyệt cho một mùa giải
-const APPROVED_TEAMS = ['Liverpool', 'Barcelona', 'Arsenal', 'Newcastle', 'Juventus', 'Real Madrid'];
+const APPROVED_TEAMS = ['Liverpool', 'Barcelona', 'Arsenal', 'Newcastle', 'Juventus', 'Real Madrid', 'Inter Milan'];
 
 const ScheduleManagement = () => {
   const [schedule, setSchedule] = useState([]);
   const [isGenerated, setIsGenerated] = useState(false);
 
   const handleGenerate = () => {
-    // Gọi thuật toán để tạo lịch
     const generatedFixtures = generateRoundRobinSchedule(APPROVED_TEAMS);
     setSchedule(generatedFixtures);
     setIsGenerated(true);
     // TODO: Gửi `generatedFixtures` lên API để lưu vào database
+    alert('Schedule generated! Check the console for the fixture list.');
+    console.log(generatedFixtures);
   };
 
   const handleReset = () => {
     setSchedule([]);
     setIsGenerated(false);
   };
-  
-  // Nhóm các trận đấu theo vòng
+
   const rounds = schedule.reduce((acc, match) => {
     acc[match.round] = acc[match.round] || [];
     acc[match.round].push(match);
@@ -61,7 +61,7 @@ const ScheduleManagement = () => {
         <div className="space-y-6">
           <div className="flex justify-end">
              <button className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
-                <Save size={18} /> Save All Changes
+                <Save size={18} /> Save All Changes to Database
              </button>
           </div>
           {Object.entries(rounds).map(([roundNumber, matches]) => (

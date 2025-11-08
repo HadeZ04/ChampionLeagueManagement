@@ -5,7 +5,7 @@ export const APP_CONFIG = {
   
   // API Configuration
   API: {
-    BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:3001/api',
+    BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:5173/api',
     TIMEOUT: 30000,
     RETRY_ATTEMPTS: 3,
     ENDPOINTS: {

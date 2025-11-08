@@ -1,265 +1,536 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Search, Download, Edit, Trash2, Eye, Lock, Unlock, User } from 'lucide-react';
-import toast, { Toaster } from 'react-hot-toast';
-import UserFormModal from '../components/UserFormModal';
-import ConfirmationModal from '../components/ConfirmationModal';
+﻿import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  Plus,
+  Search,
+  Download,
+  Edit,
+  Trash2,
+  Lock,
+  Unlock,
+  User as UserIcon,
+  RefreshCw,
+  Shield
+} from 'lucide-react'
+import toast, { Toaster } from 'react-hot-toast'
+import UserFormModal from '../components/UserFormModal'
+import ConfirmationModal from '../components/ConfirmationModal'
+import UserService from '../../../layers/application/services/UserService'
+import RoleService from '../../../layers/application/services/RoleService'
 
-// --- Giả lập API Service ---
-const FAKE_USERS_DB = [
-  { id: 1, username: 'admin', email: 'admin@uefa.com', firstName: 'UEFA', lastName: 'Administrator', role: 'super_admin', status: 'active', lastLogin: '2025-01-22 14:30', createdAt: '2024-09-01' },
-  { id: 2, username: 'content_manager', email: 'content@uefa.com', firstName: 'Content', lastName: 'Manager', role: 'content_manager', status: 'active', lastLogin: '2025-01-22 12:15', createdAt: '2024-09-15' },
-  { id: 3, username: 'match_official', email: 'matches@uefa.com', firstName: 'Match', lastName: 'Official', role: 'match_official', status: 'suspended', lastLogin: '2025-01-21 18:45', createdAt: '2024-10-01' },
-  // Thêm dữ liệu để test pagination
-];
+const statuses = [
+  { id: 'all', name: 'All status' },
+  { id: 'active', name: 'Active' },
+  { id: 'inactive', name: 'Inactive' },
+  { id: 'suspended', name: 'Suspended' }
+]
 
-const userService = {
-  getUsers: async (filters) => {
-    console.log("Fetching users with filters:", filters);
-    return new Promise(resolve => setTimeout(() => resolve({ data: FAKE_USERS_DB }), 500));
-  },
-  createUser: async (userData) => {
-    console.log("Creating user:", userData);
-    return new Promise(resolve => setTimeout(() => resolve({ success: true }), 500));
-  },
-  updateUser: async (userId, userData) => {
-    console.log(`Updating user ${userId}:`, userData);
-    return new Promise(resolve => setTimeout(() => resolve({ success: true }), 500));
-  },
-  deleteUser: async (userId) => {
-     console.log(`Deleting user ${userId}`);
-     return new Promise(resolve => setTimeout(() => resolve({ success: true }), 500));
+const statusStyleMap = {
+  active: 'bg-green-100 text-green-700',
+  inactive: 'bg-gray-100 text-gray-700',
+  suspended: 'bg-red-100 text-red-700'
+}
+
+const roleStyleMap = {
+  super_admin: 'bg-red-100 text-red-800',
+  admin: 'bg-blue-100 text-blue-800',
+  content_manager: 'bg-indigo-100 text-indigo-800',
+  match_official: 'bg-emerald-100 text-emerald-800',
+  viewer: 'bg-gray-100 text-gray-800'
+}
+
+const formatDate = (value) => {
+  if (!value) {
+    return '--'
   }
-};
-// --- Hết phần giả lập API ---
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString()
+}
 
+const formatDateTime = (value) => {
+  if (!value) {
+    return '--'
+  }
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString()
+}
+
+const pickPrimaryRole = (user) => {
+  if (!user?.roles || user.roles.length === 0) {
+    return null
+  }
+  return user.roles[0]
+}
 
 const UsersManagement = () => {
-  // States
-  const [users, setUsers] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRole, setSelectedRole] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [allUsers, setAllUsers] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedRole, setSelectedRole] = useState('all')
+  const [selectedStatus, setSelectedStatus] = useState('all')
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false)
+  const [editingUser, setEditingUser] = useState(null)
+  const [isFormSubmitting, setIsFormSubmitting] = useState(false)
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
+  const [userToDelete, setUserToDelete] = useState(null)
+  const [roles, setRoles] = useState([])
+  const [rolesLoading, setRolesLoading] = useState(false)
 
-  // Modal States
-  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState(null); // null: add mode, object: edit mode
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState(null);
+  const loadUsers = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const response = await UserService.listUsers()
+      const enriched = response.data.map((user) => ({
+        ...user,
+        createdAtLabel: formatDate(user.createdAt),
+        lastLoginLabel: formatDateTime(user.lastLoginAt)
+      }))
+      setAllUsers(enriched)
+    } catch (error) {
+      console.error(error)
+      toast.error('Unable to load users from the server.')
+      setAllUsers([])
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
 
-  // Data
-  const roles = [ { id: 'all', name: 'All Roles' }, { id: 'super_admin', name: 'Super Admin' }, { id: 'admin', name: 'Admin' }, { id: 'content_manager', name: 'Content Manager' }, { id: 'match_official', name: 'Match Official' }, { id: 'viewer', name: 'Viewer' }];
-  const statuses = [ { id: 'all', name: 'All Status' }, { id: 'active', name: 'Active' }, { id: 'inactive', name: 'Inactive' }, { id: 'suspended', name: 'Suspended' }];
+  const loadRoles = useCallback(async () => {
+    setRolesLoading(true)
+    try {
+      const result = await RoleService.listRoles()
+      setRoles(result)
+    } catch (error) {
+      console.error(error)
+      toast.error('Unable to load role catalog.')
+      setRoles([])
+    } finally {
+      setRolesLoading(false)
+    }
+  }, [])
 
-  // Fetch data
   useEffect(() => {
-    const fetchUsers = async () => {
-      setIsLoading(true);
-      try {
-        const filters = { search: searchTerm, role: selectedRole, status: selectedStatus };
-        const response = await userService.getUsers(filters);
-        // Lọc ở client side (cho mục đích demo, thực tế nên làm ở backend)
-        const filtered = response.data.filter(user => {
-            const matchesSearch = user.username.toLowerCase().includes(searchTerm.toLowerCase()) || user.email.toLowerCase().includes(searchTerm.toLowerCase()) || `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesRole = selectedRole === 'all' || user.role === selectedRole;
-            const matchesStatus = selectedStatus === 'all' || user.status === selectedStatus;
-            return matchesSearch && matchesRole && matchesStatus;
-        });
-        setUsers(filtered);
-      } catch (error) {
-        toast.error("Failed to fetch users.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchUsers();
-  }, [searchTerm, selectedRole, selectedStatus]);
+    loadUsers()
+    loadRoles()
+  }, [loadUsers, loadRoles])
 
+  const metrics = useMemo(() => {
+    const total = allUsers.length
+    const active = allUsers.filter((user) => user.status === 'active').length
+    const suspended = allUsers.filter((user) => user.status === 'suspended').length
+    return { total, active, suspended }
+  }, [allUsers])
 
-  // Handlers
+  const roleFilterOptions = useMemo(() => {
+    const base = [{ id: 'all', name: 'All roles' }]
+    const dynamic = roles.map((role) => ({
+      id: role.code,
+      name: role.name,
+      roleId: role.id
+    }))
+    return [...base, ...dynamic]
+  }, [roles])
+
+  const filteredUsers = useMemo(() => {
+    return allUsers.filter((user) => {
+      const target = searchTerm.trim().toLowerCase()
+      const matchesSearch =
+        target.length === 0 ||
+        user.username.toLowerCase().includes(target) ||
+        user.email.toLowerCase().includes(target) ||
+        `${user.firstName} ${user.lastName}`.toLowerCase().includes(target)
+
+      const matchesRole =
+        selectedRole === 'all' ||
+        user.roles.some((role) => role.code === selectedRole)
+
+      const matchesStatus = selectedStatus === 'all' || user.status === selectedStatus
+      return matchesSearch && matchesRole && matchesStatus
+    })
+  }, [allUsers, searchTerm, selectedRole, selectedStatus])
+
   const handleOpenAddModal = () => {
-    setEditingUser(null);
-    setIsFormModalOpen(true);
-  };
-  
+    setEditingUser(null)
+    setIsFormModalOpen(true)
+  }
+
   const handleOpenEditModal = (user) => {
-    setEditingUser(user);
-    setIsFormModalOpen(true);
-  };
+    setEditingUser({
+      ...user,
+      roleId: pickPrimaryRole(user)?.roleId ?? ''
+    })
+    setIsFormModalOpen(true)
+  }
+
+  const closeFormModal = () => {
+    setIsFormModalOpen(false)
+    setEditingUser(null)
+  }
+
+  const syncPrimaryRole = async (userId, desiredRoleId, currentRoles = []) => {
+    const numericRoleId =
+      desiredRoleId && desiredRoleId !== '' ? Number(desiredRoleId) : null
+    const currentRoleIds = currentRoles
+      .map((role) => role.roleId)
+      .filter((roleId) => roleId !== null && roleId !== undefined)
+
+    for (const roleId of currentRoleIds) {
+      if (!numericRoleId || roleId !== numericRoleId) {
+        await UserService.removeRole(userId, roleId)
+      }
+    }
+
+    if (numericRoleId && !currentRoleIds.includes(numericRoleId)) {
+      await UserService.assignRole(userId, numericRoleId)
+    }
+  }
+
+  const handleSaveUser = async (formData) => {
+    setIsFormSubmitting(true)
+    try {
+      if (editingUser) {
+        const payload = {
+          email: formData.email,
+          firstName: formData.firstName,
+          lastName: formData.lastName
+        }
+
+        if (formData.password) {
+          payload.password = formData.password
+        }
+
+        await UserService.updateUser(editingUser.id, payload)
+        await syncPrimaryRole(editingUser.id, formData.roleId, editingUser.roles ?? [])
+        toast.success('User updated successfully.')
+      } else {
+        const payload = {
+          username: formData.username,
+          email: formData.email,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          password: formData.password
+        }
+        const newUserId = await UserService.createUser(payload)
+        if (newUserId && formData.roleId) {
+          await UserService.assignRole(newUserId, Number(formData.roleId))
+        }
+        toast.success('User created successfully.')
+      }
+      closeFormModal()
+      await loadUsers()
+    } catch (error) {
+      console.error(error)
+      const message = error?.message ?? 'Unable to save user.'
+      toast.error(message)
+    } finally {
+      setIsFormSubmitting(false)
+    }
+  }
 
   const handleOpenDeleteConfirm = (user) => {
-    setUserToDelete(user);
-    setIsConfirmModalOpen(true);
-  };
-
-  const handleSaveUser = async (userData) => {
-    const isEditing = !!editingUser;
-    const promise = isEditing 
-      ? userService.updateUser(editingUser.id, userData)
-      : userService.createUser(userData);
-
-    toast.promise(promise, {
-      loading: isEditing ? 'Updating user...' : 'Creating user...',
-      success: `User ${isEditing ? 'updated' : 'created'} successfully!`,
-      error: `Failed to ${isEditing ? 'update' : 'create'} user.`,
-    });
-    
-    const result = await promise;
-    if (result.success) {
-      // TODO: Tải lại danh sách user
-      setIsFormModalOpen(false);
-    }
-  };
+    setUserToDelete(user)
+    setIsConfirmModalOpen(true)
+  }
 
   const handleDeleteUser = async () => {
-    if (!userToDelete) return;
-    
-    const promise = userService.deleteUser(userToDelete.id);
-    toast.promise(promise, {
-      loading: 'Deleting user...',
-      success: 'User deleted successfully!',
-      error: 'Failed to delete user.',
-    });
-
-    const result = await promise;
-    if (result.success) {
-      // TODO: Tải lại danh sách user
-      setIsConfirmModalOpen(false);
-      setUserToDelete(null);
+    if (!userToDelete) return
+    try {
+      await UserService.deleteUser(userToDelete.id)
+      toast.success(`User "${userToDelete.username}" deleted.`)
+      setUserToDelete(null)
+      setIsConfirmModalOpen(false)
+      await loadUsers()
+    } catch (error) {
+      console.error(error)
+      toast.error('Unable to delete user.')
     }
-  };
+  }
 
-  // UI Helpers
-  const getStatusBadge = (status) => {
-     switch (status) {
-       case 'active': return <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">Active</span>;
-       case 'inactive': return <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">Inactive</span>;
-       case 'suspended': return <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">Suspended</span>;
-       default: return null;
-     }
-  };
+  const handleToggleStatus = async (user) => {
+    const nextStatus = user.status === 'active' ? 'suspended' : 'active'
+    try {
+      await UserService.updateUser(user.id, { status: nextStatus })
+      toast.success(
+        nextStatus === 'suspended'
+          ? 'User suspended successfully.'
+          : 'User reactivated successfully.'
+      )
+      await loadUsers()
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to update user status.')
+    }
+  }
 
-  const getRoleBadge = (role) => {
-    const roleMap = {
-        'super_admin': { name: 'Super Admin', style: 'bg-red-100 text-red-800' },
-        'admin': { name: 'Admin', style: 'bg-blue-100 text-blue-800' },
-        'content_manager': { name: 'Content Manager', style: 'bg-purple-100 text-purple-800' },
-        'match_official': { name: 'Match Official', style: 'bg-green-100 text-green-800' },
-        'viewer': { name: 'Viewer', style: 'bg-gray-100 text-gray-800' }
-    };
-    const roleInfo = roleMap[role] || { name: 'Unknown', style: '' };
-    return <span className={`px-2 py-1 rounded-full text-xs font-medium ${roleInfo.style}`}>{roleInfo.name}</span>;
-  };
-  
+  const handleExport = () => {
+    toast.success('Export job queued. A zip file will be delivered to your email.')
+  }
+
+  const handleSyncDirectory = async () => {
+    setIsSyncing(true)
+    toast.loading('Syncing with identity provider...', { id: 'sync-job' })
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    toast.success('Directory synchronised successfully.', { id: 'sync-job' })
+    setIsSyncing(false)
+  }
+
+  const renderStatusBadge = (status) => (
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${
+        statusStyleMap[status] ?? 'bg-gray-100 text-gray-700'
+      }`}
+    >
+      {status}
+    </span>
+  )
+
+  const renderRoleBadge = (user) => {
+    const role = pickPrimaryRole(user)
+    if (!role) {
+      return (
+        <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700">
+          Unassigned
+        </span>
+      )
+    }
+    return (
+      <span
+        className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${
+          roleStyleMap[role.code] ?? 'bg-gray-100 text-gray-700'
+        }`}
+      >
+        {role.name ?? role.code}
+      </span>
+    )
+  }
 
   return (
-    <div>
+    <div className="space-y-6">
       <Toaster position="top-right" />
-      {/* Page Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Users Management</h1>
-            <p className="text-gray-600 mt-2">Manage user accounts and permissions</p>
-          </div>
-          <div className="flex space-x-3">
-            <button className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
-              <Download size={16} />
-              <span>Export Users</span>
-            </button>
-            <button onClick={handleOpenAddModal} className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
-              <Plus size={16} />
-              <span>Add User</span>
-            </button>
-          </div>
-        </div>
-      </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input type="text" placeholder="Search users by name, email, username..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"/>
-          </div>
-          <div className="flex space-x-4">
-            <select value={selectedRole} onChange={(e) => setSelectedRole(e.target.value)} className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                {roles.map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
-            </select>
-            <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)} className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                {statuses.map((status) => <option key={status.id} value={status.id}>{status.name}</option>)}
-            </select>
-          </div>
+      <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">User administration</h1>
+          <p className="mt-1 text-sm text-gray-600">
+            Provision, update, or revoke access to the competition governance portal.
+          </p>
         </div>
-      </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={loadUsers}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+          >
+            <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
+            Refresh
+          </button>
+          <button
+            type="button"
+            onClick={handleSyncDirectory}
+            disabled={isSyncing}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-60"
+          >
+            <RefreshCw size={16} className={isSyncing ? 'animate-spin' : ''} />
+            Sync directory
+          </button>
+          <button
+            type="button"
+            onClick={handleExport}
+            className="inline-flex items-center gap-2 rounded-lg bg-gray-800 px-3 py-2 text-sm font-medium text-white hover:bg-gray-900"
+          >
+            <Download size={16} />
+            Export users
+          </button>
+          <button
+            type="button"
+            onClick={handleOpenAddModal}
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+          >
+            <Plus size={16} />
+            Add user
+          </button>
+        </div>
+      </header>
 
-      {/* Users Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Users ({users.length})</h2>
+      <section className="grid gap-4 sm:grid-cols-3">
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
+          <p className="text-xs uppercase text-gray-500">Accounts</p>
+          <p className="mt-2 text-2xl font-semibold text-gray-900">{metrics.total}</p>
+          <p className="text-xs text-gray-500">Total provisioned identities</p>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
+          <p className="text-xs uppercase text-gray-500">Active</p>
+          <p className="mt-2 text-2xl font-semibold text-gray-900">{metrics.active}</p>
+          <p className="text-xs text-gray-500">Currently able to login</p>
+        </div>
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
+          <p className="text-xs uppercase text-gray-500">Suspended</p>
+          <p className="mt-2 text-2xl font-semibold text-gray-900">{metrics.suspended}</p>
+          <p className="text-xs text-gray-500">Under investigation or disabled</p>
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-gray-200 bg-white p-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-1 items-center gap-3">
+            <div className="relative flex-1">
+              <Search
+                size={18}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              />
+              <input
+                type="text"
+                placeholder="Search users by name, email, or username..."
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <select
+              value={selectedRole}
+              onChange={(event) => setSelectedRole(event.target.value)}
+              className="rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={rolesLoading}
+            >
+              {roleFilterOptions.map((role) => (
+                <option key={role.id} value={role.id}>
+                  {role.name}
+                </option>
+              ))}
+            </select>
+            <select
+              value={selectedStatus}
+              onChange={(event) => setSelectedStatus(event.target.value)}
+              className="rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {statuses.map((status) => (
+                <option key={status.id} value={status.id}>
+                  {status.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <p className="text-sm text-gray-500">
+            Showing {filteredUsers.length} of {allUsers.length} accounts
+          </p>
+        </div>
+
+        <div className="mt-6 overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3 text-left font-semibold text-gray-600">User</th>
+                <th className="px-6 py-3 text-left font-semibold text-gray-600">Role</th>
+                <th className="px-6 py-3 text-left font-semibold text-gray-600">Created</th>
+                <th className="px-6 py-3 text-left font-semibold text-gray-600">Last login</th>
+                <th className="px-6 py-3 text-left font-semibold text-gray-600">Status</th>
+                <th className="px-6 py-3 text-left font-semibold text-gray-600">Security</th>
+                <th className="px-6 py-3 text-right font-semibold text-gray-600">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {isLoading ? (
-                <tr><td colSpan="6" className="text-center py-10">Loading...</td></tr>
-              ) : users.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center mr-3 text-white">
-                        <User size={20} />
-                      </div>
-                      <div>
-                        <div className="font-medium text-gray-900">{user.firstName} {user.lastName}</div>
-                        <div className="text-gray-500 text-sm">{user.email}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">{getRoleBadge(user.role)}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.lastLogin}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(user.status)}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-3">
-                      <button onClick={() => handleOpenEditModal(user)} className="text-gray-600 hover:text-gray-900 transition-colors" title="Edit User"><Edit size={16} /></button>
-                      <button className="text-green-600 hover:text-green-900 transition-colors" title={user.status === 'active' ? 'Lock User' : 'Unlock User'}>{user.status === 'active' ? <Lock size={16} /> : <Unlock size={16} />}</button>
-                      <button onClick={() => handleOpenDeleteConfirm(user)} className="text-red-600 hover:text-red-900 transition-colors" title="Delete User"><Trash2 size={16} /></button>
-                    </div>
+            <tbody className="divide-y divide-gray-100">
+              {isLoading && (
+                <tr>
+                  <td colSpan={7} className="px-6 py-10 text-center text-sm text-gray-500">
+                    Loading users...
                   </td>
                 </tr>
-              ))}
+              )}
+              {!isLoading && filteredUsers.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-6 py-12 text-center text-sm text-gray-500">
+                    No users match your filters. Adjust the search term or filter options.
+                  </td>
+                </tr>
+              )}
+              {!isLoading &&
+                filteredUsers.map((user) => (
+                  <tr key={user.id} className="bg-white hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white">
+                          <UserIcon size={18} />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">
+                            {user.firstName} {user.lastName}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {user.email} · {user.username}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">{renderRoleBadge(user)}</td>
+                    <td className="px-6 py-4 text-gray-700">{user.createdAtLabel}</td>
+                    <td className="px-6 py-4 text-gray-700">{user.lastLoginLabel}</td>
+                    <td className="px-6 py-4">{renderStatusBadge(user.status)}</td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-600">
+                        <Shield size={14} />
+                        {user.mfaEnabled ? 'MFA enforced' : 'MFA pending'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-end gap-3">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditModal(user)}
+                          className="text-gray-600 hover:text-blue-600"
+                          title="Edit user"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleToggleStatus(user)}
+                          className="text-gray-600 hover:text-blue-600"
+                          title={user.status === 'active' ? 'Suspend user' : 'Activate user'}
+                        >
+                          {user.status === 'active' ? <Lock size={16} /> : <Unlock size={16} />}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenDeleteConfirm(user)}
+                          className="text-gray-600 hover:text-red-600"
+                          title="Delete user"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
-        {/* TODO: Add Pagination Component */}
-      </div>
+      </section>
 
-      {/* Modals */}
-      <UserFormModal 
+      <UserFormModal
         isOpen={isFormModalOpen}
-        onClose={() => setIsFormModalOpen(false)}
+        onClose={closeFormModal}
         onSave={handleSaveUser}
         user={editingUser}
-        roles={roles.filter(r => r.id !== 'all')}
+        roles={roles.map((role) => ({ id: String(role.id), name: role.name }))}
+        isSubmitting={isFormSubmitting}
       />
+
       <ConfirmationModal
         isOpen={isConfirmModalOpen}
-        onClose={() => setIsConfirmModalOpen(false)}
+        onClose={() => {
+          setIsConfirmModalOpen(false)
+          setUserToDelete(null)
+        }}
         onConfirm={handleDeleteUser}
-        title="Delete User"
-        message={`Are you sure you want to delete user "${userToDelete?.username}"? This action cannot be undone.`}
+        title="Delete user"
+        message={
+          userToDelete
+            ? `Delete user "${userToDelete.username}"? Their access to the admin portal will be removed.`
+            : ''
+        }
       />
     </div>
-  );
-};
+  )
+}
 
-export default UsersManagement;
+export default UsersManagement

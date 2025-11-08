@@ -1,61 +1,77 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { hasPermission } from '../utils/accessControl'
 // 1. Import icon mới
-import { 
-  LayoutDashboard, 
-  Users, 
-  Calendar, 
-  UserCheck, 
-  FileText, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Users,
+  Calendar,
+  UserCheck,
+  FileText,
+  Settings,
   BarChart3,
   Trophy,
   Target,
   Shield,
   Globe,
   Swords,
-  PlayCircle // <-- Icon cho Match Day
+  PlayCircle,
+  ScrollText,
+  History,
+  KeyRound
 } from 'lucide-react'
 
-const AdminSidebar = () => {
+const MENU_SECTIONS = [
+  {
+    title: 'Overview',
+    items: [
+      { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
+      { name: 'Reports', path: '/admin/reports', icon: BarChart3 }
+    ]
+  },
+  {
+    title: 'Tournament Management',
+    items: [
+      { name: 'Seasons', path: '/admin/seasons', icon: Swords, permission: 'manage_teams' },
+      { name: 'Teams', path: '/admin/teams', icon: Users, permission: 'manage_teams' },
+      { name: 'Matches', path: '/admin/matches', icon: Calendar, permission: 'manage_matches' },
+      // 2. Thêm link mới vào đây
+      { name: 'Match Day', path: '/admin/matches-today', icon: PlayCircle, permission: 'manage_matches' },
+      { name: 'Players', path: '/admin/players', icon: UserCheck, permission: 'manage_teams' },
+      { name: 'Standings', path: '/admin/standings', icon: Trophy }
+    ]
+  },
+  {
+    title: 'Content Management',
+    items: [
+      { name: 'News & Articles', path: '/admin/news', icon: FileText, permission: 'manage_content' },
+      { name: 'Media Library', path: '/admin/media', icon: Target, permission: 'manage_content' },
+      { name: 'Website Content', path: '/admin/content', icon: Globe, permission: 'manage_content' }
+    ]
+  },
+  {
+    title: 'System',
+    items: [
+      { name: 'User Management', path: '/admin/users', icon: Shield, permission: 'manage_users' },
+      { name: 'Role Permissions', path: '/admin/roles', icon: KeyRound, permission: 'manage_users' },
+      { name: 'Ruleset Governance', path: '/admin/rulesets', icon: ScrollText, permission: 'manage_rulesets' },
+      { name: 'Audit Trail', path: '/admin/audit-log', icon: History, permission: 'view_audit_logs' },
+      { name: 'Settings', path: '/admin/settings', icon: Settings, permission: 'manage_users' }
+    ]
+  }
+]
+
+const AdminSidebar = ({ currentUser }) => {
   const location = useLocation()
 
-  const menuItems = [
-    {
-      title: 'Overview',
-      items: [
-        { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
-        { name: 'Reports', path: '/admin/reports', icon: BarChart3 }
-      ]
-    },
-    {
-      title: 'Tournament Management',
-      items: [
-        { name: 'Seasons', path: '/admin/seasons', icon: Swords },
-        { name: 'Teams', path: '/admin/teams', icon: Users },
-        { name: 'Matches', path: '/admin/matches', icon: Calendar },
-        // 2. Thêm link mới vào đây
-        { name: 'Match Day', path: '/admin/matches-today', icon: PlayCircle },
-        { name: 'Players', path: '/admin/players', icon: UserCheck },
-        { name: 'Standings', path: '/admin/standings', icon: Trophy }
-      ]
-    },
-    {
-      title: 'Content Management',
-      items: [
-        { name: 'News & Articles', path: '/admin/news', icon: FileText },
-        { name: 'Media Library', path: '/admin/media', icon: Target },
-        { name: 'Website Content', path: '/admin/content', icon: Globe }
-      ]
-    },
-    {
-      title: 'System',
-      items: [
-        { name: 'User Management', path: '/admin/users', icon: Shield },
-        { name: 'Settings', path: '/admin/settings', icon: Settings }
-      ]
-    }
-  ]
+  const filteredMenu = useMemo(() => {
+    return MENU_SECTIONS
+      .map((section) => ({
+        ...section,
+        items: section.items.filter((item) => hasPermission(currentUser, item.permission))
+      }))
+      .filter((section) => section.items.length > 0)
+  }, [currentUser])
 
   return (
     <aside className="w-64 bg-gray-900 text-white min-h-screen p-4 flex flex-col">
@@ -76,7 +92,7 @@ const AdminSidebar = () => {
 
       {/* Navigation */}
       <nav className="flex-1 mt-6">
-        {menuItems.map((section, sectionIndex) => (
+        {filteredMenu.map((section, sectionIndex) => (
           <div key={sectionIndex} className="mb-6">
             <h3 className="text-gray-400 text-xs font-semibold uppercase tracking-wide mb-3 px-2">
               {section.title}

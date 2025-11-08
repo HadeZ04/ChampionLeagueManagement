@@ -10,58 +10,33 @@ class AuthService {
 
   // Login
   async login(credentials) {
-    try {
-      const response = await ApiService.post(APP_CONFIG.API.ENDPOINTS.AUTH.LOGIN, credentials)
-      
-      if (response.success) {
-        this.setTokens(response.data.token, response.data.refreshToken)
-        this.setUser(response.data.user)
-        return response.data.user
-      } else {
-        throw new Error(response.message || 'Login failed')
-      }
-    } catch (error) {
-      console.error('Login failed:', error)
-      // Mock authentication for development
-      return this.mockLogin(credentials)
-    }
-  }
+    const response = await ApiService.post(APP_CONFIG.API.ENDPOINTS.AUTH.LOGIN, credentials)
 
-  // Mock login for development
-  mockLogin(credentials) {
-    if (credentials.username === 'admin' && credentials.password === 'uefa2025') {
-      const mockUser = {
-        id: 1,
-        username: 'admin',
-        email: 'admin@uefa.com',
-        role: 'administrator',
-        permissions: ['read', 'write', 'delete', 'admin'],
-        profile: {
-          firstName: 'UEFA',
-          lastName: 'Administrator',
-          avatar: null
-        }
-      }
-      
-      const mockToken = 'mock_jwt_token_' + Date.now()
-      this.setTokens(mockToken, 'mock_refresh_token')
-      this.setUser(mockUser)
-      return mockUser
-    } else {
-      throw new Error('Invalid credentials')
+    const normalizedToken =
+      response?.token ??
+      response?.accessToken ??
+      response?.data?.token ??
+      response?.data?.accessToken
+    const normalizedRefresh =
+      response?.refreshToken ??
+      response?.data?.refreshToken ??
+      response?.data?.refresh_token ??
+      null
+    const normalizedUser = response?.user ?? response?.data?.user ?? null
+
+    if (!normalizedToken || !normalizedUser) {
+      throw new Error(response?.message || 'Login failed')
     }
+
+    this.setTokens(normalizedToken, normalizedRefresh)
+    this.setUser(normalizedUser)
+    return normalizedUser
   }
 
   // Logout
   async logout() {
-    try {
-      await ApiService.post(APP_CONFIG.API.ENDPOINTS.AUTH.LOGOUT)
-    } catch (error) {
-      console.error('Logout request failed:', error)
-    } finally {
-      this.clearTokens()
-      this.clearUser()
-    }
+    this.clearTokens()
+    this.clearUser()
   }
 
   // Refresh token
@@ -76,15 +51,35 @@ class AuthService {
         refreshToken
       })
 
-      if (response.success) {
-        this.setTokens(response.data.token, response.data.refreshToken)
-        return response.data.token
-      } else {
+      const normalizedToken = response?.token ?? response?.data?.token ?? null
+      const normalizedRefresh = response?.refreshToken ?? response?.data?.refreshToken ?? null
+
+      if (!normalizedToken) {
         throw new Error('Token refresh failed')
       }
+
+      this.setTokens(normalizedToken, normalizedRefresh)
+      return normalizedToken
     } catch (error) {
       console.error('Token refresh failed:', error)
       this.logout()
+      throw error
+    }
+  }
+
+  async restoreSession() {
+    if (!this.isAuthenticated()) {
+      return null
+    }
+    try {
+      const profile = await this.getCurrentUser()
+      if (profile) {
+        this.setUser(profile)
+      }
+      return profile
+    } catch (error) {
+      this.clearTokens()
+      this.clearUser()
       throw error
     }
   }
@@ -93,17 +88,44 @@ class AuthService {
   async getCurrentUser() {
     try {
       const response = await ApiService.get(APP_CONFIG.API.ENDPOINTS.AUTH.PROFILE)
-      return response.data
+      const payload = response?.data ?? response ?? null
+      if (payload) {
+        this.setUser(payload)
+      }
+      return payload
     } catch (error) {
       console.error('Failed to fetch user profile:', error)
-      return this.getUser()
+      throw error
+    }
+  }
+
+  async updateProfile(updates) {
+    try {
+      const response = await ApiService.put(APP_CONFIG.API.ENDPOINTS.AUTH.PROFILE, updates)
+      const payload = response?.data ?? response ?? null
+      if (payload) {
+        this.setUser(payload)
+      }
+      return payload
+    } catch (error) {
+      console.error('Failed to update profile:', error)
+      throw error
     }
   }
 
   // Token management
   setTokens(token, refreshToken) {
-    localStorage.setItem(this.tokenKey, token)
-    localStorage.setItem(this.refreshTokenKey, refreshToken)
+    if (token) {
+      localStorage.setItem(this.tokenKey, token)
+    } else {
+      localStorage.removeItem(this.tokenKey)
+    }
+
+    if (refreshToken) {
+      localStorage.setItem(this.refreshTokenKey, refreshToken)
+    } else {
+      localStorage.removeItem(this.refreshTokenKey)
+    }
   }
 
   getToken() {
@@ -147,7 +169,7 @@ class AuthService {
   // Check if user has specific role
   hasRole(role) {
     const user = this.getUser()
-    return user && user.role === role
+    return Array.isArray(user?.roles) && user.roles.includes(role)
   }
 }
 

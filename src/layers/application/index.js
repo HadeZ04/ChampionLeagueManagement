@@ -9,6 +9,10 @@ export { default as MatchesService } from './services/MatchesService'
 export { default as PlayersService } from './services/PlayersService'
 export { default as NewsService } from './services/NewsService'
 export { default as StatsService } from './services/StatsService'
+export { default as UserService } from './services/UserService'
+export { default as RoleService } from './services/RoleService'
+export { default as PermissionService } from './services/PermissionService'
+export { default as AuditLogService } from './services/AuditLogService'
 
 // Business Logic
 export { default as TournamentLogic } from './logic/TournamentLogic'

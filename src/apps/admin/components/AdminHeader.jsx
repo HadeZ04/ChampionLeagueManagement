@@ -1,9 +1,26 @@
-import React, { useState } from 'react'
-import { Bell, Search, Settings, User, LogOut, Menu, X } from 'lucide-react'
+import React, { useMemo, useState } from 'react'
+import { Bell, Search, Settings, User, LogOut } from 'lucide-react'
 
-const AdminHeader = ({ onLogout }) => {
+const AdminHeader = ({ onLogout, currentUser }) => {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
+
+  const displayName = useMemo(() => {
+    if (!currentUser) {
+      return 'Admin User'
+    }
+    if (currentUser.firstName || currentUser.lastName) {
+      return `${currentUser.firstName ?? ''} ${currentUser.lastName ?? ''}`.trim()
+    }
+    return currentUser.username ?? 'Admin User'
+  }, [currentUser])
+
+  const displayRole = useMemo(() => {
+    if (!currentUser?.roles || currentUser.roles.length === 0) {
+      return 'Administrator'
+    }
+    return currentUser.roles[0].replace(/_/g, ' ')
+  }, [currentUser])
 
   const notifications = [
     { id: 1, title: 'New match result submitted', time: '5 min ago', type: 'info' },
@@ -27,9 +44,11 @@ const AdminHeader = ({ onLogout }) => {
         {/* Left Side */}
         <div className="flex items-center space-x-4">
           <h1 className="text-2xl font-bold text-gray-900">UEFA Admin Dashboard</h1>
-          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-            Champions League 2024/25
-          </span>
+          {currentUser?.roles && (
+            <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium capitalize">
+              {displayRole}
+            </span>
+          )}
         </div>
 
         {/* Right Side */}
@@ -95,16 +114,16 @@ const AdminHeader = ({ onLogout }) => {
                 <User size={16} className="text-white" />
               </div>
               <div className="hidden md:block text-left">
-                <div className="text-sm font-medium text-gray-900">Admin User</div>
-                <div className="text-xs text-gray-500">System Administrator</div>
+                <div className="text-sm font-medium text-gray-900">{displayName}</div>
+                <div className="text-xs text-gray-500 capitalize">{displayRole}</div>
               </div>
             </button>
 
             {isProfileDropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
                 <div className="p-3 border-b border-gray-200">
-                  <div className="font-medium text-gray-900">Admin User</div>
-                  <div className="text-sm text-gray-500">admin@uefa.com</div>
+                  <div className="font-medium text-gray-900">{displayName}</div>
+                  <div className="text-sm text-gray-500">{currentUser?.email ?? '—'}</div>
                 </div>
                 <div className="py-1">
                   <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">

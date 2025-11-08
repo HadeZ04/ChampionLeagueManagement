@@ -1,16 +1,16 @@
-import React from 'react';
-import { Outlet } from 'react-router-dom';
-import AdminSidebar from './AdminSidebar';
-import AdminHeader from './AdminHeader'; // Import Header ở đây
+import React from 'react'
+import { Outlet } from 'react-router-dom'
+import AdminSidebar from './AdminSidebar'
+import AdminHeader from './AdminHeader' // Import Header  ở đây
 
-const AdminLayout = ({ onLogout }) => { // Nhận prop onLogout
+const AdminLayout = ({ onLogout, currentUser }) => {
   return (
     <div className="flex h-screen bg-gray-100">
-      <AdminSidebar />
+      <AdminSidebar currentUser={currentUser} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Truyền onLogout xuống cho AdminHeader */}
-        <AdminHeader onLogout={onLogout} />
+        <AdminHeader onLogout={onLogout} currentUser={currentUser} />
 
         <main className="flex-1 overflow-x-hidden overflow-y-auto">
           <div className="container mx-auto px-6 py-8">
@@ -19,7 +19,7 @@ const AdminLayout = ({ onLogout }) => { // Nhận prop onLogout
         </main>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default AdminLayout;
+export default AdminLayout

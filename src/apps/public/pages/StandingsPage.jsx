@@ -5,6 +5,18 @@ import TopScorers from '../components/TopScorers'
 import UpcomingMatches from '../components/UpcomingMatches'
 import LiveTicker from '../components/LiveTicker'
 
+// --- Giả lập API Service ---
+const FAKE_STANDINGS_DATA = [
+  { position: 1, change: 0, country: 'ENG', logo: 'https://img.uefa.com/imgml/TP/teams/logos/50x50/7889.png', team: 'Liverpool', played: 6, won: 6, drawn: 0, lost: 0, goalsFor: 13, goalsAgainst: 1, goalDifference: 12, points: 18, form: ['W', 'W', 'W', 'W', 'W'], status: 'qualified' },
+  { position: 2, change: 1, country: 'ESP', logo: 'https://img.uefa.com/imgml/TP/teams/logos/50x50/50080.png', team: 'Barcelona', played: 6, won: 5, drawn: 0, lost: 1, goalsFor: 21, goalsAgainst: 7, goalDifference: 14, points: 15, form: ['W', 'L', 'W', 'W', 'W'], status: 'qualified' },
+  // ...dữ liệu này được trả về từ backend sau khi tính toán
+];
+const standingsService = {
+  getStandings: async (seasonId) => new Promise(resolve => setTimeout(() => resolve({ data: FAKE_STANDINGS_DATA }), 500)),
+};
+// --- Hết giả lập ---
+
+
 const StandingsPage = () => {
   const [selectedPhase, setSelectedPhase] = useState('league')
   const [selectedGroup, setSelectedGroup] = useState('all')

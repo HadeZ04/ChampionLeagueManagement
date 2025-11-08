@@ -71,6 +71,18 @@ const PublicHeader = () => {
               <a href="#" className="hover:text-uefa-gold transition-colors">Fantasy</a>
               <a href="#" className="hover:text-uefa-gold transition-colors">Gaming</a>
               <span className="text-uefa-gray hidden md:inline">|</span>
+              <Link
+                to="/signup"
+                className="hidden md:inline-flex items-center rounded-full border border-white/40 px-4 py-1 text-sm font-semibold hover:bg-white hover:text-uefa-dark transition-colors"
+              >
+                Create Account
+              </Link>
+              <Link
+                to="/admin/login"
+                className="hidden md:inline-flex items-center rounded-full border border-white/40 px-4 py-1 text-sm font-semibold hover:bg-white hover:text-uefa-dark transition-colors"
+              >
+                Admin Login
+              </Link>
               <div className="relative hidden md:block">
                 <button
                   onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
@@ -248,6 +260,27 @@ const PublicHeader = () => {
                     {item.name}
                   </Link>
                 ))}
+              </div>
+
+              {/* Account Section */}
+              <div>
+                <div className="text-uefa-gray text-sm font-semibold uppercase tracking-wide mb-2">
+                  Account
+                </div>
+                <Link
+                  to="/signup"
+                  className="uefa-mobile-menu-item"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Create Account
+                </Link>
+                <Link
+                  to="/admin/login"
+                  className="uefa-mobile-menu-item text-uefa-blue font-semibold"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Admin Login
+                </Link>
               </div>
             </div>
           </div>

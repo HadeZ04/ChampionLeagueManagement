@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { TrendingUp, TrendingDown, Minus, Info, Eye, BarChart3 } from 'lucide-react'
 
-const StandingsTable = ({ standings = [], selectedGroup })  => {
+const StandingsTable = ({ standings, selectedGroup }) => {
   const [selectedTeam, setSelectedTeam] = useState(null)
 
   const getStatusBadge = (status) => {
