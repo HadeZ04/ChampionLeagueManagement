@@ -1,87 +1,320 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react'
 
-// Giả lập dữ liệu cho các dropdown
-const FAKE_RULESETS = [ { id: 1, name: 'Điều lệ CL 2024' }, { id: 2, name: 'Điều lệ CL 2025' }];
-const FORMAT_OPTIONS = ['Vòng tròn tính điểm', 'Loại trực tiếp', 'Hỗn hợp'];
-const STATUS_OPTIONS = ['Sắp diễn ra', 'Đang diễn ra', 'Tạm hoãn', 'Đã kết thúc'];
+const DEFAULT_FORM = {
+  name: '',
+  code: '',
+  tournamentId: '',
+  rulesetId: '',
+  status: 'draft',
+  startDate: '',
+  endDate: '',
+  participationFee: 0,
+  description: '',
+  invitationOpenedAt: '',
+  registrationDeadline: '',
+  maxTeams: 10,
+  expectedRounds: 18
+}
 
-const SeasonFormModal = ({ isOpen, onClose, onSave, season }) => {
-  const [formData, setFormData] = useState({});
+const NUMERIC_FIELDS = new Set(['tournamentId', 'rulesetId', 'participationFee', 'maxTeams', 'expectedRounds'])
 
-  const isEditing = !!season;
+const toDateValue = (value) => (value ? String(value).slice(0, 10) : '')
+const toDateTimeValue = (value) => (value ? String(value).slice(0, 16) : '')
+
+const SeasonFormModal = ({
+  isOpen,
+  onClose,
+  onSave,
+  season,
+  metadata = { statuses: [], tournaments: [], rulesets: [] },
+  isSubmitting = false
+}) => {
+  const [formData, setFormData] = useState(DEFAULT_FORM)
+
+  const statusOptions = useMemo(() => {
+    return Array.isArray(metadata.statuses) && metadata.statuses.length > 0
+      ? metadata.statuses
+      : ['draft', 'in_progress', 'completed']
+  }, [metadata.statuses])
 
   useEffect(() => {
-    // Cập nhật form khi prop `season` thay đổi (khi mở modal để sửa)
+    if (!isOpen) {
+      return
+    }
+
     if (season) {
       setFormData({
-        name: season.name || '',
-        rulesetId: season.rulesetId || '',
-        format: season.format || '',
-        status: season.status || '',
-        // Thêm các trường ngày tháng
-      });
+        name: season.name ?? '',
+        code: season.code ?? '',
+        tournamentId: season.tournamentId ?? '',
+        rulesetId: season.rulesetId ?? '',
+        status: season.status ?? statusOptions[0],
+        startDate: toDateValue(season.startDate),
+        endDate: toDateValue(season.endDate),
+        participationFee: season.participationFee ?? 0,
+        description: season.description ?? '',
+        invitationOpenedAt: toDateTimeValue(season.invitationOpenedAt),
+        registrationDeadline: toDateTimeValue(season.registrationDeadline),
+        maxTeams: season.maxTeams ?? 10,
+        expectedRounds: season.expectedRounds ?? 18
+      })
     } else {
-      // Reset form khi tạo mới
-      setFormData({ name: '', rulesetId: '', format: '', status: '' });
+      setFormData({
+        ...DEFAULT_FORM,
+        status: statusOptions[0] ?? 'draft'
+      })
     }
-  }, [season, isOpen]);
+  }, [season, isOpen, statusOptions])
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+  const handleChange = (event) => {
+    const { name, value } = event.target
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSave({ ...formData, id: season?.id });
-  };
+    if (NUMERIC_FIELDS.has(name)) {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value === '' ? '' : Number(value)
+      }))
+      return
+    }
 
-  if (!isOpen) return null;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
+  const handleSubmit = (event) => {
+    event.preventDefault()
+
+    const payload = {
+      name: formData.name.trim(),
+      code: formData.code.trim(),
+      tournamentId: Number(formData.tournamentId),
+      rulesetId: Number(formData.rulesetId),
+      status: formData.status,
+      startDate: formData.startDate,
+      endDate: formData.endDate || null,
+      description: formData.description?.trim() || null,
+      participationFee: Number(formData.participationFee || 0),
+      invitationOpenedAt: formData.invitationOpenedAt || null,
+      registrationDeadline: formData.registrationDeadline || null,
+      maxTeams: Number(formData.maxTeams || 10),
+      expectedRounds: Number(formData.expectedRounds || 18)
+    }
+
+    onSave(payload)
+  }
+
+  if (!isOpen) {
+    return null
+  }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
-      <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-2xl">
-        <h2 className="text-2xl font-bold mb-6">{isEditing ? 'Chỉnh sửa Mùa giải' : 'Tạo Mùa giải mới'}</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block font-medium mb-1">Tên Mùa giải</label>
-            <input name="name" value={formData.name || ''} onChange={handleChange} className="w-full p-2 border rounded" required />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6">
+      <div className="w-full max-w-3xl rounded-xl bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+          <h2 className="text-2xl font-semibold text-gray-900">
+            {season ? 'Chỉnh sửa Mùa giải' : 'Tạo Mùa giải mới'}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg px-3 py-1 text-sm font-medium text-gray-500 hover:bg-gray-100"
+            disabled={isSubmitting}
+          >
+            Đóng
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5 px-6 py-6">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex flex-col">
+              <label className="mb-2 text-sm font-medium text-gray-700">Tên Mùa giải</label>
+              <input
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                placeholder="UEFA Champions League 2025/26"
+                required
+              />
+            </div>
+            <div className="flex flex-col">
+              <label className="mb-2 text-sm font-medium text-gray-700">Mã Mùa giải</label>
+              <input
+                name="code"
+                value={formData.code}
+                onChange={handleChange}
+                className="rounded-lg border border-gray-300 px-4 py-2 uppercase focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                placeholder="UCL_2025"
+                required
+              />
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block font-medium mb-1">Gán Bộ Điều lệ</label>
-              <select name="rulesetId" value={formData.rulesetId || ''} onChange={handleChange} className="w-full p-2 border rounded" required>
-                <option value="" disabled>Chọn điều lệ</option>
-                {FAKE_RULESETS.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex flex-col">
+              <label className="mb-2 text-sm font-medium text-gray-700">Giải đấu</label>
+              <select
+                name="tournamentId"
+                value={formData.tournamentId}
+                onChange={handleChange}
+                className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                required
+              >
+                <option value="" disabled>
+                  Chọn giải đấu
+                </option>
+                {metadata.tournaments?.map((tournament) => (
+                  <option key={tournament.id} value={tournament.id}>
+                    {tournament.name}
+                  </option>
+                ))}
               </select>
             </div>
-             <div>
-              <label className="block font-medium mb-1">Định dạng Giải đấu</label>
-              <select name="format" value={formData.format || ''} onChange={handleChange} className="w-full p-2 border rounded" required>
-                 <option value="" disabled>Chọn định dạng</option>
-                 {FORMAT_OPTIONS.map(f => <option key={f} value={f}>{f}</option>)}
+            <div className="flex flex-col">
+              <label className="mb-2 text-sm font-medium text-gray-700">Bộ Điều lệ</label>
+              <select
+                name="rulesetId"
+                value={formData.rulesetId}
+                onChange={handleChange}
+                className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                required
+              >
+                <option value="" disabled>
+                  Chọn điều lệ
+                </option>
+                {metadata.rulesets?.map((ruleset) => (
+                  <option key={ruleset.id} value={ruleset.id}>
+                    {ruleset.name}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
-          
-          {/* TODO: Thêm các trường chọn mốc thời gian (ngày tháng) */}
 
-           <div>
-              <label className="block font-medium mb-1">Trạng thái</label>
-              <select name="status" value={formData.status || ''} onChange={handleChange} className="w-full p-2 border rounded" required>
-                 {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex flex-col">
+              <label className="mb-2 text-sm font-medium text-gray-700">Ngày bắt đầu</label>
+              <input
+                type="date"
+                name="startDate"
+                value={formData.startDate}
+                onChange={handleChange}
+                className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                required
+              />
+            </div>
+            <div className="flex flex-col">
+              <label className="mb-2 text-sm font-medium text-gray-700">Ngày kết thúc</label>
+              <input
+                type="date"
+                name="endDate"
+                value={formData.endDate}
+                onChange={handleChange}
+                className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="flex flex-col">
+              <label className="mb-2 text-sm font-medium text-gray-700">Trạng thái</label>
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                className="rounded-lg border border-gray-300 px-4 py-2 capitalize focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              >
+                {statusOptions.map((status) => (
+                  <option key={status} value={status}>
+                    {status.replace(/_/g, ' ')}
+                  </option>
+                ))}
               </select>
             </div>
+            <div className="flex flex-col">
+              <label className="mb-2 text-sm font-medium text-gray-700">Phí tham dự (VND)</label>
+              <input
+                type="number"
+                min="0"
+                step="100000"
+                name="participationFee"
+                value={formData.participationFee}
+                onChange={handleChange}
+                className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              />
+            </div>
+            <div className="flex flex-col">
+              <label className="mb-2 text-sm font-medium text-gray-700">Số đội tối đa</label>
+              <input
+                type="number"
+                min="2"
+                name="maxTeams"
+                value={formData.maxTeams}
+                onChange={handleChange}
+                className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                disabled
+              />
+            </div>
+          </div>
 
-          <div className="flex justify-end space-x-4 pt-4">
-            <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Hủy</button>
-            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Lưu</button>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex flex-col">
+              <label className="mb-2 text-sm font-medium text-gray-700">Ngày mở thư mời</label>
+              <input
+                type="datetime-local"
+                name="invitationOpenedAt"
+                value={formData.invitationOpenedAt}
+                onChange={handleChange}
+                className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              />
+            </div>
+            <div className="flex flex-col">
+              <label className="mb-2 text-sm font-medium text-gray-700">Hạn đăng ký</label>
+              <input
+                type="datetime-local"
+                name="registrationDeadline"
+                value={formData.registrationDeadline}
+                onChange={handleChange}
+                className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col">
+            <label className="mb-2 text-sm font-medium text-gray-700">Mô tả</label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows={3}
+              className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              placeholder="Thông tin tổng quan, thể thức thi đấu, yêu cầu đặc biệt..."
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-3 border-t border-gray-200 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+              disabled={isSubmitting}
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Đang lưu...' : 'Lưu Mùa giải'}
+            </button>
           </div>
         </form>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default SeasonFormModal;
+export default SeasonFormModal

@@ -8,6 +8,28 @@ class AuthService {
     this.userKey = 'user_data'
   }
 
+  notifyAuthChange(user) {
+    if (typeof window === 'undefined' || typeof window.dispatchEvent !== 'function') {
+      return
+    }
+
+    const detail = {
+      isAuthenticated: this.isAuthenticated(),
+      user
+    }
+
+    if (typeof window.CustomEvent === 'function') {
+      window.dispatchEvent(new CustomEvent('auth:changed', { detail }))
+      return
+    }
+
+    if (typeof document !== 'undefined' && typeof document.createEvent === 'function') {
+      const event = document.createEvent('CustomEvent')
+      event.initCustomEvent('auth:changed', false, false, detail)
+      window.dispatchEvent(event)
+    }
+  }
+
   // Login
   async login(credentials) {
     const response = await ApiService.post(APP_CONFIG.API.ENDPOINTS.AUTH.LOGIN, credentials)
@@ -143,7 +165,12 @@ class AuthService {
 
   // User management
   setUser(user) {
-    localStorage.setItem(this.userKey, JSON.stringify(user))
+    if (user) {
+      localStorage.setItem(this.userKey, JSON.stringify(user))
+    } else {
+      localStorage.removeItem(this.userKey)
+    }
+    this.notifyAuthChange(user ?? null)
   }
 
   getUser() {
@@ -152,7 +179,7 @@ class AuthService {
   }
 
   clearUser() {
-    localStorage.removeItem(this.userKey)
+    this.setUser(null)
   }
 
   // Check if user is authenticated

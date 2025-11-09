@@ -10,11 +10,14 @@ import PlayersManagement from './pages/PlayersManagement'
 import NewsManagement from './pages/NewsManagement'
 import UsersManagement from './pages/UsersManagement'
 import RulesetManagement from './pages/RulesetManagement'
+import LeaderboardManagement from './pages/LeaderboardManagement'
+import PlayerStatsManagement from './pages/PlayerStatsManagement'
 import RolesPermissions from './pages/RolesPermissions'
 import AuditLog from './pages/AuditLog'
 import SettingsPage from './pages/SettingsPage'
 import ReportsPage from './pages/ReportsPage'
 import StandingsPage from "../public/pages/StandingsPage";
+import StandingsManagement from './pages/StandingsManagement';
 import SeasonManagement from './pages/SeasonManagement'
 import MatchDayManagement from './pages/MatchDayManagement';
 import LiveMatchUpdatePage from './pages/LiveMatchUpdatePage';
@@ -54,7 +57,8 @@ const AdminApp = ({ onLogout, currentUser }) => {
             </AccessGuard>
           }
         />
-        <Route path="standings" element={<StandingsPage />} />
+        <Route path="standings" element={<StandingsManagement />} />
+        <Route path="standings/view" element={<StandingsPage />} />
         <Route
           path="news"
           element={
@@ -76,6 +80,22 @@ const AdminApp = ({ onLogout, currentUser }) => {
           element={
             <AccessGuard permission="manage_rulesets" currentUser={currentUser}>
               <RulesetManagement />
+            </AccessGuard>
+          }
+        />
+        <Route
+          path="leaderboard"
+          element={
+            <AccessGuard permission="manage_matches" currentUser={currentUser}>
+              <LeaderboardManagement />
+            </AccessGuard>
+          }
+        />
+        <Route
+          path="player-stats"
+          element={
+            <AccessGuard permission="manage_matches" currentUser={currentUser}>
+              <PlayerStatsManagement />
             </AccessGuard>
           }
         />

@@ -1,42 +1,76 @@
-import React from 'react';
-import { AlertTriangle } from 'lucide-react';
+import React from 'react'
+import { AlertTriangle } from 'lucide-react'
 
-const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message }) => {
-  if (!isOpen) return null;
+const ConfirmationModal = ({
+  isOpen,
+  title,
+  message,
+  confirmText = 'Xác nhận',
+  cancelText = 'Hủy',
+  confirmButtonClass = 'bg-red-600 hover:bg-red-700',
+  isProcessing = false,
+  onConfirm,
+  onCancel,
+  onClose
+}) => {
+  if (!isOpen) {
+    return null
+  }
+
+  const handleCancel = () => {
+    if (isProcessing) {
+      return
+    }
+    if (onCancel) {
+      onCancel()
+    }
+    if (onClose) {
+      onClose()
+    }
+  }
+
+  const handleConfirm = () => {
+    if (isProcessing) {
+      return
+    }
+    if (onConfirm) {
+      onConfirm()
+    }
+  }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
-        <div className="flex items-start">
-          <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-100">
             <AlertTriangle className="h-6 w-6 text-red-600" aria-hidden="true" />
           </div>
-          <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-            <h3 className="text-lg leading-6 font-medium text-gray-900">{title}</h3>
-            <div className="mt-2">
-              <p className="text-sm text-gray-500">{message}</p>
-            </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+            <p className="mt-2 text-sm text-gray-600">{message}</p>
           </div>
         </div>
-        <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+        <div className="mt-6 flex items-center justify-end gap-3">
           <button
             type="button"
-            className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 sm:ml-3 sm:w-auto sm:text-sm"
-            onClick={() => { onConfirm(); onClose(); }}
+            onClick={handleCancel}
+            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 disabled:opacity-60"
+            disabled={isProcessing}
           >
-            Confirm
+            {cancelText}
           </button>
           <button
             type="button"
-            className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:w-auto sm:text-sm"
-            onClick={onClose}
+            onClick={handleConfirm}
+            className={`rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors disabled:opacity-60 ${confirmButtonClass}`}
+            disabled={isProcessing}
           >
-            Cancel
+            {isProcessing ? 'Đang xử lý...' : confirmText}
           </button>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default ConfirmationModal;
+export default ConfirmationModal

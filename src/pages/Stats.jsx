@@ -1,8 +1,50 @@
-import React, { useState } from 'react'
-import { Trophy, Target, Users, TrendingUp, Award, Zap, Shield, Clock } from 'lucide-react'
+import React, { useEffect, useMemo, useState } from 'react'
+import { Trophy, Target, Users, TrendingUp, Award, Zap, Shield, Clock, X } from 'lucide-react'
+import StatsService from '../layers/application/services/StatsService'
 
 const Stats = () => {
   const [selectedCategory, setSelectedCategory] = useState('goals')
+  const [seasonFilter, setSeasonFilter] = useState('2025-2026')
+  const [playerStats, setPlayerStats] = useState({
+    goals: [],
+    assists: [],
+    'clean-sheets': [],
+    minutes: []
+  })
+  const [statsLoading, setStatsLoading] = useState(false)
+  const [statsError, setStatsError] = useState(null)
+  const [playerSearch, setPlayerSearch] = useState('')
+  const [detailModalOpen, setDetailModalOpen] = useState(false)
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [detailData, setDetailData] = useState(null)
+
+  useEffect(() => {
+    let isMounted = true
+
+    const loadStats = async () => {
+      setStatsLoading(true)
+      setStatsError(null)
+      try {
+        const data = await StatsService.getPlayerStats({ season: seasonFilter })
+        if (isMounted) {
+          setPlayerStats(data)
+        }
+      } catch (error) {
+        if (isMounted) {
+          setStatsError('Unable to load player statistics right now.')
+        }
+      } finally {
+        if (isMounted) {
+          setStatsLoading(false)
+        }
+      }
+    }
+
+    loadStats()
+    return () => {
+      isMounted = false
+    }
+  }, [seasonFilter])
 
   const categories = [
     { id: 'goals', name: 'Goals', icon: Target },
@@ -11,175 +53,44 @@ const Stats = () => {
     { id: 'minutes', name: 'Minutes Played', icon: Clock }
   ]
 
-  const playerStats = {
-    goals: [
-      {
-        rank: 1,
-        player: 'Robert Lewandowski',
-        team: 'Barcelona',
-        teamLogo: '🔵',
-        value: 7,
-        matches: 6
-      },
-      {
-        rank: 2,
-        player: 'Viktor Gyökeres',
-        team: 'Sporting CP',
-        teamLogo: '🟢',
-        value: 5,
-        matches: 6
-      },
-      {
-        rank: 3,
-        player: 'Raphinha',
-        team: 'Barcelona',
-        teamLogo: '🔵',
-        value: 4,
-        matches: 6
-      },
-      {
-        rank: 4,
-        player: 'Harry Kane',
-        team: 'Bayern Munich',
-        teamLogo: '🔴',
-        value: 4,
-        matches: 6
-      },
-      {
-        rank: 5,
-        player: 'Serhou Guirassy',
-        team: 'Borussia Dortmund',
-        teamLogo: '🟡',
-        value: 4,
-        matches: 6
-      }
-    ],
-    assists: [
-      {
-        rank: 1,
-        player: 'Raphinha',
-        team: 'Barcelona',
-        teamLogo: '🔵',
-        value: 4,
-        matches: 6
-      },
-      {
-        rank: 2,
-        player: 'Mohamed Salah',
-        team: 'Liverpool',
-        teamLogo: '🔴',
-        value: 3,
-        matches: 6
-      },
-      {
-        rank: 3,
-        player: 'Jamal Musiala',
-        team: 'Bayern Munich',
-        teamLogo: '🔴',
-        value: 3,
-        matches: 6
-      },
-      {
-        rank: 4,
-        player: 'Bukayo Saka',
-        team: 'Arsenal',
-        teamLogo: '🔴',
-        value: 2,
-        matches: 6
-      },
-      {
-        rank: 5,
-        player: 'Luka Modrić',
-        team: 'Real Madrid',
-        teamLogo: '⚪',
-        value: 2,
-        matches: 6
-      }
-    ],
-    'clean-sheets': [
-      {
-        rank: 1,
-        player: 'Caoimhín Kelleher',
-        team: 'Liverpool',
-        teamLogo: '🔴',
-        value: 5,
-        matches: 6
-      },
-      {
-        rank: 2,
-        player: 'Yann Sommer',
-        team: 'Inter',
-        teamLogo: '⚫',
-        value: 4,
-        matches: 6
-      },
-      {
-        rank: 3,
-        player: 'David Raya',
-        team: 'Arsenal',
-        teamLogo: '🔴',
-        value: 4,
-        matches: 6
-      },
-      {
-        rank: 4,
-        player: 'Marco Bizot',
-        team: 'Brest',
-        teamLogo: '🔵',
-        value: 3,
-        matches: 6
-      },
-      {
-        rank: 5,
-        player: 'Gianluigi Donnarumma',
-        team: 'Paris Saint-Germain',
-        teamLogo: '🔵',
-        value: 3,
-        matches: 6
-      }
-    ],
-    minutes: [
-      {
-        rank: 1,
-        player: 'Caoimhín Kelleher',
-        team: 'Liverpool',
-        teamLogo: '🔴',
-        value: 540,
-        matches: 6
-      },
-      {
-        rank: 2,
-        player: 'Yann Sommer',
-        team: 'Inter',
-        teamLogo: '⚫',
-        value: 540,
-        matches: 6
-      },
-      {
-        rank: 3,
-        player: 'David Raya',
-        team: 'Arsenal',
-        teamLogo: '🔴',
-        value: 540,
-        matches: 6
-      },
-      {
-        rank: 4,
-        player: 'Virgil van Dijk',
-        team: 'Liverpool',
-        teamLogo: '🔴',
-        value: 540,
-        matches: 6
-      },
-      {
-        rank: 5,
-        player: 'William Saliba',
-        team: 'Arsenal',
-        teamLogo: '🔴',
-        value: 540,
-        matches: 6
-      }
-    ]
+  const seasonOptions = ['2025-2026', '2024-2025', '2023-2024']
+  const statsForCategory = useMemo(() => playerStats[selectedCategory] ?? [], [playerStats, selectedCategory])
+  const filteredStatsForCategory = useMemo(() => {
+    if (!playerSearch.trim()) {
+      return statsForCategory
+    }
+    const search = playerSearch.toLowerCase()
+    return statsForCategory.filter(
+      (player) =>
+        player.player?.toLowerCase().includes(search) ||
+        player.team?.toLowerCase().includes(search) ||
+        player.nationality?.toLowerCase().includes(search)
+    )
+  }, [playerSearch, statsForCategory])
+
+  const openPlayerDetail = async (player) => {
+    setDetailModalOpen(true)
+    setDetailLoading(true)
+    setDetailData(player)
+    if (!player?.id) {
+      setDetailLoading(false)
+      return
+    }
+    try {
+      const detail = await StatsService.getPlayerStatDetail(player.id)
+      setDetailData(detail ?? player)
+    } catch (error) {
+      console.error('Failed to load player detail', error)
+      setDetailData(player)
+    } finally {
+      setDetailLoading(false)
+    }
+  }
+
+  const closePlayerDetail = () => {
+    setDetailModalOpen(false)
+    setDetailData(null)
+    setDetailLoading(false)
   }
 
   const teamStats = [
@@ -291,8 +202,30 @@ const Stats = () => {
 
       {/* Player Statistics */}
       <div className="mb-12">
-        <h2 className="text-2xl font-bold text-uefa-dark mb-6">Player Statistics</h2>
-        
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <h2 className="text-2xl font-bold text-uefa-dark">Player Statistics</h2>
+          <div className="flex items-center space-x-3">
+            <span className="text-uefa-gray text-sm uppercase tracking-wide">Season</span>
+            <select
+              className="uefa-select bg-white text-uefa-dark w-48"
+              value={seasonFilter}
+              onChange={(event) => setSeasonFilter(event.target.value)}
+            >
+              {seasonOptions.map((season) => (
+                <option key={season} value={season}>
+                  {season}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {statsError && (
+          <div className="mb-4 p-4 rounded-uefa bg-red-50 text-sm text-red-700 border border-red-200">
+            {statsError}
+          </div>
+        )}
+
         {/* Category Tabs */}
         <div className="uefa-filter-tabs mb-6">
           {categories.map((category) => (
@@ -305,6 +238,18 @@ const Stats = () => {
               {category.name}
             </button>
           ))}
+        </div>
+
+        <div className="mb-4">
+          <div className="relative max-w-md">
+            <input
+              type="text"
+              placeholder="Search players, clubs or nationality..."
+              className="w-full rounded-uefa border border-gray-300 py-2 pl-3 pr-3 text-sm text-gray-700 focus:border-uefa-blue focus:outline-none"
+              value={playerSearch}
+              onChange={(event) => setPlayerSearch(event.target.value)}
+            />
+          </div>
         </div>
 
         {/* Player Stats Table */}
@@ -326,40 +271,145 @@ const Stats = () => {
               </tr>
             </thead>
             <tbody className="uefa-table-body">
-              {playerStats[selectedCategory].map((player) => (
-                <tr key={player.rank} className="uefa-table-row">
-                  <td className="uefa-table-cell text-center font-bold text-uefa-dark">
-                    {player.rank}
-                  </td>
-                  <td className="uefa-table-cell">
-                    <div className="font-semibold text-uefa-dark">{player.player}</div>
-                  </td>
-                  <td className="uefa-table-cell">
-                    <div className="flex items-center space-x-2">
-                      <div className="uefa-team-logo bg-gray-100 flex items-center justify-center text-sm w-6 h-6">
-                        {player.teamLogo}
-                      </div>
-                      <span className="text-uefa-dark">{player.team}</span>
-                    </div>
-                  </td>
-                  <td className="uefa-table-cell text-center font-bold text-lg text-uefa-blue">
-                    {selectedCategory === 'minutes' ? `${player.value}'` : player.value}
-                  </td>
-                  <td className="uefa-table-cell text-center text-uefa-dark">
-                    {player.matches}
-                  </td>
-                  <td className="uefa-table-cell text-center text-uefa-gray">
-                    {selectedCategory === 'minutes' 
-                      ? `${Math.round(player.value / player.matches)}'`
-                      : (player.value / player.matches).toFixed(2)
-                    }
+              {statsLoading && (
+                <tr>
+                  <td className="uefa-table-cell text-center py-8 text-uefa-gray" colSpan={6}>
+                    Loading player statistics...
                   </td>
                 </tr>
-              ))}
+              )}
+
+              {!statsLoading && filteredStatsForCategory.length === 0 && (
+                <tr>
+                  <td className="uefa-table-cell text-center py-8 text-uefa-gray" colSpan={6}>
+                    No statistics available for this season.
+                  </td>
+                </tr>
+              )}
+
+              {!statsLoading &&
+                filteredStatsForCategory.map((player) => (
+                  <tr
+                    key={`${player.id ?? player.rank}-${player.player}`}
+                    className="uefa-table-row cursor-pointer hover:bg-uefa-light-gray/60"
+                    onClick={() => openPlayerDetail(player)}
+                  >
+                    <td className="uefa-table-cell text-center font-bold text-uefa-dark">
+                      {player.rank}
+                    </td>
+                    <td className="uefa-table-cell">
+                      <div className="font-semibold text-uefa-dark">{player.player}</div>
+                    </td>
+                    <td className="uefa-table-cell">
+                      <div className="flex items-center space-x-2">
+                        <div className="uefa-team-logo bg-gray-100 flex items-center justify-center text-sm w-6 h-6">
+                          {player.teamLogo}
+                        </div>
+                        <span className="text-uefa-dark">{player.team}</span>
+                      </div>
+                    </td>
+                    <td className="uefa-table-cell text-center font-bold text-lg text-uefa-blue">
+                      {selectedCategory === 'minutes' ? `${player.value}'` : player.value}
+                    </td>
+                    <td className="uefa-table-cell text-center text-uefa-dark">
+                      {player.matches}
+                    </td>
+                    <td className="uefa-table-cell text-center text-uefa-gray">
+                      {selectedCategory === 'minutes'
+                        ? `${player.matches ? Math.round(player.value / player.matches) : 0}'`
+                        : player.matches
+                          ? (player.value / player.matches).toFixed(2)
+                          : '0.00'}
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
       </div>
+
+      {detailModalOpen && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-3xl rounded-uefa-lg bg-white p-6 shadow-uefa-xl relative">
+            <button
+              className="absolute right-4 top-4 rounded-full bg-gray-100 p-2 text-gray-500 hover:bg-gray-200"
+              onClick={closePlayerDetail}
+            >
+              <X className="h-4 w-4" />
+            </button>
+            {detailLoading ? (
+              <div className="flex items-center justify-center py-12 text-uefa-gray">
+                Loading profile...
+              </div>
+            ) : (
+              detailData && (
+                <div className="space-y-6">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center">
+                    <div className="h-24 w-24 overflow-hidden rounded-full bg-uefa-light-gray flex items-center justify-center text-2xl font-bold text-uefa-dark">
+                      {detailData.avatar ? (
+                        <img src={detailData.avatar} alt={detailData.player} className="h-full w-full object-cover" />
+                      ) : (
+                        detailData.player?.slice(0, 2)?.toUpperCase()
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-sm uppercase tracking-wide text-uefa-gray">{detailData.category}</div>
+                      <h3 className="text-2xl font-bold text-uefa-dark">{detailData.player}</h3>
+                      <p className="text-uefa-gray">
+                        {detailData.position ? `${detailData.position} • ` : ''}
+                        {detailData.team}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                    <div className="rounded-uefa bg-uefa-light-gray p-4">
+                      <div className="text-sm text-uefa-gray">Statistic</div>
+                      <div className="text-2xl font-bold text-uefa-dark">
+                        {detailData.category === 'minutes' ? `${detailData.value}'` : detailData.value}
+                      </div>
+                    </div>
+                    <div className="rounded-uefa bg-uefa-light-gray p-4">
+                      <div className="text-sm text-uefa-gray">Matches</div>
+                      <div className="text-2xl font-bold text-uefa-dark">{detailData.matches}</div>
+                    </div>
+                    <div className="rounded-uefa bg-uefa-light-gray p-4">
+                      <div className="text-sm text-uefa-gray">Nationality</div>
+                      <div className="text-lg font-semibold text-uefa-dark">
+                        {detailData.nationality ?? 'Updating'}
+                      </div>
+                    </div>
+                    <div className="rounded-uefa bg-uefa-light-gray p-4">
+                      <div className="text-sm text-uefa-gray">Season</div>
+                      <div className="text-lg font-semibold text-uefa-dark">{detailData.season}</div>
+                    </div>
+                  </div>
+
+                  {detailData.recentMatches && detailData.recentMatches.length > 0 && (
+                    <div>
+                      <h4 className="mb-3 text-sm font-semibold text-uefa-gray uppercase tracking-wide">
+                        Recent Matches
+                      </h4>
+                      <div className="space-y-2">
+                        {detailData.recentMatches.map((match, index) => (
+                          <div
+                            key={`${match.opponent}-${index}`}
+                            className="flex items-center justify-between rounded-uefa border border-uefa-light-gray px-4 py-2 text-sm"
+                          >
+                            <div className="font-medium text-uefa-dark">{match.opponent}</div>
+                            <div className="text-uefa-gray">{match.result}</div>
+                            <div className="font-semibold text-uefa-blue">{match.contribution}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Team Statistics */}
       <div>

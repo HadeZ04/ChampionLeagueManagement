@@ -1,159 +1,83 @@
-import React from 'react'
-import { Calendar, Clock, Tag, ArrowRight, Eye, Share2 } from 'lucide-react'
+import React from 'react';
+import { Calendar, Clock, Tag, ArrowRight } from 'lucide-react';
 
 const NewsCard = ({ article, featured = false }) => {
-  const formatDate = (dateString) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-GB', {
+  const formatDate = (dateString) =>
+    new Date(dateString).toLocaleDateString('en-GB', {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
-    })
-  }
+    });
 
-  const getCategoryColor = (category) => {
-    switch (category) {
-      case 'matches':
-        return 'bg-uefa-green text-white'
-      case 'teams':
-        return 'bg-uefa-blue text-white'
-      case 'players':
-        return 'bg-uefa-purple text-white'
-      case 'draws':
-        return 'bg-uefa-gold text-uefa-black'
-      case 'awards':
-        return 'bg-uefa-red text-white'
-      default:
-        return 'bg-uefa-gray text-white'
-    }
-  }
+  const categoryColors = {
+    matches: 'bg-[#0055FF]/10 text-[#0055FF]',
+    teams: 'bg-[#8454FF]/10 text-[#8454FF]',
+    players: 'bg-[#00E5FF]/10 text-[#00E5FF]'
+  };
 
   if (featured) {
     return (
-      <article className="uefa-card overflow-hidden group hover:shadow-2xl transition-all duration-500">
-        {/* Featured Image */}
-        <div className="relative h-48 bg-gradient-to-br from-uefa-blue to-uefa-light-blue overflow-hidden">
-          <div className="absolute inset-0 bg-black/20"></div>
-          <div className="absolute top-4 left-4">
-            <span className="bg-uefa-red text-white px-3 py-1 rounded-full text-xs font-bold uppercase">
-              Featured
-            </span>
-          </div>
-          <div className="absolute top-4 right-4 flex space-x-2">
-            <button className="p-2 bg-white/20 backdrop-blur-sm rounded-full text-white hover:bg-white/30 transition-colors">
-              <Share2 size={16} />
-            </button>
-            <button className="p-2 bg-white/20 backdrop-blur-sm rounded-full text-white hover:bg-white/30 transition-colors">
-              <Eye size={16} />
-            </button>
-          </div>
-          <div className="absolute bottom-4 left-4 text-white">
-            <div className="flex items-center space-x-3 text-sm">
-              <div className="flex items-center space-x-1">
+      <article className="glass-card overflow-hidden group">
+        <div className="h-48 bg-gradient-to-br from-[#0055FF]/15 via-[#00E5FF]/10 to-[#8454FF]/15 relative">
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent" />
+          <div className="absolute bottom-4 left-4 space-y-2 text-white">
+            <p className="flex items-center gap-3 text-sm">
+              <span className="flex items-center gap-1">
                 <Calendar size={14} />
-                <span>{formatDate(article.date)}</span>
-              </div>
-              <div className="flex items-center space-x-1">
+                {formatDate(article.date)}
+              </span>
+              <span className="flex items-center gap-1">
                 <Clock size={14} />
-                <span>{article.time}</span>
-              </div>
-            </div>
+                {article.time}
+              </span>
+            </p>
+            <span className="text-xs uppercase tracking-[0.35em] text-white/70">{article.category}</span>
           </div>
         </div>
-
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${getCategoryColor(article.category)}`}>
-              {article.category}
-            </span>
-            <div className="text-2xl">{article.image}</div>
-          </div>
-          
-          <h3 className="text-xl font-bold text-uefa-dark mb-3 group-hover:text-uefa-blue transition-colors cursor-pointer line-clamp-2">
+        <div className="p-6 space-y-4">
+          <h3 className="text-2xl font-semibold text-slate-900 group-hover:text-[#0055FF] transition-colors">
             {article.title}
           </h3>
-          
-          <p className="text-uefa-gray mb-4 leading-relaxed line-clamp-3">
-            {article.summary}
-          </p>
-          
+          <p className="text-slate-600">{article.summary}</p>
           <div className="flex items-center justify-between">
-            <div className="flex flex-wrap gap-2">
-              {article.tags.slice(0, 2).map((tag, index) => (
-                <span key={index} className="bg-uefa-light-gray text-uefa-dark-gray px-2 py-1 rounded text-xs flex items-center">
-                  <Tag size={10} className="mr-1" />
-                  {tag}
+            <div className="flex flex-wrap gap-2 text-xs text-slate-500">
+              {article.tags.map(tag => (
+                <span key={tag} className="px-3 py-1 rounded-2xl bg-slate-100 border border-slate-200 flex items-center gap-1">
+                  <Tag size={10} /> {tag}
                 </span>
               ))}
             </div>
-            <button className="flex items-center space-x-2 text-uefa-blue hover:text-uefa-dark transition-colors font-medium">
-              <span>Read More</span>
-              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+            <button className="flex items-center gap-2 text-[#0055FF] text-sm uppercase tracking-[0.3em]">
+              Read <ArrowRight size={14} />
             </button>
           </div>
         </div>
       </article>
-    )
+    );
   }
 
   return (
-    <article className="uefa-card p-6 group hover:shadow-xl transition-all duration-300">
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="flex-shrink-0">
-          <div className="w-20 h-20 bg-gradient-to-br from-uefa-light-gray to-uefa-medium-gray rounded-uefa flex items-center justify-center text-3xl group-hover:scale-110 transition-transform duration-300">
-            {article.image}
-          </div>
-        </div>
-        
-        <div className="flex-1">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-3">
-              <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${getCategoryColor(article.category)}`}>
-                {article.category}
-              </span>
-              <div className="flex items-center space-x-2 text-uefa-gray text-sm">
-                <Calendar size={14} />
-                <span>{formatDate(article.date)}</span>
-                <Clock size={14} />
-                <span>{article.time}</span>
-              </div>
-            </div>
-            <div className="flex space-x-2">
-              <button className="p-1 text-uefa-gray hover:text-uefa-blue transition-colors">
-                <Share2 size={14} />
-              </button>
-              <button className="p-1 text-uefa-gray hover:text-uefa-blue transition-colors">
-                <Eye size={14} />
-              </button>
-            </div>
-          </div>
-          
-          <h3 className="text-lg font-bold text-uefa-dark mb-2 group-hover:text-uefa-blue transition-colors cursor-pointer line-clamp-2">
-            {article.title}
-          </h3>
-          
-          <p className="text-uefa-gray mb-3 leading-relaxed line-clamp-2">
-            {article.summary}
-          </p>
-          
-          <div className="flex items-center justify-between">
-            <div className="flex flex-wrap gap-2">
-              {article.tags.map((tag, index) => (
-                <span key={index} className="bg-uefa-light-gray text-uefa-dark-gray px-2 py-1 rounded text-xs flex items-center">
-                  <Tag size={10} className="mr-1" />
-                  {tag}
-                </span>
-              ))}
-            </div>
-            <button className="flex items-center space-x-2 text-uefa-blue hover:text-uefa-dark transition-colors font-medium">
-              <span>Read More</span>
-              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
-        </div>
+    <article className="glass-card p-6 space-y-3 group">
+      <div className="flex items-center gap-3 text-xs text-slate-500">
+        <span className={`px-3 py-1 rounded-full ${categoryColors[article.category] || 'bg-slate-100 text-slate-500'}`}>
+          {article.category}
+        </span>
+        <span className="flex items-center gap-1">
+          <Calendar size={12} />
+          {formatDate(article.date)}
+        </span>
+        <span className="flex items-center gap-1">
+          <Clock size={12} />
+          {article.time}
+        </span>
       </div>
+      <h3 className="text-xl font-semibold text-slate-900 group-hover:text-[#0055FF] transition-colors">{article.title}</h3>
+      <p className="text-slate-500 text-sm">{article.summary}</p>
+      <button className="flex items-center gap-2 text-[#0055FF] text-xs uppercase tracking-[0.3em]">
+        Read More <ArrowRight size={12} />
+      </button>
     </article>
-  )
-}
+  );
+};
 
-export default NewsCard
+export default NewsCard;

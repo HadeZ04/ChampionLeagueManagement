@@ -10,31 +10,63 @@ class TeamsService {
         limit: filters.limit || APP_CONFIG.UI.PAGINATION.DEFAULT_PAGE_SIZE,
         country: filters.country || '',
         search: filters.search || '',
-        status: filters.status || 'active'
+        status: filters.status || '',
+        season: filters.season || ''
       }
 
       const response = await ApiService.get(APP_CONFIG.API.ENDPOINTS.TEAMS.LIST, params)
+      
+      // Map backend data structure to frontend structure
+      const teams = (response.data || []).map(team => ({
+        id: team.team_id,
+        name: team.name,
+        short_name: team.short_name,
+        code: team.code,
+        city: team.city,
+        country: team.country,
+        founded_year: team.founded_year,
+        status: team.status,
+        governing_body: team.governing_body,
+        description: team.description,
+        playerCount: 0 // Will be populated separately if needed
+      }))
+      
       return {
-        teams: response.data || [],
+        teams,
         pagination: response.pagination || {},
         total: response.total || 0
       }
     } catch (error) {
       console.error('Failed to fetch teams:', error)
-      // Return mock data for development
-      return this.getMockTeams(filters)
+      throw error
     }
   }
 
   // Get team by ID
-  async getTeamById(teamId) {
+  async getTeamById(teamId, query = {}) {
     try {
       const endpoint = APP_CONFIG.API.ENDPOINTS.TEAMS.DETAIL.replace(':id', teamId)
-      const response = await ApiService.get(endpoint)
-      return response.data
+      const response = await ApiService.get(endpoint, query)
+      const team = response.data
+      
+      // Map backend data structure to frontend structure
+      return {
+        id: team.team_id,
+        name: team.name,
+        short_name: team.short_name,
+        code: team.code,
+        city: team.city,
+        country: team.country,
+        founded_year: team.founded_year,
+        status: team.status,
+        governing_body: team.governing_body,
+        description: team.description,
+        home_stadium_id: team.home_stadium_id,
+        home_kit_description: team.home_kit_description
+      }
     } catch (error) {
       console.error('Failed to fetch team:', error)
-      return this.getMockTeam(teamId)
+      throw error
     }
   }
 
@@ -74,10 +106,10 @@ class TeamsService {
   }
 
   // Get team players
-  async getTeamPlayers(teamId) {
+  async getTeamPlayers(teamId, query = {}) {
     try {
       const endpoint = APP_CONFIG.API.ENDPOINTS.TEAMS.PLAYERS.replace(':id', teamId)
-      const response = await ApiService.get(endpoint)
+      const response = await ApiService.get(endpoint, query)
       return response.data || []
     } catch (error) {
       console.error('Failed to fetch team players:', error)
@@ -176,6 +208,18 @@ class TeamsService {
   getMockTeam(teamId) {
     const mockTeams = this.getMockTeams().teams
     return mockTeams.find(team => team.id === parseInt(teamId)) || null
+  }
+
+  async getCompetitionSeasons(fromYear = 2020) {
+    const response = await ApiService.get(APP_CONFIG.API.ENDPOINTS.TEAMS.SEASONS, { fromYear })
+    return response.data || []
+  }
+
+  async getCompetitionStandings(filters = {}) {
+    const response = await ApiService.get(APP_CONFIG.API.ENDPOINTS.TEAMS.STANDINGS, {
+      season: filters.season || ''
+    })
+    return response.data
   }
 }
 

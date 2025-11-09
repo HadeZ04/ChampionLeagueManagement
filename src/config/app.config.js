@@ -1,3 +1,18 @@
+const ENV = (typeof import.meta !== 'undefined' && import.meta.env)
+  ? import.meta.env
+  : (typeof process !== 'undefined' ? process.env : {});
+
+const getEnvVar = (keys, fallback) => {
+  const lookupKeys = Array.isArray(keys) ? keys : [keys];
+  for (const key of lookupKeys) {
+    const value = ENV?.[key];
+    if (value !== undefined && value !== null && value !== '') {
+      return value;
+    }
+  }
+  return fallback;
+};
+
 // Application Configuration
 export const APP_CONFIG = {
   // Environment Configuration
@@ -5,7 +20,7 @@ export const APP_CONFIG = {
   
   // API Configuration
   API: {
-    BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:5173/api',
+    BASE_URL: getEnvVar(['VITE_API_URL', 'REACT_APP_API_URL'], 'http://localhost:3000/api'),
     TIMEOUT: 30000,
     RETRY_ATTEMPTS: 3,
     ENDPOINTS: {
@@ -14,7 +29,8 @@ export const APP_CONFIG = {
         LOGIN: '/auth/login',
         LOGOUT: '/auth/logout',
         REFRESH: '/auth/refresh',
-        PROFILE: '/auth/profile'
+        PROFILE: '/auth/me',
+        REGISTER: '/auth/register'
       },
       // Teams
       TEAMS: {
@@ -23,7 +39,9 @@ export const APP_CONFIG = {
         CREATE: '/teams',
         UPDATE: '/teams/:id',
         DELETE: '/teams/:id',
-        PLAYERS: '/teams/:id/players'
+        PLAYERS: '/teams/:id/players',
+        SEASONS: '/teams/seasons',
+        STANDINGS: '/teams/standings'
       },
       // Matches
       MATCHES: {
@@ -59,10 +77,60 @@ export const APP_CONFIG = {
         DELETE: '/news/:id',
         CATEGORIES: '/news/categories'
       },
+      // Audit logging
+      AUDIT: {
+        LIST: '/audit-events'
+      },
+      // Admin - Users & Roles
+      USERS: {
+        LIST: '/users',
+        DETAIL: '/users/:id',
+        CREATE: '/users',
+        UPDATE: '/users/:id',
+        DELETE: '/users/:id',
+        ROLES: '/users/:id/roles',
+        REMOVE_ROLE: '/users/:id/roles/:roleId'
+      },
+      ROLES: {
+        LIST: '/roles',
+        CREATE: '/roles',
+        PERMISSIONS: '/roles/:id/permissions'
+      },
+      PERMISSIONS: {
+        LIST: '/permissions'
+      },
+      RULESETS: {
+        LIST: '/rulesets',
+        DETAIL: '/rulesets/:id',
+        CREATE: '/rulesets',
+        UPDATE: '/rulesets/:id',
+        DELETE: '/rulesets/:id',
+        PUBLISH: '/rulesets/:id/publish',
+        PLAYER_CONSTRAINTS: '/rulesets/:id/player-constraints',
+        SCORING_RULES: '/rulesets/:id/scoring-rules',
+        RANKING_RULES: '/rulesets/:id/ranking-rules',
+        ASSIGN_SEASON: '/rulesets/seasons/:seasonId/assign'
+      },
+      SEASONS: {
+        LIST: '/seasons',
+        DETAIL: '/seasons/:id',
+        CREATE: '/seasons',
+        UPDATE: '/seasons/:id',
+        DELETE: '/seasons/:id',
+        METADATA: '/seasons/metadata'
+      },
+      LEADERBOARD: {
+        LIST: '/leaderboard',
+        DETAIL: '/leaderboard/:id',
+        CREATE: '/leaderboard',
+        UPDATE: '/leaderboard/:id',
+        DELETE: '/leaderboard/:id'
+      },
       // Statistics
       STATS: {
         OVERVIEW: '/stats/overview',
         PLAYERS: '/stats/players',
+        PLAYER_DETAIL: '/stats/players/:id',
         TEAMS: '/stats/teams',
         MATCHES: '/stats/matches'
       },
@@ -79,11 +147,11 @@ export const APP_CONFIG = {
   DATABASE: {
     TYPE: 'postgresql', // postgresql | mysql | mongodb
     CONNECTION: {
-      HOST: process.env.DB_HOST || 'localhost',
-      PORT: process.env.DB_PORT || 5432,
-      DATABASE: process.env.DB_NAME || 'uefa_champions_league',
-      USERNAME: process.env.DB_USER || 'uefa_admin',
-      PASSWORD: process.env.DB_PASS || 'uefa2025'
+      HOST: getEnvVar('DB_HOST', 'localhost'),
+      PORT: getEnvVar('DB_PORT', 5432),
+      DATABASE: getEnvVar('DB_NAME', 'uefa_champions_league'),
+      USERNAME: getEnvVar('DB_USER', 'uefa_admin'),
+      PASSWORD: getEnvVar('DB_PASS', 'uefa2025')
     },
     POOL: {
       MIN: 2,
@@ -95,7 +163,7 @@ export const APP_CONFIG = {
   // Security Configuration
   SECURITY: {
     JWT: {
-      SECRET: process.env.JWT_SECRET || 'uefa_champions_league_secret_2025',
+      SECRET: getEnvVar('JWT_SECRET', 'uefa_champions_league_secret_2025'),
       EXPIRES_IN: '24h',
       REFRESH_EXPIRES_IN: '7d'
     },
@@ -103,7 +171,7 @@ export const APP_CONFIG = {
       SALT_ROUNDS: 12
     },
     CORS: {
-      ORIGIN: process.env.CORS_ORIGIN || ['http://localhost:3000', 'http://localhost:3001'],
+      ORIGIN: getEnvVar('CORS_ORIGIN', ['http://localhost:3000', 'http://localhost:3001']),
       CREDENTIALS: true
     },
     RATE_LIMITING: {
@@ -128,21 +196,21 @@ export const APP_CONFIG = {
   UPLOAD: {
     MAX_SIZE: 10 * 1024 * 1024, // 10MB
     ALLOWED_TYPES: ['image/jpeg', 'image/png', 'image/webp', 'video/mp4'],
-    STORAGE_PATH: process.env.UPLOAD_PATH || './uploads',
-    CDN_URL: process.env.CDN_URL || ''
+    STORAGE_PATH: getEnvVar('UPLOAD_PATH', './uploads'),
+    CDN_URL: getEnvVar('CDN_URL', '')
   },
 
   // Notification Configuration
   NOTIFICATIONS: {
     EMAIL: {
-      SMTP_HOST: process.env.SMTP_HOST,
-      SMTP_PORT: process.env.SMTP_PORT || 587,
-      SMTP_USER: process.env.SMTP_USER,
-      SMTP_PASS: process.env.SMTP_PASS
+      SMTP_HOST: getEnvVar('SMTP_HOST'),
+      SMTP_PORT: getEnvVar('SMTP_PORT', 587),
+      SMTP_USER: getEnvVar('SMTP_USER'),
+      SMTP_PASS: getEnvVar('SMTP_PASS')
     },
     PUSH: {
-      VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
-      VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY
+      VAPID_PUBLIC_KEY: getEnvVar('VAPID_PUBLIC_KEY'),
+      VAPID_PRIVATE_KEY: getEnvVar('VAPID_PRIVATE_KEY')
     }
   },
 

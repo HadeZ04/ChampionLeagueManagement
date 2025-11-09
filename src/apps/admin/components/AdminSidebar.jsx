@@ -38,6 +38,8 @@ const MENU_SECTIONS = [
       // 2. Thêm link mới vào đây
       { name: 'Match Day', path: '/admin/matches-today', icon: PlayCircle, permission: 'manage_matches' },
       { name: 'Players', path: '/admin/players', icon: UserCheck, permission: 'manage_teams' },
+      { name: 'Leaderboard', path: '/admin/leaderboard', icon: Trophy, permission: 'manage_matches' },
+      { name: 'Player Stats', path: '/admin/player-stats', icon: Target, permission: 'manage_matches' },
       { name: 'Standings', path: '/admin/standings', icon: Trophy }
     ]
   },

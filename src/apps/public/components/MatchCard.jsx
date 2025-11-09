@@ -1,164 +1,87 @@
-
-import StandingsTable from './StandingsTable';
-import React from 'react'
-import { Clock, MapPin, Calendar, Users, Tv, Thermometer } from 'lucide-react'
+import React from 'react';
+import { Calendar, Clock, MapPin, Users } from 'lucide-react';
 
 const MatchCard = ({ match }) => {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'live':
-        return <span className="uefa-live-badge animate-pulse">LIVE</span>
+        return <span className="status-pill text-[#F05252]">Live</span>;
       case 'finished':
-        return <span className="bg-uefa-gray text-white px-2 py-1 rounded text-xs font-bold">FT</span>
-      case 'upcoming':
-        return <span className="bg-uefa-blue text-white px-2 py-1 rounded text-xs font-bold">UPCOMING</span>
+        return <span className="status-pill text-slate-500">FT</span>;
       default:
-        return null
+        return <span className="status-pill text-[#0055FF]">Upcoming</span>;
     }
-  }
+  };
 
-  const formatTime = (time) => {
-    return new Date(`2000-01-01T${time}`).toLocaleTimeString('en-GB', {
+  const formatTime = (time) =>
+    new Date(`2000-01-01T${time}`).toLocaleTimeString('en-GB', {
       hour: '2-digit',
       minute: '2-digit'
-    })
-  }
+    });
 
   return (
-    <div className="uefa-match-card group">
-      {/* Match Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <div className="flex items-center space-x-2 text-uefa-gray text-sm">
+    <article className="relative overflow-hidden rounded-3xl border border-slate-100 bg-white p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg">
+      <span className="absolute left-0 top-4 bottom-4 w-1 rounded-full bg-gradient-to-b from-[#0055FF] via-[#00E5FF] to-[#8454FF]" />
+      <div className="flex items-center justify-between mb-4 text-sm text-slate-500">
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-1">
             <Calendar size={14} />
-            <span>{new Date(match.date).toLocaleDateString('en-GB')}</span>
+            {new Date(match.date).toLocaleDateString('en-GB')}
+          </span>
+          <span className="flex items-center gap-1">
             <Clock size={14} />
-            <span>{formatTime(match.time)}</span>
-          </div>
-          {getStatusBadge(match.status)}
+            {formatTime(match.time)}
+          </span>
         </div>
-        <div className="text-uefa-gray text-sm font-medium">
-          {match.competition} • MD{match.matchday}
-        </div>
+        {getStatusBadge(match.status)}
       </div>
-
-      {/* Teams and Score */}
-      <div className="flex items-center justify-between mb-4">
-        {/* Home Team */}
-        <div className="flex items-center space-x-3 flex-1">
-          <img 
-            src={match.homeTeam.logo} 
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3 flex-1">
+          <img
+            src={match.homeTeam.logo}
             alt={match.homeTeam.name}
-            className="w-10 h-10 object-contain group-hover:scale-110 transition-transform duration-300"
-            onError={(e) => {
-              e.target.src = `data:image/svg+xml;base64,${btoa(`<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="20" fill="#003399"/><text x="20" y="25" text-anchor="middle" fill="white" font-size="10" font-weight="bold">${match.homeTeam.shortName}</text></svg>`)}`
-            }}
+            className="h-10 w-10 object-contain"
           />
           <div>
-            <div className="uefa-team-name text-lg font-semibold">{match.homeTeam.name}</div>
-            <div className="text-uefa-gray text-sm">{match.homeTeam.shortName}</div>
+            <p className="text-slate-900 font-semibold">{match.homeTeam.name}</p>
+            <p className="text-xs text-slate-400 uppercase tracking-[0.3em]">{match.homeTeam.shortName}</p>
           </div>
         </div>
-
-        {/* Score or Time */}
-        <div className="flex items-center justify-center min-w-[100px] px-4">
+        <div className="text-center min-w-[120px] score-flip">
           {match.status === 'finished' && match.score ? (
-            <div className="text-center">
-              <div className="uefa-score text-3xl font-bold">
-                {match.score.home} - {match.score.away}
-              </div>
-              <div className="text-xs text-uefa-gray">Full Time</div>
-            </div>
-          ) : match.status === 'live' ? (
-            <div className="text-center">
-              <div className="uefa-score text-3xl font-bold text-uefa-red">
-                {match.score?.home || 0} - {match.score?.away || 0}
-              </div>
-              <div className="text-xs text-uefa-red font-bold animate-pulse">
-                {match.minute || '90'}'
-              </div>
-            </div>
+            <p className="text-3xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#0055FF] to-[#00E5FF]">
+              {match.score.home} - {match.score.away}
+            </p>
           ) : (
-            <div className="text-center">
-              <div className="text-uefa-blue font-bold text-lg">{formatTime(match.time)}</div>
-              <div className="text-xs text-uefa-gray">Kick-off</div>
-            </div>
+            <p className="text-xl font-semibold text-slate-900">{formatTime(match.time)}</p>
           )}
+          <p className="text-xs text-slate-400 uppercase tracking-[0.3em]">{match.status === 'live' ? 'Live' : 'Kick-off'}</p>
         </div>
-
-        {/* Away Team */}
-        <div className="flex items-center space-x-3 flex-1 justify-end">
+        <div className="flex items-center gap-3 flex-1 justify-end">
           <div className="text-right">
-            <div className="uefa-team-name text-lg font-semibold">{match.awayTeam.name}</div>
-            <div className="text-uefa-gray text-sm">{match.awayTeam.shortName}</div>
+            <p className="text-slate-900 font-semibold">{match.awayTeam.name}</p>
+            <p className="text-xs text-slate-400 uppercase tracking-[0.3em]">{match.awayTeam.shortName}</p>
           </div>
-          <img 
-            src={match.awayTeam.logo} 
-            alt={match.awayTeam.name}
-            className="w-10 h-10 object-contain group-hover:scale-110 transition-transform duration-300"
-            onError={(e) => {
-              e.target.src = `data:image/svg+xml;base64,${btoa(`<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="20" fill="#003399"/><text x="20" y="25" text-anchor="middle" fill="white" font-size="10" font-weight="bold">${match.awayTeam.shortName}</text></svg>`)}`
-            }}
-          />
+          <img src={match.awayTeam.logo} alt={match.awayTeam.name} className="h-10 w-10 object-contain" />
         </div>
       </div>
-
-      {/* Match Details */}
-      <div className="flex items-center justify-between pt-4 border-t border-uefa-medium-gray">
-        <div className="flex items-center space-x-4 text-uefa-gray text-sm">
-          <div className="flex items-center space-x-1">
-            <MapPin size={14} />
-            <span>{match.venue}</span>
-          </div>
-          <div className="flex items-center space-x-1">
-            <Users size={14} />
-            <span>{match.city}</span>
-          </div>
-          {match.temperature && (
-            <div className="flex items-center space-x-1">
-              <Thermometer size={14} />
-              <span>{match.temperature}</span>
-            </div>
-          )}
+      <div className="flex items-center justify-between text-xs text-slate-500">
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-1">
+            <MapPin size={13} />
+            {match.venue}
+          </span>
+          <span className="flex items-center gap-1">
+            <Users size={13} />
+            {match.city}
+          </span>
         </div>
-        
-        <div className="flex space-x-2">
-          {match.status === 'upcoming' && (
-            <>
-              <button className="text-uefa-blue hover:text-uefa-dark text-sm font-medium transition-colors">
-                Preview
-              </button>
-              <button className="text-uefa-blue hover:text-uefa-dark text-sm font-medium transition-colors">
-                H2H
-              </button>
-            </>
-          )}
-          
-          {match.status === 'finished' && (
-            <>
-              <button className="text-uefa-blue hover:text-uefa-dark text-sm font-medium transition-colors">
-                Report
-              </button>
-              <button className="text-uefa-blue hover:text-uefa-dark text-sm font-medium transition-colors">
-                Highlights
-              </button>
-            </>
-          )}
-          
-          {match.status === 'live' && (
-            <>
-              <button className="text-uefa-red hover:text-uefa-dark text-sm font-medium transition-colors animate-pulse">
-                Watch Live
-              </button>
-              <button className="text-uefa-blue hover:text-uefa-dark text-sm font-medium transition-colors">
-                Stats
-              </button>
-            </>
-          )}
-        </div>
+        <button className="text-[#0055FF] text-xs uppercase tracking-[0.4em]">
+          Details
+        </button>
       </div>
-    </div>
-  )
-}
+    </article>
+  );
+};
 
-export default StandingsTable
+export default MatchCard;

@@ -1,419 +1,300 @@
-import React, { useState } from 'react'
-import { ChevronDown, Trophy, Target, Users, TrendingUp, TrendingDown, Minus, Download, Share2 } from 'lucide-react'
-import StandingsTable from '../components/StandingsTable'
-import TopScorers from '../components/TopScorers'
-import UpcomingMatches from '../components/UpcomingMatches'
-import LiveTicker from '../components/LiveTicker'
+import React, { useEffect, useMemo, useState } from 'react';
+import { Trophy, Download, Share2, TrendingUp, Users, Target } from 'lucide-react';
+import StandingsTable from '../components/StandingsTable';
+import TopScorers from '../components/TopScorers';
+import UpcomingMatches from '../components/UpcomingMatches';
+import TeamsService from '../../../layers/application/services/TeamsService';
 
-// --- Giả lập API Service ---
-const FAKE_STANDINGS_DATA = [
-  { position: 1, change: 0, country: 'ENG', logo: 'https://img.uefa.com/imgml/TP/teams/logos/50x50/7889.png', team: 'Liverpool', played: 6, won: 6, drawn: 0, lost: 0, goalsFor: 13, goalsAgainst: 1, goalDifference: 12, points: 18, form: ['W', 'W', 'W', 'W', 'W'], status: 'qualified' },
-  { position: 2, change: 1, country: 'ESP', logo: 'https://img.uefa.com/imgml/TP/teams/logos/50x50/50080.png', team: 'Barcelona', played: 6, won: 5, drawn: 0, lost: 1, goalsFor: 21, goalsAgainst: 7, goalDifference: 14, points: 15, form: ['W', 'L', 'W', 'W', 'W'], status: 'qualified' },
-  // ...dữ liệu này được trả về từ backend sau khi tính toán
+const phases = [
+  { id: 'league', name: 'League Phase', icon: Users },
+  { id: 'knockout', name: 'Knockout Phase', icon: Target }
 ];
-const standingsService = {
-  getStandings: async (seasonId) => new Promise(resolve => setTimeout(() => resolve({ data: FAKE_STANDINGS_DATA }), 500)),
-};
-// --- Hết giả lập ---
 
+const groups = [
+  { id: 'all', name: 'All Teams', count: 36 },
+  { id: 'qualified', name: 'Qualified', count: 8 },
+  { id: 'playoff', name: 'Playoff', count: 16 },
+  { id: 'eliminated', name: 'Eliminated', count: 12 }
+];
 
 const StandingsPage = () => {
-  const [selectedPhase, setSelectedPhase] = useState('league')
-  const [selectedGroup, setSelectedGroup] = useState('all')
-  const [showLiveTicker, setShowLiveTicker] = useState(true)
+  const [selectedPhase, setSelectedPhase] = useState('league');
+  const [selectedGroup, setSelectedGroup] = useState('all');
+  const [seasons, setSeasons] = useState([]);
+  const [selectedSeason, setSelectedSeason] = useState('');
+  const [standings, setStandings] = useState(null);
+  const [isLoadingSeasons, setIsLoadingSeasons] = useState(true);
+  const [isLoadingStandings, setIsLoadingStandings] = useState(true);
+  const [error, setError] = useState(null);
 
-  const phases = [
-    { id: 'league', name: 'League Phase', active: true },
-    { id: 'knockout', name: 'Knockout Phase', active: false },
-  ]
+  useEffect(() => {
+    const loadSeasons = async () => {
+      setIsLoadingSeasons(true);
+      try {
+        const data = await TeamsService.getCompetitionSeasons(2020);
+        setSeasons(data);
+        if (data.length) {
+          setSelectedSeason(String(data[0].year));
+        }
+      } catch (err) {
+        console.error('Failed to fetch seasons', err);
+        setError('Không thể tải danh sách mùa giải.');
+      } finally {
+        setIsLoadingSeasons(false);
+      }
+    };
 
-  const groups = [
-    { id: 'all', name: 'All Teams' },
-    { id: 'qualified', name: 'Qualified' },
-    { id: 'playoff', name: 'Playoff' },
-    { id: 'eliminated', name: 'Eliminated' },
-  ]
+    loadSeasons();
+  }, []);
 
-  const standings = [
-    {
-      position: 1,
-      team: 'Liverpool',
-      logo: 'https://img.uefa.com/imgml/TP/teams/logos/50x50/7889.png',
-      country: 'ENG',
-      countryFlag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-      played: 6,
-      won: 6,
-      drawn: 0,
-      lost: 0,
-      goalsFor: 13,
-      goalsAgainst: 1,
-      goalDifference: 12,
-      points: 18,
-      form: ['W', 'W', 'W', 'W', 'W'],
-      status: 'qualified',
+  useEffect(() => {
+    if (!selectedSeason) return;
+
+    const loadStandings = async () => {
+      setIsLoadingStandings(true);
+      try {
+        const data = await TeamsService.getCompetitionStandings({ season: selectedSeason });
+        setStandings(data);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch standings', err);
+        setError('Không thể tải bảng xếp hạng.');
+      } finally {
+        setIsLoadingStandings(false);
+      }
+    };
+
+    loadStandings();
+  }, [selectedSeason]);
+
+  const formattedStandings = useMemo(() => {
+    if (!standings?.table) return [];
+    return standings.table.map((row) => ({
+      position: row.position,
       change: 0,
-      nextMatch: 'vs Lille (H)',
-      coefficient: 89.000
-    },
-    {
-      position: 2,
-      team: 'Barcelona',
-      logo: 'https://img.uefa.com/imgml/TP/teams/logos/50x50/50080.png',
-      country: 'ESP',
-      countryFlag: '🇪🇸',
-      played: 6,
-      won: 5,
-      drawn: 0,
-      lost: 1,
-      goalsFor: 21,
-      goalsAgainst: 7,
-      goalDifference: 14,
-      points: 15,
-      form: ['W', 'W', 'L', 'W', 'W'],
-      status: 'qualified',
-      change: 1,
-      nextMatch: 'vs Atalanta (H)',
-      coefficient: 86.000
-    },
-    {
-      position: 3,
-      team: 'Arsenal',
-      logo: 'https://img.uefa.com/imgml/TP/teams/logos/50x50/52280.png',
-      country: 'ENG',
-      countryFlag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-      played: 6,
-      won: 4,
-      drawn: 1,
-      lost: 1,
-      goalsFor: 11,
-      goalsAgainst: 2,
-      goalDifference: 9,
-      points: 13,
-      form: ['W', 'D', 'W', 'W', 'W'],
-      status: 'qualified',
-      change: 0,
-      nextMatch: 'vs Dinamo Zagreb (H)',
-      coefficient: 78.000
-    }
-    // Add more teams as needed
-  ]
-
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'qualified':
-        return <div className="uefa-badge uefa-badge-qualified">Q</div>
-      case 'playoff':
-        return <div className="uefa-badge uefa-badge-playoff">P</div>
-      case 'eliminated':
-        return <div className="uefa-badge uefa-badge-eliminated">E</div>
-      default:
-        return null
-    }
-  }
-
-  const getFormBadge = (result) => {
-    const baseClasses = "w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center text-white"
-    switch (result) {
-      case 'W':
-        return <div className={`${baseClasses} bg-uefa-green`}>W</div>
-      case 'D':
-        return <div className={`${baseClasses} bg-uefa-yellow text-uefa-black`}>D</div>
-      case 'L':
-        return <div className={`${baseClasses} bg-uefa-red`}>L</div>
-      default:
-        return null
-    }
-  }
-
-  const filteredStandings = selectedGroup === 'all' 
-    ? standings 
-    : standings.filter(team => team.status === selectedGroup)
-
-  const stats = {
-    totalTeams: standings.length,
-    totalMatches: standings.reduce((sum, team) => sum + team.played, 0) / 2,
-    totalGoals: standings.reduce((sum, team) => sum + team.goalsFor, 0),
-    averageGoals: (standings.reduce((sum, team) => sum + team.goalsFor, 0) / (standings.reduce((sum, team) => sum + team.played, 0) / 2)).toFixed(2)
-  }
+      country: row.tla || row.shortName || '',
+      logo: row.crest,
+      team: row.teamName,
+      played: row.played,
+      won: row.won,
+      drawn: row.draw,
+      lost: row.lost,
+      goalsFor: row.goalsFor,
+      goalsAgainst: row.goalsAgainst,
+      goalDifference: row.goalDifference,
+      points: row.points,
+      form: row.form || [],
+      status: row.status
+    }));
+  }, [standings]);
 
   return (
-    <div className="uefa-container py-8">
-      {/* Breadcrumb */}
-      <nav className="uefa-breadcrumb">
-        <a href="#" className="uefa-breadcrumb-item hover:text-uefa-blue transition-colors">Home</a>
-        <span className="uefa-breadcrumb-separator">/</span>
-        <a href="#" className="uefa-breadcrumb-item hover:text-uefa-blue transition-colors">Champions League</a>
-        <span className="uefa-breadcrumb-separator">/</span>
-        <span className="text-uefa-dark font-semibold">Standings</span>
-      </nav>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Hero Section */}
+        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-600 p-8 lg:p-12 shadow-2xl">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRjMC0yLjIxIDEuNzktNCA0LTRzNCAxLjc5IDQgNC0xLjc5IDQtNCA0LTQtMS43OS00LTR6bTAgMTBjMC0yLjIxIDEuNzktNCA0LTRzNCAxLjc5IDQgNC0xLjc5IDQtNCA0LTQtMS43OS00LTR6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-20"></div>
+          
+          <div className="relative flex flex-col lg:flex-row gap-8 items-start lg:items-center justify-between">
+            <div className="flex-1 space-y-4">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm border border-white/30">
+                <Trophy size={16} className="text-yellow-300" />
+                <span className="text-xs uppercase tracking-wider text-white font-bold">UEFA Champions League</span>
+              </div>
+              
+              <h1 className="text-4xl lg:text-5xl font-black text-white leading-tight">
+                League Phase Standings
+              </h1>
+              
+              <p className="text-lg text-blue-100 max-w-2xl leading-relaxed">
+                Track qualification spots, playoff zones, and live form powered by Champions League data from Football-Data.org.
+              </p>
+              
+              {selectedSeason && standings?.updated && (
+                <div className="flex flex-wrap gap-4 text-sm text-blue-100">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                    <span>Season {selectedSeason}/{Number(selectedSeason) + 1}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <TrendingUp size={16} />
+                    <span>Updated {new Date(standings.updated).toLocaleString()}</span>
+                  </div>
+                </div>
+              )}
+            </div>
 
-      {/* Page Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="uefa-section-title flex items-center">
-              <Trophy className="mr-4 text-uefa-gold" size={36} />
-              UEFA Champions League Standings
-            </h1>
-            <p className="uefa-section-subtitle">
-              League phase standings for the 2024/25 season • Last updated: {new Date().toLocaleString('en-GB')}
-            </p>
+            <div className="flex flex-wrap gap-3">
+              <select
+                className="px-6 py-3 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 text-white font-semibold cursor-pointer hover:bg-white/30 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/50"
+                value={selectedSeason}
+                onChange={(event) => setSelectedSeason(event.target.value)}
+                disabled={isLoadingSeasons || seasons.length === 0}
+              >
+                {isLoadingSeasons && <option>Loading...</option>}
+                {!isLoadingSeasons &&
+                  seasons.map((season) => (
+                    <option key={season.id} value={season.year} className="text-slate-900">
+                      {season.year}/{season.year + 1}
+                    </option>
+                  ))}
+              </select>
+              
+              <button className="px-6 py-3 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 text-white font-semibold hover:bg-white/30 transition-all duration-300 flex items-center gap-2 group">
+                <Download size={18} className="group-hover:animate-bounce" />
+                <span>Export</span>
+              </button>
+              
+              <button className="px-6 py-3 rounded-xl bg-white text-blue-600 font-semibold hover:bg-blue-50 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl hover:scale-105">
+                <Share2 size={18} />
+                <span>Share</span>
+              </button>
+            </div>
           </div>
-          <div className="flex space-x-3">
-            <button className="flex items-center space-x-2 uefa-btn-secondary">
-              <Download size={16} />
-              <span>Export</span>
-            </button>
-            <button className="flex items-center space-x-2 uefa-btn-secondary">
-              <Share2 size={16} />
-              <span>Share</span>
-            </button>
-          </div>
-        </div>
-      </div>
+        </section>
 
-      {/* Statistics Cards */}
-      <div className="uefa-stats-grid mb-8">
-        <div className="uefa-stats-card">
-          <div className="uefa-stats-icon">
-            <Users size={24} />
-          </div>
-          <div className="uefa-stats-number">{stats.totalTeams}</div>
-          <div className="uefa-stats-label">Teams</div>
-        </div>
-        
-        <div className="uefa-stats-card">
-          <div className="uefa-stats-icon">
-            <Trophy size={24} />
-          </div>
-          <div className="uefa-stats-number">{stats.totalMatches}</div>
-          <div className="uefa-stats-label">Matches Played</div>
-        </div>
-        
-        <div className="uefa-stats-card">
-          <div className="uefa-stats-icon">
-            <Target size={24} />
-          </div>
-          <div className="uefa-stats-number">{stats.totalGoals}</div>
-          <div className="uefa-stats-label">Total Goals</div>
-        </div>
-        
-        <div className="uefa-stats-card">
-          <div className="uefa-stats-icon">
-            <TrendingUp size={24} />
-          </div>
-          <div className="uefa-stats-number">{stats.averageGoals}</div>
-          <div className="uefa-stats-label">Goals per Match</div>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        {/* Phase Filter */}
-        <div className="relative">
-          <select
-            value={selectedPhase}
-            onChange={(e) => setSelectedPhase(e.target.value)}
-            className="uefa-select pr-8 appearance-none"
-          >
-            {phases.map((phase) => (
-              <option key={phase.id} value={phase.id}>
-                {phase.name}
-              </option>
-            ))}
-          </select>
-          <ChevronDown size={16} className="absolute right-2 top-1/2 transform -translate-y-1/2 text-uefa-gray pointer-events-none" />
+        {/* Phase Selector */}
+        <div className="flex flex-wrap gap-3">
+          {phases.map((phase, index) => {
+            const Icon = phase.icon;
+            return (
+              <button
+                key={phase.id}
+                onClick={() => setSelectedPhase(phase.id)}
+                className={`
+                  px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2
+                  ${selectedPhase === phase.id
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-105'
+                    : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
+                  }
+                `}
+                style={{
+                  animation: `fadeInUp 0.4s ease-out ${index * 0.1}s both`
+                }}
+              >
+                <Icon size={18} />
+                <span>{phase.name}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Group Filter */}
-        <div className="uefa-filter-tabs">
-          {groups.map((group) => (
+        <div className="flex flex-wrap gap-3">
+          {groups.map((group, index) => (
             <button
               key={group.id}
               onClick={() => setSelectedGroup(group.id)}
-              className={`uefa-filter-tab ${selectedGroup === group.id ? 'active' : ''}`}
+              className={`
+                px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-3
+                ${selectedGroup === group.id
+                  ? 'bg-white text-blue-600 shadow-lg border-2 border-blue-600 scale-105'
+                  : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 hover:border-blue-300'
+                }
+              `}
+              style={{
+                animation: `fadeInUp 0.4s ease-out ${index * 0.1}s both`
+              }}
             >
-              {group.name}
+              <span>{group.name}</span>
+              <span className={`
+                px-2 py-1 rounded-lg text-xs font-bold
+                ${selectedGroup === group.id
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'bg-slate-100 text-slate-600'
+                }
+              `}>
+                {group.count}
+              </span>
             </button>
           ))}
         </div>
-      </div>
 
-      {/* Main Content Grid */}
-      <div className="grid lg:grid-cols-3 gap-8">
-        {/* Main Standings */}
-        <div className="lg:col-span-2">
-          <StandingsTable standings={filteredStandings} selectedGroup={selectedGroup} />
-          
-          {/* Legend */}
-          <div className="mt-6 p-6 bg-gradient-to-r from-uefa-light-gray to-uefa-medium-gray rounded-uefa-lg">
-            <h3 className="font-bold text-uefa-dark mb-4 flex items-center">
-              <Trophy size={20} className="mr-2 text-uefa-gold" />
-              Qualification Status
-            </h3>
-            <div className="grid md:grid-cols-3 gap-4 text-sm">
-              <div className="flex items-center space-x-3 p-3 bg-white rounded-uefa">
-                <div className="uefa-badge uefa-badge-qualified">Q</div>
-                <div>
-                  <div className="font-semibold text-uefa-dark">Qualified</div>
-                  <div className="text-uefa-gray">Round of 16 (1-8)</div>
-                </div>
+        {/* Error Message */}
+        {error && (
+          <div className="rounded-2xl bg-rose-500/10 backdrop-blur-md border-2 border-rose-500/30 p-6 flex items-center gap-4 animate-shake shadow-2xl">
+            <div className="w-12 h-12 rounded-full bg-rose-500/20 flex items-center justify-center flex-shrink-0">
+              <Trophy size={24} className="text-rose-400" />
+            </div>
+            <div>
+              <h3 className="font-bold text-white">Error Loading Data</h3>
+              <p className="text-white/80">{error}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Main Content Grid */}
+        <div className="grid lg:grid-cols-[2fr,1fr] gap-8">
+          {/* Standings Table */}
+          <div className="space-y-6">
+            {isLoadingStandings ? (
+              <div className="rounded-2xl bg-white/5 backdrop-blur-md p-16 flex flex-col items-center justify-center gap-4 shadow-2xl border border-white/10">
+                <div className="w-16 h-16 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-white/80 font-medium">Loading standings...</p>
               </div>
-              <div className="flex items-center space-x-3 p-3 bg-white rounded-uefa">
-                <div className="uefa-badge uefa-badge-playoff">P</div>
-                <div>
-                  <div className="font-semibold text-uefa-dark">Playoff</div>
-                  <div className="text-uefa-gray">Knockout Playoff (9-24)</div>
+            ) : (
+              <StandingsTable standings={formattedStandings} selectedGroup={selectedGroup} />
+            )}
+
+            {/* Qualification Info Card */}
+            <div className="rounded-2xl bg-white/5 backdrop-blur-md p-6 border border-white/10 shadow-2xl hover:shadow-3xl hover:bg-white/10 transition-all duration-300">
+              <div className="flex items-start gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/50">
+                  <Trophy size={28} className="text-white" />
                 </div>
-              </div>
-              <div className="flex items-center space-x-3 p-3 bg-white rounded-uefa">
-                <div className="uefa-badge uefa-badge-eliminated">E</div>
-                <div>
-                  <div className="font-semibold text-uefa-dark">Eliminated</div>
-                  <div className="text-uefa-gray">Out of competition (25-36)</div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-white mb-3 drop-shadow-sm">Qualification Rules</h3>
+                  <div className="space-y-2 text-sm text-white/80">
+                    <p className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50"></span>
+                      <span><strong className="text-white">Top 8 teams</strong> qualify directly to Round of 16</span>
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-amber-500 shadow-lg shadow-amber-500/50"></span>
+                      <span><strong className="text-white">Teams 9-24</strong> enter playoff round</span>
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-rose-500 shadow-lg shadow-rose-500/50"></span>
+                      <span><strong className="text-white">Bottom 12 teams</strong> are eliminated</span>
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Format Explanation */}
-          <div className="mt-6 p-6 bg-uefa-blue text-white rounded-uefa-lg">
-            <h3 className="font-bold mb-3">New Champions League Format</h3>
-            <div className="grid md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <h4 className="font-semibold mb-2">League Phase</h4>
-                <ul className="space-y-1 text-uefa-light-gray">
-                  <li>• 36 teams in single league table</li>
-                  <li>• Each team plays 8 matches</li>
-                  <li>• Top 8 qualify directly to Round of 16</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2">Knockout Phase</h4>
-                <ul className="space-y-1 text-uefa-light-gray">
-                  <li>• Teams 9-24 enter playoff round</li>
-                  <li>• Teams 25-36 are eliminated</li>
-                  <li>• Playoff winners join top 8 in Round of 16</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          <TopScorers />
-          <UpcomingMatches />
-          
-          {/* Quick Stats */}
-          <div className="uefa-card p-6">
-            <h3 className="font-bold text-uefa-dark mb-4">Quick Stats</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-uefa-gray">Matches played:</span>
-                <span className="font-bold text-uefa-dark">108/144</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-uefa-gray">Goals scored:</span>
-                <span className="font-bold text-uefa-dark">312</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-uefa-gray">Average goals:</span>
-                <span className="font-bold text-uefa-dark">2.89</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-uefa-gray">Clean sheets:</span>
-                <span className="font-bold text-uefa-dark">67</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-uefa-gray">Hat-tricks:</span>
-                <span className="font-bold text-uefa-dark">8</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Next Matchday Countdown */}
-          <div className="uefa-card p-6 bg-gradient-to-br from-uefa-blue to-uefa-light-blue text-white">
-            <h3 className="font-bold mb-4">Next Matchday</h3>
-            <div className="text-center">
-              <div className="text-3xl font-bold mb-2">Matchday 7</div>
-              <div className="text-sm opacity-90 mb-4">January 22, 2025</div>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <div className="text-2xl font-bold">16</div>
-                  <div className="opacity-75">Matches</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold">32</div>
-                  <div className="opacity-75">Teams</div>
-                </div>
-              </div>
-            </div>
+          {/* Sidebar */}
+          <div className="space-y-6">
+            <TopScorers />
+            <UpcomingMatches />
           </div>
         </div>
       </div>
 
-      {/* Live Ticker */}
-      {showLiveTicker && <LiveTicker />}
+      <style>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
 
-      {/* Additional Info */}
-      <div className="mt-12 pt-8 border-t border-uefa-medium-gray">
-        <div className="grid md:grid-cols-2 gap-8">
-          <div>
-            <h3 className="font-bold text-uefa-dark mb-4">Tournament Information</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-uefa-gray">Season:</span>
-                <span className="text-uefa-dark font-medium">2024/25</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-uefa-gray">Format:</span>
-                <span className="text-uefa-dark font-medium">League Phase + Knockout</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-uefa-gray">Teams:</span>
-                <span className="text-uefa-dark font-medium">36</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-uefa-gray">Matches per team:</span>
-                <span className="text-uefa-dark font-medium">8 (League Phase)</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-uefa-gray">Total matches:</span>
-                <span className="text-uefa-dark font-medium">189</span>
-              </div>
-            </div>
-          </div>
-          
-          <div>
-            <h3 className="font-bold text-uefa-dark mb-4">Key Dates</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-uefa-gray">League Phase ends:</span>
-                <span className="text-uefa-dark font-medium">29 January 2025</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-uefa-gray">Knockout draw:</span>
-                <span className="text-uefa-dark font-medium">31 January 2025</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-uefa-gray">Playoff round:</span>
-                <span className="text-uefa-dark font-medium">11/12 & 18/19 Feb 2025</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-uefa-gray">Round of 16:</span>
-                <span className="text-uefa-dark font-medium">4/5 & 11/12 Mar 2025</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-uefa-gray">Final:</span>
-                <span className="text-uefa-dark font-medium">31 May 2025, Munich</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-10px); }
+          75% { transform: translateX(10px); }
+        }
+
+        .animate-shake {
+          animation: shake 0.5s ease-in-out;
+        }
+      `}</style>
     </div>
-  )
-}
+  );
+};
 
-export default StandingsPage
+export default StandingsPage;

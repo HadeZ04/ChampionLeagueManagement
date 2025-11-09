@@ -1,8 +1,66 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Gamepad2, Trophy, Users, Target, Star, Zap, Award, Crown } from 'lucide-react'
+import LeaderboardService from '../layers/application/services/LeaderboardService'
+
+const FALLBACK_LEADERBOARD = {
+  '2025-2026': [
+    { id: 'l1', rank: 1, username: 'ChampionsKing', points: 2847, country: 'Spain', badge: 'Legend' },
+    { id: 'l2', rank: 2, username: 'BarcaFan2024', points: 2756, country: 'Spain', badge: 'Master' },
+    { id: 'l3', rank: 3, username: 'LiverpoolLegend', points: 2689, country: 'England', badge: 'Master' },
+    { id: 'l4', rank: 4, username: 'InterMilan', points: 2634, country: 'Italy', badge: 'Expert' },
+    { id: 'l5', rank: 5, username: 'BayernMunich', points: 2587, country: 'Germany', badge: 'Expert' }
+  ],
+  '2024-2025': [
+    { id: 'p1', rank: 1, username: 'MadridMaestro', points: 2712, country: 'Spain', badge: 'Legend' },
+    { id: 'p2', rank: 2, username: 'BlueMoon', points: 2654, country: 'England', badge: 'Master' },
+    { id: 'p3', rank: 3, username: 'TurinTitan', points: 2598, country: 'Italy', badge: 'Expert' },
+    { id: 'p4', rank: 4, username: 'ParisProdigy', points: 2526, country: 'France', badge: 'Expert' },
+    { id: 'p5', rank: 5, username: 'LisbonLion', points: 2491, country: 'Portugal', badge: 'Pro' }
+  ],
+  '2023-2024': [
+    { id: 'q1', rank: 1, username: 'RedDevil', points: 2624, country: 'England', badge: 'Legend' },
+    { id: 'q2', rank: 2, username: 'MunichMaster', points: 2579, country: 'Germany', badge: 'Master' },
+    { id: 'q3', rank: 3, username: 'AjaxArtist', points: 2510, country: 'Netherlands', badge: 'Expert' },
+    { id: 'q4', rank: 4, username: 'SevillaStar', points: 2456, country: 'Spain', badge: 'Expert' },
+    { id: 'q5', rank: 5, username: 'PortoPrince', points: 2402, country: 'Portugal', badge: 'Pro' }
+  ]
+}
 
 const Gaming = () => {
   const [selectedGame, setSelectedGame] = useState('fantasy')
+  const [seasonFilter, setSeasonFilter] = useState('2025-2026')
+  const [leaderboardEntries, setLeaderboardEntries] = useState(FALLBACK_LEADERBOARD['2025-2026'])
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false)
+  const [leaderboardError, setLeaderboardError] = useState(null)
+
+  useEffect(() => {
+    let isMounted = true
+
+    const loadLeaderboard = async () => {
+      setLeaderboardLoading(true)
+      setLeaderboardError(null)
+      try {
+        const data = await LeaderboardService.getLeaderboard({ season: seasonFilter })
+        if (isMounted) {
+          setLeaderboardEntries(Array.isArray(data) && data.length ? data : FALLBACK_LEADERBOARD[seasonFilter])
+        }
+      } catch (error) {
+        if (isMounted) {
+          setLeaderboardError('Unable to load leaderboard. Showing cached data.')
+          setLeaderboardEntries(FALLBACK_LEADERBOARD[seasonFilter])
+        }
+      } finally {
+        if (isMounted) {
+          setLeaderboardLoading(false)
+        }
+      }
+    }
+
+    loadLeaderboard()
+    return () => {
+      isMounted = false
+    }
+  }, [seasonFilter])
 
   const games = [
     {
@@ -39,43 +97,7 @@ const Gaming = () => {
     }
   ]
 
-  const leaderboard = [
-    {
-      rank: 1,
-      username: 'ChampionsKing',
-      points: 2847,
-      country: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-      badge: 'Legend'
-    },
-    {
-      rank: 2,
-      username: 'BarçaFan2024',
-      points: 2756,
-      country: '🇪🇸',
-      badge: 'Master'
-    },
-    {
-      rank: 3,
-      username: 'LiverpoolLegend',
-      points: 2689,
-      country: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-      badge: 'Master'
-    },
-    {
-      rank: 4,
-      username: 'InterMilan',
-      points: 2634,
-      country: '🇮🇹',
-      badge: 'Expert'
-    },
-    {
-      rank: 5,
-      username: 'BayernMunich',
-      points: 2587,
-      country: '🇩🇪',
-      badge: 'Expert'
-    }
-  ]
+  const seasonOptions = ['2025-2026', '2024-2025', '2023-2024']
 
   const achievements = [
     {
@@ -205,41 +227,74 @@ const Gaming = () => {
       <div className="grid lg:grid-cols-2 gap-8">
         {/* Leaderboard */}
         <div className="uefa-card p-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <Trophy className="text-uefa-gold" size={24} />
-            <h2 className="text-2xl font-bold text-uefa-dark">Global Leaderboard</h2>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <div className="flex items-center space-x-3">
+              <Trophy className="text-uefa-gold" size={24} />
+              <h2 className="text-2xl font-bold text-uefa-dark">Global Leaderboard</h2>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-uefa-gray uppercase tracking-wide">Season</span>
+              <select
+                className="uefa-select bg-white text-uefa-dark"
+                value={seasonFilter}
+                onChange={(event) => setSeasonFilter(event.target.value)}
+              >
+                {seasonOptions.map((season) => (
+                  <option key={season} value={season}>
+                    {season}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
+
+          {leaderboardError && (
+            <div className="mb-4 p-3 rounded-uefa bg-red-50 text-sm text-red-700 border border-red-200">
+              {leaderboardError}
+            </div>
+          )}
           
           <div className="space-y-4">
-            {leaderboard.map((player) => (
-              <div key={player.rank} className="flex items-center justify-between p-4 bg-uefa-light-gray rounded-uefa hover:bg-uefa-medium-gray transition-colors">
-                <div className="flex items-center space-x-4">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${
-                    player.rank === 1 ? 'bg-uefa-gold text-uefa-black' :
-                    player.rank === 2 ? 'bg-uefa-silver text-uefa-black' :
-                    player.rank === 3 ? 'bg-uefa-bronze text-white' :
-                    'bg-uefa-gray'
-                  }`}>
-                    {player.rank}
-                  </div>
-                  
-                  <div>
-                    <div className="font-semibold text-uefa-dark">{player.username}</div>
-                    <div className="flex items-center space-x-2 text-sm">
-                      <span>{player.country}</span>
-                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${getBadgeColor(player.badge)}`}>
-                        {player.badge}
-                      </span>
+            {leaderboardLoading && (
+              <div className="text-center py-6 text-uefa-gray">Loading leaderboard...</div>
+            )}
+
+            {!leaderboardLoading && leaderboardEntries.length === 0 && (
+              <div className="text-center py-6 text-uefa-gray">
+                No leaderboard results for this season.
+              </div>
+            )}
+
+            {!leaderboardLoading &&
+              leaderboardEntries.map((player) => (
+                <div key={player.id ?? player.rank} className="flex items-center justify-between p-4 bg-uefa-light-gray rounded-uefa hover:bg-uefa-medium-gray transition-colors">
+                  <div className="flex items-center space-x-4">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${
+                      player.rank === 1 ? 'bg-uefa-gold text-uefa-black' :
+                      player.rank === 2 ? 'bg-uefa-silver text-uefa-black' :
+                      player.rank === 3 ? 'bg-uefa-bronze text-white' :
+                      'bg-uefa-gray'
+                    }`}>
+                      {player.rank}
+                    </div>
+                    
+                    <div>
+                      <div className="font-semibold text-uefa-dark">{player.username}</div>
+                      <div className="flex items-center space-x-2 text-sm">
+                        <span>{player.country}</span>
+                        <span className={`px-2 py-0.5 rounded text-xs font-bold ${getBadgeColor(player.badge)}`}>
+                          {player.badge}
+                        </span>
+                      </div>
                     </div>
                   </div>
+                  
+                  <div className="text-right">
+                    <div className="text-xl font-bold text-uefa-blue">{Number(player.points).toLocaleString()}</div>
+                    <div className="text-uefa-gray text-sm">points</div>
+                  </div>
                 </div>
-                
-                <div className="text-right">
-                  <div className="text-xl font-bold text-uefa-blue">{player.points.toLocaleString()}</div>
-                  <div className="text-uefa-gray text-sm">points</div>
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
           
           <div className="mt-6 text-center">

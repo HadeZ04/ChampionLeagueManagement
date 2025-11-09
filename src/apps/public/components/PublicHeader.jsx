@@ -1,21 +1,22 @@
-import React, { useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, ChevronDown, Search, Globe, User, ShoppingCart, Bell } from 'lucide-react'
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Menu, X, ChevronDown, Search, Globe, User, ShoppingCart, Bell } from 'lucide-react';
+import uefaPrimaryMark from '../../../assets/images/UEFA_Champions_League_logo.svg.png';
 
 const PublicHeader = () => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isCompetitionDropdownOpen, setIsCompetitionDropdownOpen] = useState(false)
-  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false)
-  const [isScrolled, setIsScrolled] = useState(false)
-  const location = useLocation()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCompetitionDropdownOpen, setIsCompetitionDropdownOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 0)
-    }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+      setIsScrolled(window.scrollY > 0);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const navigationItems = [
     { name: 'Standings', path: '/standings' },
@@ -25,7 +26,7 @@ const PublicHeader = () => {
     { name: 'News', path: '/news' },
     { name: 'Video', path: '/video' },
     { name: 'Gaming', path: '/gaming' },
-  ]
+  ];
 
   const competitions = [
     { name: 'Champions League', path: '/champions-league', active: true },
@@ -33,9 +34,9 @@ const PublicHeader = () => {
     { name: 'Conference League', path: '/conference-league' },
     { name: 'Super Cup', path: '/super-cup' },
     { name: 'Youth League', path: '/youth-league' },
-    { name: 'Women\'s Champions League', path: '/womens-champions-league' },
+    { name: "Women's Champions League", path: '/womens-champions-league' },
     { name: 'Futsal Champions League', path: '/futsal-champions-league' },
-  ]
+  ];
 
   const userMenuItems = [
     { name: 'My Profile', path: '/profile' },
@@ -43,129 +44,109 @@ const PublicHeader = () => {
     { name: 'Fantasy Football', path: '/fantasy' },
     { name: 'Predictions', path: '/predictions' },
     { name: 'Settings', path: '/settings' },
-  ]
+  ];
 
   return (
-    <header className={`uefa-nav sticky top-0 z-50 transition-all duration-300 ${isScrolled ? 'shadow-lg' : ''}`}>
+    <header className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled ? 'shadow-xl' : ''}`}>
       {/* Top Bar */}
-      <div className="bg-uefa-dark text-white py-2">
-        <div className="uefa-container">
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center space-x-6">
-              <span className="font-medium">Official UEFA Website</span>
-              <div className="hidden md:flex items-center space-x-4">
-                <a href="#" className="hover:text-uefa-gold transition-colors flex items-center">
-                  <Globe size={16} className="mr-1" />
-                  English
-                </a>
-                <span className="text-uefa-gray">|</span>
-                <a href="#" className="hover:text-uefa-gold transition-colors">
-                  <Bell size={16} className="inline mr-1" />
-                  Notifications
-                </a>
+      <div className="bg-[#1a2332] border-b border-white/5">
+        <div className="max-w-[1400px] mx-auto px-4">
+          <div className="flex items-center justify-between h-9 text-xs">
+            <div className="flex items-center gap-6">
+              <span className="text-white/70 font-medium hidden md:flex items-center gap-2">
+                <Globe size={13} />
+                Official UEFA Website
+              </span>
+              <div className="hidden lg:flex items-center gap-4 text-white/60">
+                <a href="#" className="hover:text-white transition-colors">Store</a>
+                <span className="text-white/30">•</span>
+                <a href="#" className="hover:text-white transition-colors">Tickets</a>
+                <span className="text-white/30">•</span>
+                <a href="#" className="hover:text-white transition-colors">Fantasy</a>
+                <span className="text-white/30">•</span>
+                <a href="#" className="hover:text-white transition-colors">Gaming</a>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <a href="#" className="hover:text-uefa-gold transition-colors">Store</a>
-              <a href="#" className="hover:text-uefa-gold transition-colors">Tickets</a>
-              <a href="#" className="hover:text-uefa-gold transition-colors">Fantasy</a>
-              <a href="#" className="hover:text-uefa-gold transition-colors">Gaming</a>
-              <span className="text-uefa-gray hidden md:inline">|</span>
+            <div className="flex items-center gap-3">
+              <button className="flex items-center gap-1 text-white/70 hover:text-white transition-colors">
+                <Globe size={13} />
+                <span className="hidden sm:inline">English</span>
+                <ChevronDown size={12} />
+              </button>
+              <span className="text-white/30 hidden md:inline">|</span>
               <Link
                 to="/signup"
-                className="hidden md:inline-flex items-center rounded-full border border-white/40 px-4 py-1 text-sm font-semibold hover:bg-white hover:text-uefa-dark transition-colors"
+                className="hidden md:inline-flex items-center text-white/70 hover:text-white transition-colors"
               >
-                Create Account
+                Sign In
               </Link>
               <Link
                 to="/admin/login"
-                className="hidden md:inline-flex items-center rounded-full border border-white/40 px-4 py-1 text-sm font-semibold hover:bg-white hover:text-uefa-dark transition-colors"
+                className="hidden md:inline-flex items-center px-3 py-1 bg-[#00d4ff] text-[#0a1929] font-semibold rounded hover:bg-[#00b8e6] transition-all"
               >
-                Admin Login
+                Create Account
               </Link>
-              <div className="relative hidden md:block">
-                <button
-                  onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                  className="flex items-center space-x-1 hover:text-uefa-gold transition-colors"
-                >
-                  <User size={16} />
-                  <span>Sign In</span>
-                  <ChevronDown size={14} className={`transform transition-transform ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-                
-                {isUserDropdownOpen && (
-                  <div className="uefa-dropdown right-0">
-                    <div className="px-4 py-3 border-b border-gray-200">
-                      <p className="text-sm font-medium text-uefa-dark">Welcome back!</p>
-                      <p className="text-xs text-uefa-gray">Access your UEFA account</p>
-                    </div>
-                    {userMenuItems.map((item) => (
-                      <Link
-                        key={item.name}
-                        to={item.path}
-                        className="uefa-dropdown-item"
-                        onClick={() => setIsUserDropdownOpen(false)}
-                      >
-                        {item.name}
-                      </Link>
-                    ))}
-                    <div className="border-t border-gray-200 px-4 py-2">
-                      <button className="text-sm text-uefa-red hover:text-uefa-dark transition-colors">
-                        Sign Out
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Navigation */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="uefa-container">
+      <div className="bg-[#0a1929] border-b border-white/5">
+        <div className="max-w-[1400px] mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link to="/" className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-uefa-blue to-uefa-light-blue rounded-full flex items-center justify-center shadow-lg">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2L13.09 8.26L20 9L13.09 15.74L12 22L10.91 15.74L4 9L10.91 8.26L12 2Z" fill="white"/>
-                </svg>
+            <Link to="/" className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden hover:border-[#00d4ff]/50 transition-all">
+                <img
+                  src={uefaPrimaryMark}
+                  alt="UEFA Champions League"
+                  className="h-10 w-10 object-contain"
+                />
               </div>
               <div className="hidden md:block">
-                <div className="text-uefa-blue font-bold text-xl">UEFA</div>
-                <div className="text-uefa-gray text-sm font-medium">Champions League</div>
+                <div className="text-white font-bold text-lg leading-tight">UEFA</div>
+                <div className="text-[#00d4ff] text-[10px] font-semibold uppercase tracking-wider">Champions League</div>
               </div>
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center space-x-8">
+            <nav className="hidden lg:flex items-center">
               {/* Competition Dropdown */}
               <div className="relative">
                 <button
                   onClick={() => setIsCompetitionDropdownOpen(!isCompetitionDropdownOpen)}
-                  className="flex items-center space-x-1 text-uefa-dark-gray hover:text-uefa-blue font-medium transition-colors py-2"
+                  onMouseEnter={() => setIsCompetitionDropdownOpen(true)}
+                  onMouseLeave={() => setIsCompetitionDropdownOpen(false)}
+                  className="flex items-center gap-1 px-4 py-2 text-white/80 hover:text-white font-medium transition-colors"
                 >
                   <span>Competitions</span>
-                  <ChevronDown size={16} className={`transform transition-transform ${isCompetitionDropdownOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown size={16} className={`transition-transform ${isCompetitionDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
-                
+
                 {isCompetitionDropdownOpen && (
-                  <div className="uefa-dropdown w-64">
-                    <div className="px-4 py-3 border-b border-gray-200">
-                      <p className="text-sm font-semibold text-uefa-dark">UEFA Competitions</p>
+                  <div
+                    className="absolute top-full left-0 mt-1 w-64 bg-[#0a1929] border border-white/10 rounded-lg shadow-2xl overflow-hidden"
+                    onMouseEnter={() => setIsCompetitionDropdownOpen(true)}
+                    onMouseLeave={() => setIsCompetitionDropdownOpen(false)}
+                  >
+                    <div className="px-4 py-3 border-b border-white/10">
+                      <p className="text-xs font-semibold text-white/60 uppercase tracking-wider">UEFA Competitions</p>
                     </div>
                     {competitions.map((competition) => (
                       <Link
                         key={competition.name}
                         to={competition.path}
-                        className={`uefa-dropdown-item flex items-center justify-between ${competition.active ? 'text-uefa-blue font-semibold bg-uefa-light-gray' : ''}`}
+                        className={`flex items-center justify-between px-4 py-2.5 text-sm transition-colors ${
+                          competition.active
+                            ? 'text-[#00d4ff] font-semibold bg-white/5'
+                            : 'text-white/80 hover:text-white hover:bg-white/5'
+                        }`}
                         onClick={() => setIsCompetitionDropdownOpen(false)}
                       >
                         <span>{competition.name}</span>
                         {competition.active && (
-                          <span className="w-2 h-2 bg-uefa-blue rounded-full"></span>
+                          <span className="w-1.5 h-1.5 bg-[#00d4ff] rounded-full"></span>
                         )}
                       </Link>
                     ))}
@@ -178,7 +159,11 @@ const PublicHeader = () => {
                 <Link
                   key={item.name}
                   to={item.path}
-                  className={`uefa-nav-item py-2 px-1 border-b-2 border-transparent ${location.pathname === item.path ? 'active border-uefa-blue' : ''}`}
+                  className={`px-4 py-2 text-sm font-medium transition-colors ${
+                    location.pathname === item.path
+                      ? 'text-[#00d4ff]'
+                      : 'text-white/80 hover:text-white'
+                  }`}
                 >
                   {item.name}
                 </Link>
@@ -186,35 +171,35 @@ const PublicHeader = () => {
             </nav>
 
             {/* Search and Actions */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-2">
               <div className="relative hidden md:block">
-                <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-uefa-gray" />
+                <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40" />
                 <input
                   type="text"
-                  placeholder="Search teams, players, matches..."
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-uefa-blue focus:border-transparent w-80 transition-all duration-300"
+                  placeholder="Search teams, players, match..."
+                  className="pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-full text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-[#00d4ff]/50 focus:bg-white/10 w-64 transition-all"
                 />
               </div>
-              
-              <button className="p-2 text-uefa-dark-gray hover:text-uefa-blue transition-colors md:hidden">
+
+              <button className="p-2 text-white/70 hover:text-white transition-colors md:hidden">
                 <Search size={20} />
               </button>
 
-              <button className="p-2 text-uefa-dark-gray hover:text-uefa-blue transition-colors relative">
+              <button className="p-2 text-white/70 hover:text-white transition-colors relative">
+                <Bell size={20} />
+                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+              </button>
+
+              <button className="p-2 text-white/70 hover:text-white transition-colors relative">
                 <ShoppingCart size={20} />
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-uefa-red text-white text-xs rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#00d4ff] text-[#0a1929] text-[10px] font-bold rounded-full flex items-center justify-center">
                   0
                 </span>
               </button>
 
-              <button className="p-2 text-uefa-dark-gray hover:text-uefa-blue transition-colors relative">
-                <Bell size={20} />
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-uefa-red rounded-full"></span>
-              </button>
-              
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden p-2 text-uefa-dark-gray hover:text-uefa-blue transition-colors"
+                className="lg:hidden p-2 text-white/70 hover:text-white transition-colors"
               >
                 {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
@@ -223,21 +208,49 @@ const PublicHeader = () => {
         </div>
       </div>
 
+      {/* Live Match Ticker */}
+      <div className="bg-gradient-to-r from-[#003B73] via-[#004EA8] to-[#00C65A] overflow-hidden">
+        <div className="max-w-[1400px] mx-auto px-4">
+          <div className="flex items-center h-8 text-xs text-white font-medium overflow-hidden">
+            <span className="bg-white text-red-600 px-2 py-0.5 rounded text-[10px] font-bold mr-3 flex-shrink-0">
+              LIVE
+            </span>
+            <div className="flex items-center gap-6 animate-scroll whitespace-nowrap">
+              <span>Manchester City 1-0 PSG • 82'</span>
+              <span className="text-white/60">•</span>
+              <span>Barcelona 3-2 Inter Milan • FT</span>
+              <span className="text-white/60">•</span>
+              <span>Real Madrid 2-1 Bayern Munich • 78'</span>
+              <span className="text-white/60">•</span>
+              <span>Liverpool 2-2 Juventus • 65'</span>
+              <span className="text-white/60">•</span>
+              <span>Manchester City 1-0 PSG • 82'</span>
+              <span className="text-white/60">•</span>
+              <span>Barcelona 3-2 Inter Milan • FT</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="uefa-mobile-menu">
-          <div className="uefa-container py-4">
-            <div className="space-y-4">
-              {/* Competition Section */}
+        <div className="lg:hidden bg-[#0a1929] border-t border-white/5">
+          <div className="max-w-[1400px] mx-auto px-4 py-6">
+            <div className="space-y-6">
+              {/* Competitions */}
               <div>
-                <div className="text-uefa-gray text-sm font-semibold uppercase tracking-wide mb-2">
+                <div className="text-white/60 text-xs font-semibold uppercase tracking-wide mb-3">
                   Competitions
                 </div>
                 {competitions.map((competition) => (
                   <Link
                     key={competition.name}
                     to={competition.path}
-                    className={`uefa-mobile-menu-item ${competition.active ? 'text-uefa-blue font-semibold' : ''}`}
+                    className={`block px-4 py-2.5 rounded-lg text-sm transition-colors ${
+                      competition.active
+                        ? 'text-[#00d4ff] font-semibold bg-white/5'
+                        : 'text-white/80 hover:text-white hover:bg-white/5'
+                    }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {competition.name}
@@ -245,16 +258,20 @@ const PublicHeader = () => {
                 ))}
               </div>
 
-              {/* Navigation Section */}
+              {/* Navigation */}
               <div>
-                <div className="text-uefa-gray text-sm font-semibold uppercase tracking-wide mb-2">
+                <div className="text-white/60 text-xs font-semibold uppercase tracking-wide mb-3">
                   Navigation
                 </div>
                 {navigationItems.map((item) => (
                   <Link
                     key={item.name}
                     to={item.path}
-                    className={`uefa-mobile-menu-item ${location.pathname === item.path ? 'text-uefa-blue font-semibold' : ''}`}
+                    className={`block px-4 py-2.5 rounded-lg text-sm transition-colors ${
+                      location.pathname === item.path
+                        ? 'text-[#00d4ff] font-semibold bg-white/5'
+                        : 'text-white/80 hover:text-white hover:bg-white/5'
+                    }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {item.name}
@@ -262,21 +279,21 @@ const PublicHeader = () => {
                 ))}
               </div>
 
-              {/* Account Section */}
+              {/* Account */}
               <div>
-                <div className="text-uefa-gray text-sm font-semibold uppercase tracking-wide mb-2">
+                <div className="text-white/60 text-xs font-semibold uppercase tracking-wide mb-3">
                   Account
                 </div>
                 <Link
                   to="/signup"
-                  className="uefa-mobile-menu-item"
+                  className="block px-4 py-2.5 rounded-lg text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors mb-2"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Create Account
                 </Link>
                 <Link
                   to="/admin/login"
-                  className="uefa-mobile-menu-item text-uefa-blue font-semibold"
+                  className="block px-4 py-2.5 rounded-lg text-sm text-[#00d4ff] font-semibold bg-white/5"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Admin Login
@@ -286,8 +303,23 @@ const PublicHeader = () => {
           </div>
         </div>
       )}
-    </header>
-  )
-}
 
-export default PublicHeader
+      <style jsx>{`
+        @keyframes scroll {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+
+        .animate-scroll {
+          animation: scroll 30s linear infinite;
+        }
+      `}</style>
+    </header>
+  );
+};
+
+export default PublicHeader;
