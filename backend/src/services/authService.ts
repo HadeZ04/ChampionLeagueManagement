@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import jwt, { type SignOptions, type Secret } from "jsonwebtoken";
 import { query } from "../db/sqlServer";
 import { appConfig } from "../config";
@@ -11,7 +12,7 @@ interface UserRecord {
   email: string;
   first_name: string;
   last_name: string;
-  password_hash: string;
+  password_hash: string | Buffer;
   status: string;
   last_login_at: Date | null;
   must_reset_password: boolean;
@@ -24,6 +25,61 @@ interface RoleRecord {
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_MINUTES = 15;
+const LEGACY_SALT_ROUNDS = 10;
+const BCRYPT_PATTERN = /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/;
+
+function normalizePasswordBuffer(passwordHash: string | Buffer | null | undefined) {
+  if (!passwordHash) {
+    return Buffer.alloc(0);
+  }
+  return Buffer.isBuffer(passwordHash) ? passwordHash : Buffer.from(passwordHash, "utf8");
+}
+
+function isBcryptHash(hash: string) {
+  return BCRYPT_PATTERN.test(hash.trim());
+}
+
+async function upgradeLegacyPasswordHash(userId: number, password: string) {
+  try {
+    const newHash = await bcrypt.hash(password, LEGACY_SALT_ROUNDS);
+    await query(
+      `UPDATE user_accounts
+       SET password_hash = @passwordHash,
+           updated_at = SYSUTCDATETIME(),
+           updated_by = COALESCE(updated_by, @userId)
+       WHERE user_id = @userId`,
+      {
+        passwordHash: Buffer.from(newHash, "utf8"),
+        userId,
+      }
+    );
+  } catch (error) {
+    console.warn("Unable to upgrade legacy password hash", { userId, error });
+  }
+}
+
+async function verifyPassword(password: string, storedHash: string | Buffer, userId: number) {
+  const hashBuffer = normalizePasswordBuffer(storedHash);
+  if (hashBuffer.length === 0) {
+    return false;
+  }
+
+  const asString = hashBuffer.toString("utf8").replace(/\0+$/, "");
+  if (asString && isBcryptHash(asString)) {
+    return bcrypt.compare(password, asString);
+  }
+
+  const legacyDigest = crypto.createHash("sha512").update(password, "utf8").digest();
+  if (legacyDigest.length !== hashBuffer.length) {
+    return false;
+  }
+
+  const matches = crypto.timingSafeEqual(legacyDigest, hashBuffer);
+  if (matches) {
+    await upgradeLegacyPasswordHash(userId, password);
+  }
+  return matches;
+}
 
 async function getUserByUsername(username: string): Promise<UserRecord | null> {
   const result = await query<UserRecord>(
@@ -69,6 +125,15 @@ async function getLockout(userId: number) {
 }
 
 async function setLockout(userId: number, failedAttempts: number, lockMinutes?: number) {
+  const now = Date.now();
+  const lockDurationMs = lockMinutes
+    ? lockMinutes * 60 * 1000
+    : failedAttempts >= MAX_FAILED_ATTEMPTS
+    ? LOCKOUT_MINUTES * 60 * 1000
+    : 0;
+  const lockedUntilValue =
+    lockDurationMs > 0 ? new Date(now + lockDurationMs) : new Date(0);
+
   await query(
     `MERGE user_session_lockouts AS target
     USING (SELECT @userId AS user_id) AS src
@@ -82,11 +147,7 @@ async function setLockout(userId: number, failedAttempts: number, lockMinutes?: 
     {
       userId,
       failedAttempts,
-      lockedUntil: lockMinutes
-        ? new Date(Date.now() + lockMinutes * 60 * 1000)
-        : failedAttempts >= MAX_FAILED_ATTEMPTS
-        ? new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000)
-        : null,
+      lockedUntil: lockedUntilValue,
     }
   );
 }
@@ -110,11 +171,7 @@ export async function login(username: string, password: string) {
     throw new HttpError(423, "Account is locked. Please try again later.");
   }
 
-  const storedHash = Buffer.isBuffer(user.password_hash)
-    ? user.password_hash.toString()
-    : user.password_hash;
-
-  const passwordMatches = await bcrypt.compare(password, storedHash);
+  const passwordMatches = await verifyPassword(password, user.password_hash, user.user_id);
   if (!passwordMatches) {
     const attempts = (lockout?.failed_attempts ?? 0) + 1;
     await setLockout(user.user_id, attempts);

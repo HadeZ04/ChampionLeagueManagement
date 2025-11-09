@@ -5,10 +5,11 @@ const config: sql.config = {
   user: appConfig.db.user,
   password: appConfig.db.password,
   server: appConfig.db.host,
+  port: appConfig.db.port,
   database: appConfig.db.name,
   options: {
-    encrypt: false,
-    trustServerCertificate: true,
+    encrypt: appConfig.db.encrypt,
+    trustServerCertificate: appConfig.db.trustServerCertificate,
   },
 };
 

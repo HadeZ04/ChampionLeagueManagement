@@ -7,14 +7,21 @@ loadDotenv({
   path: path.resolve(process.cwd(), ".env"),
 });
 
-const requiredEnvVars = ["DB_HOST", "DB_USER", "DB_PASS", "DB_NAME", "JWT_SECRET"];
+const requiredEnvVars = ["DB_HOST", "DB_USER", "DB_PASS", "DB_NAME", "JWT_SECRET", "FOOTBALL_DATA_API_TOKEN"];
 
 requiredEnvVars.forEach((key) => {
   if (!process.env[key]) {
     // eslint-disable-next-line no-console
-    console.warn(`⚠️  Environment variable ${key} is not set.`);
+    console.warn(`?s??,?  Environment variable ${key} is not set.`);
   }
 });
+
+const parseBoolean = (value: string | undefined, defaultValue: boolean): boolean => {
+  if (value === undefined) {
+    return defaultValue;
+  }
+  return value.toLowerCase() === "true";
+};
 
 export const appConfig = {
   env: NODE_ENV,
@@ -25,9 +32,19 @@ export const appConfig = {
   },
   db: {
     host: process.env.DB_HOST ?? "localhost",
+    port: Number(process.env.DB_PORT ?? 1433),
     user: process.env.DB_USER ?? "sa",
     password: process.env.DB_PASS ?? "",
     name: process.env.DB_NAME ?? "LeagueManagement",
+    encrypt: parseBoolean(process.env.DB_ENCRYPT, true),
+    trustServerCertificate: parseBoolean(process.env.DB_TRUST_SERVER_CERTIFICATE, false),
+  },
+  footballData: {
+    baseUrl: process.env.FOOTBALL_DATA_API_BASE_URL ?? "https://api.football-data.org/v4",
+    token: process.env.FOOTBALL_DATA_API_TOKEN ?? "",
+    competitionCode: process.env.FOOTBALL_DATA_COMPETITION_CODE ?? "CL",
+    timeout: Number(process.env.FOOTBALL_DATA_TIMEOUT ?? 15000),
+    cacheTtlMs: Number(process.env.FOOTBALL_DATA_CACHE_TTL ?? 5 * 60 * 1000),
   },
 };
 

@@ -1,0 +1,554 @@
+import { query } from "../db/sqlServer";
+import {
+  TeamSummary,
+  TeamDetail,
+  getCompetitionTeams,
+  getTeamDetail,
+} from "./footballDataService";
+
+export interface TeamRecord {
+  id: number;
+  externalId: number;
+  name: string;
+  shortName: string | null;
+  tla: string | null;
+  logo: string | null;
+  crest: string | null;
+  country: string | null;
+  countryCode: string | null;
+  countryFlag: string | null;
+  venue: string | null;
+  clubColors: string | null;
+  founded: number | null;
+  coach: string | null;
+  coachNationality: string | null;
+  website: string | null;
+  address: string | null;
+  season: string | null;
+  updatedAt: string;
+  runningCompetitions?: Array<{
+    id: number;
+    name: string;
+    code?: string;
+    type?: string;
+  }>;
+}
+
+export interface TeamFilters {
+  search?: string;
+  country?: string;
+  season?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginatedTeams {
+  data: TeamRecord[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+const DEFAULT_LIMIT = 25;
+const MAX_LIMIT = 100;
+
+const upsertTeam = async (team: TeamSummary): Promise<void> => {
+  await query(
+    `
+      MERGE dbo.FootballTeams AS target
+      USING (VALUES (@externalId, @season)) AS source(external_id, season)
+      ON target.external_id = source.external_id 
+         AND (target.season = source.season OR (target.season IS NULL AND source.season IS NULL))
+      WHEN MATCHED THEN
+        UPDATE SET
+          target.name = @name,
+          target.short_name = @shortName,
+          target.tla = @tla,
+          target.logo = @logo,
+          target.crest = @crest,
+          target.country = @country,
+          target.country_code = @countryCode,
+          target.country_flag = @countryFlag,
+          target.venue = @venue,
+          target.club_colors = @clubColors,
+          target.founded = @founded,
+          target.coach = @coach,
+          target.coach_nationality = @coachNationality,
+          target.website = @website,
+          target.address = @address,
+          target.updated_at = SYSUTCDATETIME()
+      WHEN NOT MATCHED THEN
+        INSERT (
+          external_id,
+          name,
+          short_name,
+          tla,
+          logo,
+          crest,
+          country,
+          country_code,
+          country_flag,
+          venue,
+          club_colors,
+          founded,
+          coach,
+          coach_nationality,
+          website,
+          address,
+          season
+        )
+        VALUES (
+          @externalId,
+          @name,
+          @shortName,
+          @tla,
+          @logo,
+          @crest,
+          @country,
+          @countryCode,
+          @countryFlag,
+          @venue,
+          @clubColors,
+          @founded,
+          @coach,
+          @coachNationality,
+          @website,
+          @address,
+          @season
+        );
+    `,
+    {
+      externalId: team.id,
+      name: team.name,
+      shortName: team.shortName ?? null,
+      tla: team.tla ?? null,
+      logo: team.logo ?? null,
+      crest: team.crest ?? null,
+      country: team.country ?? null,
+      countryCode: team.countryCode ?? null,
+      countryFlag: team.countryFlag ?? null,
+      venue: team.venue ?? null,
+      clubColors: team.clubColors ?? null,
+      founded: team.founded ?? null,
+      coach: team.coach ?? null,
+      coachNationality: team.coachNationality ?? null,
+      website: team.website ?? null,
+      address: team.address ?? null,
+      season: team.season ?? null,
+    },
+  );
+
+  // Get the team's internal ID for competitions
+  const teamResult = await query<{ id: number }>(
+    "SELECT id FROM dbo.FootballTeams WHERE external_id = @externalId AND (season = @season OR (season IS NULL AND @season IS NULL))",
+    { externalId: team.id, season: team.season ?? null },
+  );
+
+  const teamInternalId = teamResult.recordset[0]?.id;
+  if (!teamInternalId) {
+    return;
+  }
+
+  // Delete old competitions and insert new ones
+  await query(
+    "DELETE FROM dbo.FootballTeamCompetitions WHERE team_id = @teamId AND (season = @season OR (season IS NULL AND @season IS NULL))",
+    { teamId: teamInternalId, season: team.season ?? null },
+  );
+
+  for (const competition of team.runningCompetitions ?? []) {
+    await query(
+      `
+        INSERT INTO dbo.FootballTeamCompetitions (
+          team_id,
+          season,
+          competition_id,
+          competition_name,
+          competition_code,
+          competition_type
+        )
+        VALUES (
+          @teamId,
+          @season,
+          @competitionId,
+          @competitionName,
+          @competitionCode,
+          @competitionType
+        );
+      `,
+      {
+        teamId: teamInternalId,
+        season: team.season ?? null,
+        competitionId: competition.id,
+        competitionName: competition.name,
+        competitionCode: competition.code ?? null,
+        competitionType: competition.type ?? null,
+      },
+    );
+  }
+};
+
+export const syncTeamsFromUpstream = async (season?: string): Promise<{
+  season: string | undefined;
+  totalTeams: number;
+}> => {
+  const teams = await getCompetitionTeams(season);
+
+  for (const team of teams) {
+    await upsertTeam(team);
+  }
+
+  return {
+    season,
+    totalTeams: teams.length,
+  };
+};
+
+export const listTeams = async (filters: TeamFilters = {}): Promise<PaginatedTeams> => {
+  const page = filters.page && filters.page > 0 ? filters.page : 1;
+  const limit = filters.limit
+    ? Math.min(Math.max(filters.limit, 1), MAX_LIMIT)
+    : DEFAULT_LIMIT;
+  const offset = (page - 1) * limit;
+
+  const conditions: string[] = [];
+  const parameters: Record<string, unknown> = {
+    offset,
+    limit,
+  };
+
+  if (filters.search) {
+    conditions.push(
+      "(LOWER(name) LIKE LOWER(@search) OR LOWER(short_name) LIKE LOWER(@search) OR LOWER(tla) LIKE LOWER(@search))",
+    );
+    parameters.search = `%${filters.search.trim()}%`;
+  }
+
+  if (filters.country) {
+    if (filters.country.toLowerCase() !== "all") {
+      conditions.push(
+        "(LOWER(country) LIKE LOWER(@country) OR LOWER(country_code) = LOWER(@countryCode))",
+      );
+      parameters.country = `%${filters.country.trim()}%`;
+      parameters.countryCode = filters.country.trim();
+    }
+  }
+
+  if (filters.season) {
+    conditions.push("season = @season");
+    parameters.season = filters.season.trim();
+  }
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  const dataResult = await query<TeamRecord>(
+    `
+      SELECT
+        id,
+        external_id AS externalId,
+        name,
+        short_name AS shortName,
+        tla,
+        logo,
+        crest,
+        country,
+        country_code AS countryCode,
+        country_flag AS countryFlag,
+        venue,
+        club_colors AS clubColors,
+        founded,
+        coach,
+        coach_nationality AS coachNationality,
+        website,
+        address,
+        season,
+        CONVERT(VARCHAR(33), updated_at, 127) AS updatedAt
+      FROM dbo.FootballTeams
+      ${whereClause}
+      ORDER BY name ASC
+      OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY;
+    `,
+    parameters,
+  );
+
+  const countResult = await query<{ total: number }>(
+    `
+      SELECT COUNT(1) AS total
+      FROM dbo.FootballTeams
+      ${whereClause};
+    `,
+    parameters,
+  );
+
+  const total = countResult.recordset[0]?.total ?? 0;
+  const totalPages = limit > 0 ? Math.ceil(total / limit) : 1;
+
+  // Fetch running competitions for each team
+  const teamsWithCompetitions = await Promise.all(
+    dataResult.recordset.map(async (team) => {
+      const competitionsResult = await query<{
+        competitionId: number;
+        competitionName: string;
+        competitionCode: string | null;
+        competitionType: string | null;
+      }>(
+        `
+          SELECT
+            competition_id AS competitionId,
+            competition_name AS competitionName,
+            competition_code AS competitionCode,
+            competition_type AS competitionType
+          FROM dbo.FootballTeamCompetitions
+          WHERE team_id = @teamId AND (season = @season OR (season IS NULL AND @season IS NULL));
+        `,
+        { teamId: team.id, season: team.season },
+      );
+
+      return {
+        ...team,
+        runningCompetitions: competitionsResult.recordset.map((c) => ({
+          id: c.competitionId,
+          name: c.competitionName,
+          code: c.competitionCode ?? undefined,
+          type: c.competitionType ?? undefined,
+        })),
+      };
+    }),
+  );
+
+  return {
+    data: teamsWithCompetitions,
+    total,
+    page,
+    limit,
+    totalPages,
+  };
+};
+
+export const getTeamById = async (id: number): Promise<TeamRecord | null> => {
+  const result = await query<TeamRecord>(
+    `
+      SELECT
+        id,
+        external_id AS externalId,
+        name,
+        short_name AS shortName,
+        tla,
+        logo,
+        crest,
+        country,
+        country_code AS countryCode,
+        country_flag AS countryFlag,
+        venue,
+        club_colors AS clubColors,
+        founded,
+        coach,
+        coach_nationality AS coachNationality,
+        website,
+        address,
+        season,
+        CONVERT(VARCHAR(33), updated_at, 127) AS updatedAt
+      FROM dbo.FootballTeams
+      WHERE id = @id;
+    `,
+    { id },
+  );
+
+  const team = result.recordset[0];
+  if (!team) {
+    return null;
+  }
+
+  // Fetch running competitions
+  const competitionsResult = await query<{
+    competitionId: number;
+    competitionName: string;
+    competitionCode: string | null;
+    competitionType: string | null;
+  }>(
+    `
+      SELECT
+        competition_id AS competitionId,
+        competition_name AS competitionName,
+        competition_code AS competitionCode,
+        competition_type AS competitionType
+      FROM dbo.FootballTeamCompetitions
+      WHERE team_id = @teamId;
+    `,
+    { teamId: team.id },
+  );
+
+  return {
+    ...team,
+    runningCompetitions: competitionsResult.recordset.map((c) => ({
+      id: c.competitionId,
+      name: c.competitionName,
+      code: c.competitionCode ?? undefined,
+      type: c.competitionType ?? undefined,
+    })),
+  };
+};
+
+export const getTeamByExternalId = async (
+  externalId: number,
+  season?: string,
+): Promise<TeamRecord | null> => {
+  const result = await query<TeamRecord>(
+    `
+      SELECT
+        id,
+        external_id AS externalId,
+        name,
+        short_name AS shortName,
+        tla,
+        logo,
+        crest,
+        country,
+        country_code AS countryCode,
+        country_flag AS countryFlag,
+        venue,
+        club_colors AS clubColors,
+        founded,
+        coach,
+        coach_nationality AS coachNationality,
+        website,
+        address,
+        season,
+        CONVERT(VARCHAR(33), updated_at, 127) AS updatedAt
+      FROM dbo.FootballTeams
+      WHERE external_id = @externalId 
+        AND (season = @season OR (season IS NULL AND @season IS NULL))
+      ORDER BY updated_at DESC;
+    `,
+    { externalId, season: season ?? null },
+  );
+
+  const team = result.recordset[0];
+  if (!team) {
+    return null;
+  }
+
+  // Fetch running competitions
+  const competitionsResult = await query<{
+    competitionId: number;
+    competitionName: string;
+    competitionCode: string | null;
+    competitionType: string | null;
+  }>(
+    `
+      SELECT
+        competition_id AS competitionId,
+        competition_name AS competitionName,
+        competition_code AS competitionCode,
+        competition_type AS competitionType
+      FROM dbo.FootballTeamCompetitions
+      WHERE team_id = @teamId;
+    `,
+    { teamId: team.id },
+  );
+
+  return {
+    ...team,
+    runningCompetitions: competitionsResult.recordset.map((c) => ({
+      id: c.competitionId,
+      name: c.competitionName,
+      code: c.competitionCode ?? undefined,
+      type: c.competitionType ?? undefined,
+    })),
+  };
+};
+
+export const updateTeam = async (
+  id: number,
+  payload: Partial<
+    Pick<
+      TeamRecord,
+      | "name"
+      | "shortName"
+      | "tla"
+      | "venue"
+      | "clubColors"
+      | "founded"
+      | "coach"
+      | "coachNationality"
+      | "website"
+      | "address"
+    >
+  >,
+): Promise<TeamRecord | null> => {
+  const fields: string[] = [];
+  const params: Record<string, unknown> = { id };
+
+  if (payload.name !== undefined) {
+    fields.push("name = @name");
+    params.name = payload.name.trim();
+  }
+  if (payload.shortName !== undefined) {
+    fields.push("short_name = @shortName");
+    params.shortName = payload.shortName ? payload.shortName.trim() : null;
+  }
+  if (payload.tla !== undefined) {
+    fields.push("tla = @tla");
+    params.tla = payload.tla ? payload.tla.trim() : null;
+  }
+  if (payload.venue !== undefined) {
+    fields.push("venue = @venue");
+    params.venue = payload.venue ? payload.venue.trim() : null;
+  }
+  if (payload.clubColors !== undefined) {
+    fields.push("club_colors = @clubColors");
+    params.clubColors = payload.clubColors ? payload.clubColors.trim() : null;
+  }
+  if (payload.founded !== undefined) {
+    fields.push("founded = @founded");
+    params.founded = payload.founded ?? null;
+  }
+  if (payload.coach !== undefined) {
+    fields.push("coach = @coach");
+    params.coach = payload.coach ? payload.coach.trim() : null;
+  }
+  if (payload.coachNationality !== undefined) {
+    fields.push("coach_nationality = @coachNationality");
+    params.coachNationality = payload.coachNationality
+      ? payload.coachNationality.trim()
+      : null;
+  }
+  if (payload.website !== undefined) {
+    fields.push("website = @website");
+    params.website = payload.website ? payload.website.trim() : null;
+  }
+  if (payload.address !== undefined) {
+    fields.push("address = @address");
+    params.address = payload.address ? payload.address.trim() : null;
+  }
+
+  if (fields.length === 0) {
+    return getTeamById(id);
+  }
+
+  fields.push("updated_at = SYSUTCDATETIME()");
+
+  await query(
+    `
+      UPDATE dbo.FootballTeams
+      SET ${fields.join(", ")}
+      WHERE id = @id;
+    `,
+    params,
+  );
+
+  return getTeamById(id);
+};
+
+export const deleteTeam = async (id: number): Promise<boolean> => {
+  // Delete related competitions first
+  await query("DELETE FROM dbo.FootballTeamCompetitions WHERE team_id = @id;", { id });
+
+  const result = await query<{ rowsAffected: number }>(
+    "DELETE FROM dbo.FootballTeams WHERE id = @id;",
+    { id },
+  );
+  const rowsAffected = result.rowsAffected?.[0] ?? 0;
+  return rowsAffected > 0;
+};
+

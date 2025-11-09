@@ -38,3 +38,27 @@ export function requirePermission(permission: string) {
     next();
   };
 }
+
+export function requireAnyPermission(...permissions: string[]) {
+  const requested = permissions.filter((permission) => Boolean(permission));
+
+  return (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      throw UnauthorizedError("Authentication required");
+    }
+
+    if (requested.length === 0) {
+      next();
+      return;
+    }
+
+    const userPermissions = Array.isArray(req.user.permissions) ? req.user.permissions : [];
+    const hasPermission = requested.some((permission) => userPermissions.includes(permission));
+
+    if (!hasPermission) {
+      throw ForbiddenError("You are not allowed to perform this action");
+    }
+
+    next();
+  };
+}
