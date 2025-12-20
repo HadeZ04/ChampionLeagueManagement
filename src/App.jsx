@@ -1,56 +1,68 @@
-import React, { useEffect, useState } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import React from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import PublicApp from './apps/public/PublicApp'
 import AdminApp from './apps/admin/AdminApp'
 import LoginPage from './apps/admin/pages/LoginPage'
-import AuthService from './layers/application/services/AuthService'
 import { hasAdminPortalAccess } from './apps/admin/utils/accessControl'
+import { useAuth } from './layers/application/context/AuthContext'
+
+const AdminRoute = ({ children }) => {
+  const location = useLocation()
+  const { isAuthenticated, user, status } = useAuth()
+  const isAdminAuthenticated = isAuthenticated && hasAdminPortalAccess(user)
+
+  if (status === 'checking') {
+    return null
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />
+  }
+
+  if (!isAdminAuthenticated) {
+    return <Navigate to="/portal" replace />
+  }
+
+  return children
+}
+
+const AdminLoginRoute = ({ children }) => {
+  const { isAuthenticated, user, status } = useAuth()
+  const isAdminAuthenticated = isAuthenticated && hasAdminPortalAccess(user)
+
+  if (status === 'checking') {
+    return null
+  }
+
+  if (isAdminAuthenticated) {
+    return <Navigate to="/admin/dashboard" replace />
+  }
+
+  if (isAuthenticated && !isAdminAuthenticated) {
+    return <Navigate to="/portal" replace />
+  }
+
+  return children
+}
 
 function App() {
-  const [adminUser, setAdminUser] = useState(AuthService.getUser())
-  const [isAuthBootstrapped, setIsAuthBootstrapped] = useState(false)
-
-  const isAdminAuthenticated = AuthService.isAuthenticated() && hasAdminPortalAccess(adminUser)
-
-  useEffect(() => {
-    const bootstrap = async () => {
-      if (AuthService.isAuthenticated()) {
-        try {
-          const profile = await AuthService.restoreSession()
-          if (profile && hasAdminPortalAccess(profile)) {
-            setAdminUser(profile)
-          } else {
-            await AuthService.logout()
-            setAdminUser(null)
-          }
-        } catch (error) {
-          console.error('Failed to restore admin session:', error)
-          await AuthService.logout()
-          setAdminUser(null)
-        }
-      }
-      setIsAuthBootstrapped(true)
-    }
-
-    bootstrap()
-  }, [])
+  const { user, status, isAuthenticated, login, logout } = useAuth()
+  const isAdminAuthenticated = isAuthenticated && hasAdminPortalAccess(user)
 
   const handleAdminLogin = async (credentials) => {
-    const user = await AuthService.login(credentials)
-    if (!hasAdminPortalAccess(user)) {
-      await AuthService.logout()
-      setAdminUser(null)
-      throw new Error('Your account does not have access to the admin area..')
+    const loggedInUser = await login(credentials)
+    if (!hasAdminPortalAccess(loggedInUser)) {
+      await logout()
+      throw new Error('Your account does not have access to the admin area.')
     }
-    setAdminUser(user)
+    return loggedInUser
   }
 
   const handleAdminLogout = async () => {
-    await AuthService.logout()
-    setAdminUser(null)
+    await logout()
   }
 
-  if (!isAuthBootstrapped) {
+  if (status === 'checking') {
     return null
   }
 
@@ -65,17 +77,17 @@ function App() {
           <Route 
             path="/admin/login" 
             element={
-              <LoginPage onLogin={handleAdminLogin} isAuthenticated={isAdminAuthenticated} />
+              <AdminLoginRoute>
+                <LoginPage onLogin={handleAdminLogin} isAuthenticated={isAdminAuthenticated} />
+              </AdminLoginRoute>
             } 
           />
           <Route 
             path="/admin/*" 
             element={
-              isAdminAuthenticated ? (
-                <AdminApp onLogout={handleAdminLogout} currentUser={adminUser} />
-              ) : (
-                <Navigate to="/admin/login" replace />
-              )
+              <AdminRoute>
+                <AdminApp onLogout={handleAdminLogout} currentUser={user} />
+              </AdminRoute>
             } 
           />
         </Routes>

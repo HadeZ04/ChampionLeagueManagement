@@ -52,6 +52,7 @@ const RulesetForm = ({ initialData = {}, onSave, onCancel, isSubmitting = false 
       ? initialParams.ranking.tiebreakers
       : ['points', 'goal_difference', 'goals_for', 'head_to_head', 'fair_play']
   );
+  const [pointsError, setPointsError] = useState('');
   const [errors, setErrors] = useState([]);
 
   const handleGoalTypeToggle = (goalTypeId) => {
@@ -115,6 +116,16 @@ const RulesetForm = ({ initialData = {}, onSave, onCancel, isSubmitting = false 
     }
     if (tiebreakers.length === 0) {
       validationErrors.push('Select at least one tiebreaker metric.');
+    }
+
+    const winPoints = Number(pointsConfig.win);
+    const drawPoints = Number(pointsConfig.draw);
+    const lossPoints = Number(pointsConfig.loss);
+    if (!(winPoints > drawPoints && drawPoints > lossPoints)) {
+      validationErrors.push('Points must satisfy: Win > Draw > Loss.');
+      setPointsError('Win points must be greater than draw, and draw greater than loss.');
+    } else {
+      setPointsError('');
     }
 
     setErrors(validationErrors);
@@ -344,6 +355,9 @@ const RulesetForm = ({ initialData = {}, onSave, onCancel, isSubmitting = false 
               />
             </div>
           </div>
+          {pointsError && (
+            <p className="mt-2 text-xs font-semibold text-red-600">{pointsError}</p>
+          )}
         </div>
 
         <div>

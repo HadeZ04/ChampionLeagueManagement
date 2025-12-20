@@ -33,10 +33,13 @@ const MENU_SECTIONS = [
     title: 'Tournament Management',
     items: [
       { name: 'Seasons', path: '/admin/seasons', icon: Swords, permission: 'manage_teams' },
+      { name: 'Fixtures', path: '/admin/fixtures', icon: Calendar, permission: 'manage_matches' },
       { name: 'Teams', path: '/admin/teams', icon: Users, permission: 'manage_teams' },
       { name: 'Matches', path: '/admin/matches', icon: Calendar, permission: 'manage_matches' },
       // 2. Thêm link mới vào đây
       { name: 'Match Day', path: '/admin/matches-today', icon: PlayCircle, permission: 'manage_matches' },
+      { name: 'Matches Live', path: '/admin/matches-live', icon: PlayCircle, permission: 'manage_matches' },
+      { name: 'Approvals', path: '/admin/approvals', icon: Shield, permission: 'approve_registrations' },
       { name: 'Players', path: '/admin/players', icon: UserCheck, permission: 'manage_teams' },
       { name: 'Leaderboard', path: '/admin/leaderboard', icon: Trophy, permission: 'manage_matches' },
       { name: 'Player Stats', path: '/admin/player-stats', icon: Target, permission: 'manage_matches' },
@@ -46,6 +49,7 @@ const MENU_SECTIONS = [
   {
     title: 'Content Management',
     items: [
+      { name: 'CMS', path: '/admin/cms', icon: FileText, permission: 'manage_content' },
       { name: 'News & Articles', path: '/admin/news', icon: FileText, permission: 'manage_content' },
       { name: 'Media Library', path: '/admin/media', icon: Target, permission: 'manage_content' },
       { name: 'Website Content', path: '/admin/content', icon: Globe, permission: 'manage_content' }
@@ -56,7 +60,9 @@ const MENU_SECTIONS = [
     items: [
       { name: 'User Management', path: '/admin/users', icon: Shield, permission: 'manage_users' },
       { name: 'Role Permissions', path: '/admin/roles', icon: KeyRound, permission: 'manage_users' },
+      { name: 'Invitations', path: '/admin/invitations', icon: ScrollText, permission: 'manage_users' },
       { name: 'Ruleset Governance', path: '/admin/rulesets', icon: ScrollText, permission: 'manage_rulesets' },
+      { name: 'Officials', path: '/admin/officials', icon: Shield, permission: 'manage_matches' },
       { name: 'Audit Trail', path: '/admin/audit-log', icon: History, permission: 'view_audit_logs' },
       { name: 'Settings', path: '/admin/settings', icon: Settings, permission: 'manage_users' }
     ]

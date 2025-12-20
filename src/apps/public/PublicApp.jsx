@@ -16,6 +16,10 @@ import ProfilePage from './pages/ProfilePage';
 import MatchCenterPage from './pages/MatchCenterPage';
 import PlayerProfilePage from './pages/PlayerProfilePage';
 import PlayerLookup from '../../pages/PlayerLookup';
+import LoginPage from './pages/LoginPage';
+import PortalHomePage from './pages/PortalHomePage';
+import PortalGuard from './components/PortalGuard';
+import { Navigate } from 'react-router-dom';
 
 const PublicApp = () => {
   return (
@@ -32,7 +36,17 @@ const PublicApp = () => {
         <Route path="gaming" element={<GamingPage />} />
         <Route path="match-center" element={<MatchCenterPage />} />
         <Route path="submit-lineup" element={<LineupSubmissionPage />} />
-        <Route path="signup" element={<SignUpPage />} />
+        <Route path="login" element={<LoginPage />} />
+        <Route path="register" element={<SignUpPage />} />
+        <Route path="signup" element={<Navigate to="/register" replace />} />
+        <Route
+          path="portal"
+          element={
+            <PortalGuard>
+              <PortalHomePage />
+            </PortalGuard>
+          }
+        />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="teams/:teamId" element={<TeamProfilePage />} />
         <Route path="players/:playerId" element={<PlayerProfilePage />} />

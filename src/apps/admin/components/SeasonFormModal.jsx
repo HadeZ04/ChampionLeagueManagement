@@ -17,6 +17,7 @@ const DEFAULT_FORM = {
 }
 
 const NUMERIC_FIELDS = new Set(['tournamentId', 'rulesetId', 'participationFee', 'maxTeams', 'expectedRounds'])
+const LOCKED_STATUSES = new Set(['locked', 'completed', 'archived'])
 
 const toDateValue = (value) => (value ? String(value).slice(0, 10) : '')
 const toDateTimeValue = (value) => (value ? String(value).slice(0, 16) : '')
@@ -30,11 +31,12 @@ const SeasonFormModal = ({
   isSubmitting = false
 }) => {
   const [formData, setFormData] = useState(DEFAULT_FORM)
+  const [formErrors, setFormErrors] = useState([])
 
   const statusOptions = useMemo(() => {
-    return Array.isArray(metadata.statuses) && metadata.statuses.length > 0
-      ? metadata.statuses
-      : ['draft', 'in_progress', 'completed']
+    const defaults = ['draft', 'in_progress', 'active', 'completed', 'locked', 'archived']
+    const fromMetadata = Array.isArray(metadata.statuses) && metadata.statuses.length > 0 ? metadata.statuses : []
+    return Array.from(new Set([...fromMetadata, ...defaults]))
   }, [metadata.statuses])
 
   useEffect(() => {
@@ -64,7 +66,10 @@ const SeasonFormModal = ({
         status: statusOptions[0] ?? 'draft'
       })
     }
+    setFormErrors([])
   }, [season, isOpen, statusOptions])
+
+  const isLocked = season ? LOCKED_STATUSES.has(String(season.status).toLowerCase()) : false
 
   const handleChange = (event) => {
     const { name, value } = event.target
@@ -102,6 +107,44 @@ const SeasonFormModal = ({
       expectedRounds: Number(formData.expectedRounds || 18)
     }
 
+    const validationMessages = []
+
+    if (!payload.name) {
+      validationMessages.push('Season name is required.')
+    }
+    if (!payload.code) {
+      validationMessages.push('Season code is required.')
+    }
+    if (!payload.startDate) {
+      validationMessages.push('Start date is required.')
+    }
+    if (payload.endDate && payload.startDate && payload.endDate < payload.startDate) {
+      validationMessages.push('End date cannot be before start date.')
+    }
+    if (
+      payload.registrationDeadline &&
+      payload.startDate &&
+      payload.registrationDeadline > `${payload.startDate}T23:59`
+    ) {
+      validationMessages.push('Registration deadline must be before the season start date.')
+    }
+    if (
+      payload.invitationOpenedAt &&
+      payload.registrationDeadline &&
+      payload.invitationOpenedAt > payload.registrationDeadline
+    ) {
+      validationMessages.push('Invitation open time must be before registration deadline.')
+    }
+    if (isLocked) {
+      validationMessages.push('Locked seasons cannot be edited.')
+    }
+
+    if (validationMessages.length > 0) {
+      setFormErrors(validationMessages)
+      return
+    }
+
+    setFormErrors([])
     onSave(payload)
   }
 
@@ -126,6 +169,22 @@ const SeasonFormModal = ({
           </button>
         </div>
 
+        {isLocked && (
+          <div className="mx-6 mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Season is locked and cannot be edited. Unlock via administrative override to make changes.
+          </div>
+        )}
+
+        {formErrors.length > 0 && (
+          <div className="mx-6 mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <ul className="list-disc space-y-1 pl-4">
+              {formErrors.map((err) => (
+                <li key={err}>{err}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-5 px-6 py-6">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="flex flex-col">
@@ -137,6 +196,7 @@ const SeasonFormModal = ({
                 className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 placeholder="UEFA Champions League 2025/26"
                 required
+                disabled={isLocked || isSubmitting}
               />
             </div>
             <div className="flex flex-col">
@@ -148,6 +208,7 @@ const SeasonFormModal = ({
                 className="rounded-lg border border-gray-300 px-4 py-2 uppercase focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 placeholder="UCL_2025"
                 required
+                disabled={isLocked || isSubmitting}
               />
             </div>
           </div>
@@ -161,6 +222,7 @@ const SeasonFormModal = ({
                 onChange={handleChange}
                 className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 required
+                disabled={isLocked || isSubmitting}
               >
                 <option value="" disabled>
                   Chọn giải đấu
@@ -180,6 +242,7 @@ const SeasonFormModal = ({
                 onChange={handleChange}
                 className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 required
+                disabled={isLocked || isSubmitting}
               >
                 <option value="" disabled>
                   Chọn điều lệ
@@ -203,6 +266,7 @@ const SeasonFormModal = ({
                 onChange={handleChange}
                 className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 required
+                disabled={isLocked || isSubmitting}
               />
             </div>
             <div className="flex flex-col">
@@ -213,6 +277,7 @@ const SeasonFormModal = ({
                 value={formData.endDate}
                 onChange={handleChange}
                 className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                disabled={isLocked || isSubmitting}
               />
             </div>
           </div>
@@ -225,6 +290,7 @@ const SeasonFormModal = ({
                 value={formData.status}
                 onChange={handleChange}
                 className="rounded-lg border border-gray-300 px-4 py-2 capitalize focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                disabled={isLocked || isSubmitting}
               >
                 {statusOptions.map((status) => (
                   <option key={status} value={status}>
@@ -243,6 +309,7 @@ const SeasonFormModal = ({
                 value={formData.participationFee}
                 onChange={handleChange}
                 className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                disabled={isLocked || isSubmitting}
               />
             </div>
             <div className="flex flex-col">
@@ -268,6 +335,7 @@ const SeasonFormModal = ({
                 value={formData.invitationOpenedAt}
                 onChange={handleChange}
                 className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                disabled={isLocked || isSubmitting}
               />
             </div>
             <div className="flex flex-col">
@@ -278,6 +346,7 @@ const SeasonFormModal = ({
                 value={formData.registrationDeadline}
                 onChange={handleChange}
                 className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                disabled={isLocked || isSubmitting}
               />
             </div>
           </div>
@@ -291,6 +360,7 @@ const SeasonFormModal = ({
               rows={3}
               className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
               placeholder="Thông tin tổng quan, thể thức thi đấu, yêu cầu đặc biệt..."
+              disabled={isLocked || isSubmitting}
             />
           </div>
 
@@ -306,7 +376,7 @@ const SeasonFormModal = ({
             <button
               type="submit"
               className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isLocked}
             >
               {isSubmitting ? 'Đang lưu...' : 'Lưu Mùa giải'}
             </button>

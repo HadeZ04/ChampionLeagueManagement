@@ -3,7 +3,7 @@ import { Outlet } from 'react-router-dom';
 import PublicHeader from './PublicHeader';
 import PublicFooter from './PublicFooter';
 import LiveTicker from './LiveTicker';
-import heroVideo from '../../../assets/videos/hero-bg.mp4';
+import heroVideo from '@/assets/videos/hero-bg.mp4';
 
 const PublicLayout = () => {
   return (

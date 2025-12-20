@@ -9,7 +9,9 @@ import {
   Unlock,
   User as UserIcon,
   RefreshCw,
-  Shield
+  Shield,
+  KeyRound,
+  History
 } from 'lucide-react'
 import toast, { Toaster } from 'react-hot-toast'
 import UserFormModal from '../components/UserFormModal'
@@ -75,6 +77,7 @@ const UsersManagement = () => {
   const [userToDelete, setUserToDelete] = useState(null)
   const [roles, setRoles] = useState([])
   const [rolesLoading, setRolesLoading] = useState(false)
+  const [isResetting, setIsResetting] = useState(false)
 
   const loadUsers = useCallback(async () => {
     setIsLoading(true)
@@ -165,6 +168,38 @@ const UsersManagement = () => {
   const closeFormModal = () => {
     setIsFormModalOpen(false)
     setEditingUser(null)
+  }
+
+  const validatePassword = (password) => {
+    if (!password || password.length < 8) {
+      return 'Password must be at least 8 characters.'
+    }
+    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
+      return 'Password must include uppercase, lowercase, and a number.'
+    }
+    return null
+  }
+
+  const handleResetPassword = async (user) => {
+    const input = window.prompt(`Enter a new password for ${user.username}`)
+    if (input === null) {
+      return
+    }
+    const validationMessage = validatePassword(input.trim())
+    if (validationMessage) {
+      toast.error(validationMessage)
+      return
+    }
+    setIsResetting(true)
+    try {
+      await UserService.updateUser(user.id, { password: input.trim() })
+      toast.success('Password reset successfully.')
+    } catch (error) {
+      console.error(error)
+      toast.error('Unable to reset password.')
+    } finally {
+      setIsResetting(false)
+    }
   }
 
   const syncPrimaryRole = async (userId, desiredRoleId, currentRoles = []) => {
@@ -480,6 +515,23 @@ const UsersManagement = () => {
                           title="Edit user"
                         >
                           <Edit size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleResetPassword(user)}
+                          className="text-gray-600 hover:text-amber-600 disabled:opacity-60"
+                          title="Reset password"
+                          disabled={isResetting}
+                        >
+                          <KeyRound size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => window.open(`/admin/audit-log?userId=${user.id}`, '_self')}
+                          className="text-gray-600 hover:text-gray-900"
+                          title="View audit log"
+                        >
+                          <History size={16} />
                         </button>
                         <button
                           type="button"

@@ -5,7 +5,7 @@ import StandingsTable from '../components/StandingsTable';
 import UpcomingMatches from '../components/UpcomingMatches';
 import TopScorers from '../components/TopScorers';
 import NewsCard from '../components/NewsCard';
-import uefaWordmark from '../../../assets/images/UEFA_CHAMPIONS_LEAGUE.png';
+import uefaWordmark from '@/assets/images/UEFA_CHAMPIONS_LEAGUE.png';
 import PlayersService from '../../../layers/application/services/PlayersService';
 import MatchesService from '../../../layers/application/services/MatchesService';
 

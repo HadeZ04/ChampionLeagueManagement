@@ -1,14 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ChevronDown, Search, Globe, User, ShoppingCart, Bell } from 'lucide-react';
-import uefaPrimaryMark from '../../../assets/images/UEFA_Champions_League_logo.svg.png';
+import { Menu, X, ChevronDown, Search, Globe, ShoppingCart, Bell, LogOut } from 'lucide-react';
+import uefaPrimaryMark from '@/assets/images/UEFA_Champions_League_logo.svg.png';
+import { useAuth } from '../../../layers/application/context/AuthContext';
+import { hasAdminPortalAccess } from '../../admin/utils/accessControl';
 
 const PublicHeader = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCompetitionDropdownOpen, setIsCompetitionDropdownOpen] = useState(false);
-  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
+  const { user, isAuthenticated, logout } = useAuth();
+  const isAdmin = isAuthenticated && hasAdminPortalAccess(user);
+  const userRoles = Array.isArray(user?.roles) && user.roles.length ? user.roles : ['viewer'];
+  const displayName = user?.firstName || user?.lastName
+    ? [user.firstName, user.lastName].filter(Boolean).join(' ').trim()
+    : user?.username ?? user?.email ?? 'User';
+  const initials = displayName
+    .split(' ')
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+  const primaryDestination = isAdmin ? '/admin' : '/portal';
+
+  const handleLogout = async () => {
+    await logout();
+    setIsMobileMenuOpen(false);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -36,14 +55,6 @@ const PublicHeader = () => {
     { name: 'Youth League', path: '/youth-league' },
     { name: "Women's Champions League", path: '/womens-champions-league' },
     { name: 'Futsal Champions League', path: '/futsal-champions-league' },
-  ];
-
-  const userMenuItems = [
-    { name: 'My Profile', path: '/profile' },
-    { name: 'My Tickets', path: '/tickets' },
-    { name: 'Fantasy Football', path: '/fantasy' },
-    { name: 'Predictions', path: '/predictions' },
-    { name: 'Settings', path: '/settings' },
   ];
 
   return (
@@ -74,18 +85,53 @@ const PublicHeader = () => {
                 <ChevronDown size={12} />
               </button>
               <span className="text-white/30 hidden md:inline">|</span>
-              <Link
-                to="/signup"
-                className="hidden md:inline-flex items-center text-white/70 hover:text-white transition-colors"
-              >
-                Sign In
-              </Link>
-              <Link
-                to="/admin/login"
-                className="hidden md:inline-flex items-center px-3 py-1 bg-[#00d4ff] text-[#0a1929] font-semibold rounded hover:bg-[#00b8e6] transition-all"
-              >
-                Create Account
-              </Link>
+              {isAuthenticated ? (
+                <div className="hidden md:flex items-center gap-3">
+                  <div className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-1">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-sm font-bold uppercase text-white">
+                      {initials}
+                    </div>
+                    <div className="leading-tight">
+                      <p className="text-white text-xs font-semibold">{displayName}</p>
+                      <p className="text-[10px] uppercase text-blue-100 font-semibold">{userRoles[0]}</p>
+                    </div>
+                  </div>
+                  <Link
+                    to={primaryDestination}
+                    className="inline-flex items-center px-3 py-1 bg-[#00d4ff] text-[#0a1929] font-semibold rounded hover:bg-[#00b8e6] transition-all"
+                  >
+                    {isAdmin ? 'Admin' : 'Portal'}
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors"
+                  >
+                    <LogOut size={14} />
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="hidden md:inline-flex items-center text-white/70 hover:text-white transition-colors"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="hidden md:inline-flex items-center px-3 py-1 bg-[#00d4ff] text-[#0a1929] font-semibold rounded hover:bg-[#00b8e6] transition-all"
+                  >
+                    Create Account
+                  </Link>
+                  <Link
+                    to="/admin/login"
+                    className="hidden md:inline-flex items-center text-white/70 hover:text-white transition-colors"
+                  >
+                    Admin
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -168,6 +214,19 @@ const PublicHeader = () => {
                   {item.name}
                 </Link>
               ))}
+              {isAuthenticated && (
+                <Link
+                  key="portal-nav"
+                  to={primaryDestination}
+                  className={`px-4 py-2 text-sm font-semibold transition-colors ${
+                    location.pathname.startsWith(primaryDestination)
+                      ? 'text-[#00d4ff]'
+                      : 'text-white hover:text-white'
+                  }`}
+                >
+                  {isAdmin ? 'Admin' : 'Portal'}
+                </Link>
+              )}
             </nav>
 
             {/* Search and Actions */}
@@ -277,6 +336,19 @@ const PublicHeader = () => {
                     {item.name}
                   </Link>
                 ))}
+                {isAuthenticated && (
+                  <Link
+                    to={primaryDestination}
+                    className={`block px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+                      location.pathname.startsWith(primaryDestination)
+                        ? 'text-[#00d4ff] bg-white/5'
+                        : 'text-white/80 hover:text-white hover:bg-white/5'
+                    }`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {isAdmin ? 'Admin' : 'Portal'}
+                  </Link>
+                )}
               </div>
 
               {/* Account */}
@@ -284,20 +356,72 @@ const PublicHeader = () => {
                 <div className="text-white/60 text-xs font-semibold uppercase tracking-wide mb-3">
                   Account
                 </div>
-                <Link
-                  to="/signup"
-                  className="block px-4 py-2.5 rounded-lg text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors mb-2"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Create Account
-                </Link>
-                <Link
-                  to="/admin/login"
-                  className="block px-4 py-2.5 rounded-lg text-sm text-[#00d4ff] font-semibold bg-white/5"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Admin Login
-                </Link>
+                {isAuthenticated ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 rounded-lg bg-white/5 px-4 py-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white font-semibold uppercase">
+                        {initials}
+                      </div>
+                      <div>
+                        <p className="text-white font-semibold">{displayName}</p>
+                        <div className="mt-1 flex flex-wrap gap-1 text-[10px] uppercase text-blue-100">
+                          {userRoles.map((role) => (
+                            <span key={role} className="rounded-full bg-white/10 px-2 py-0.5 font-semibold">
+                              {role}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <Link
+                      to={primaryDestination}
+                      className="block px-4 py-2.5 rounded-lg text-sm text-[#0a1929] font-semibold bg-[#00d4ff] hover:bg-[#00b8e6] transition-colors text-center"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Go to {isAdmin ? 'Admin' : 'Portal'}
+                    </Link>
+                    <Link
+                      to="/profile"
+                      className="block px-4 py-2.5 rounded-lg text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors text-center"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                    <button
+                      onClick={() => {
+                        handleLogout()
+                        setIsMobileMenuOpen(false)
+                      }}
+                      className="block w-full px-4 py-2.5 rounded-lg text-sm text-white/90 border border-white/10 hover:bg-white/5 transition-colors text-center"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Link
+                      to="/login"
+                      className="block px-4 py-2.5 rounded-lg text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="block px-4 py-2.5 rounded-lg text-sm text-[#0a1929] font-semibold bg-[#00d4ff] hover:bg-[#00b8e6] transition-colors"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Create Account
+                    </Link>
+                    <Link
+                      to="/admin/login"
+                      className="block px-4 py-2.5 rounded-lg text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Admin Login
+                    </Link>
+                  </div>
+                )}
               </div>
             </div>
           </div>

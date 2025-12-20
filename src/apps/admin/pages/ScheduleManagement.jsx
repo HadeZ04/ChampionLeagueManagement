@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { generateRoundRobinSchedule } from '../../../lib/scheduleGenerator';
+import { generateRoundRobinSchedule } from '../../../layers/application/logic/scheduleGenerator';
 import { CalendarCheck, ListRestart, Save } from 'lucide-react';
 
 // Giả lập danh sách đội đã được phê duyệt cho một mùa giải

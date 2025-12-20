@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { ShieldCheck, LogOut, RefreshCw, User, Mail, Lock } from 'lucide-react'
 import toast, { Toaster } from 'react-hot-toast'
 import AuthService from '../../../layers/application/services/AuthService'
+import { useAuth } from '../../../layers/application/context/AuthContext'
 
 const initialProfileForm = {
   firstName: '',
@@ -17,15 +18,15 @@ const initialLoginForm = {
 }
 
 const ProfilePage = () => {
-  const [profile, setProfile] = useState(null)
+  const { user, login, logout, refreshProfile, isAuthenticated, status } = useAuth()
+  const [profile, setProfile] = useState(user ?? null)
   const [profileForm, setProfileForm] = useState(initialProfileForm)
   const [loginForm, setLoginForm] = useState(initialLoginForm)
-  const [isAuthenticating, setIsAuthenticating] = useState(false)
   const [isLoadingProfile, setIsLoadingProfile] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
 
   const bootstrapProfile = async () => {
-    if (!AuthService.isAuthenticated()) {
+    if (!isAuthenticated) {
       setProfile(null)
       setProfileForm(initialProfileForm)
       return
@@ -33,7 +34,7 @@ const ProfilePage = () => {
 
     setIsLoadingProfile(true)
     try {
-      const currentProfile = await AuthService.getCurrentUser()
+      const currentProfile = await refreshProfile()
       setProfile(currentProfile)
       setProfileForm({
         firstName: currentProfile?.firstName ?? '',
@@ -53,7 +54,7 @@ const ProfilePage = () => {
 
   useEffect(() => {
     bootstrapProfile()
-  }, [])
+  }, [isAuthenticated])
 
   const handleProfileChange = (event) => {
     const { name, value } = event.target
@@ -67,17 +68,14 @@ const ProfilePage = () => {
 
   const handleLoginSubmit = async (event) => {
     event.preventDefault()
-    setIsAuthenticating(true)
     try {
-      await AuthService.login(loginForm)
+      await login(loginForm)
       await bootstrapProfile()
       toast.success('Signed in successfully.')
       setLoginForm(initialLoginForm)
     } catch (error) {
       console.error(error)
       toast.error(error?.message ?? 'Unable to sign in with those credentials.')
-    } finally {
-      setIsAuthenticating(false)
     }
   }
 
@@ -133,13 +131,14 @@ const ProfilePage = () => {
   }
 
   const handleLogout = async () => {
-    await AuthService.logout()
+    await logout()
     setProfile(null)
     setProfileForm(initialProfileForm)
     toast.success('You have been signed out.')
   }
 
-  const isAuthenticated = Boolean(profile)
+  const isProfileLoaded = Boolean(profile)
+  const isAuthenticating = status === 'authenticating'
 
   return (
     <div className="bg-slate-50 py-12">
@@ -156,7 +155,7 @@ const ProfilePage = () => {
           </p>
         </div>
 
-        {isAuthenticated ? (
+        {isProfileLoaded ? (
           <div className="grid gap-6 lg:grid-cols-3">
             <aside className="rounded-2xl border border-gray-200 bg-white p-6">
               <div className="flex items-center gap-3">
@@ -404,7 +403,7 @@ const ProfilePage = () => {
               </ul>
               <p className="mt-4 text-xs text-blue-100">
                 Need an account?{' '}
-                <a href="/signup" className="font-semibold text-white underline">
+                <a href="/register" className="font-semibold text-white underline">
                   Create one here
                 </a>
                 .

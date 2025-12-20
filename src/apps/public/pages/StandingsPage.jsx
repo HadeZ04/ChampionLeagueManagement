@@ -162,10 +162,10 @@ const StandingsPage = () => {
                 key={phase.id}
                 onClick={() => setSelectedPhase(phase.id)}
                 className={`
-                  px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2
+                  px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 backdrop-blur-xl
                   ${selectedPhase === phase.id
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-105'
-                    : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
+                    ? 'bg-gradient-to-r from-blue-500/80 to-indigo-500/80 text-white shadow-lg shadow-blue-500/30 scale-105 border border-white/20'
+                    : 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
                   }
                 `}
                 style={{
@@ -186,10 +186,10 @@ const StandingsPage = () => {
               key={group.id}
               onClick={() => setSelectedGroup(group.id)}
               className={`
-                px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-3
+                px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-3 backdrop-blur-xl
                 ${selectedGroup === group.id
-                  ? 'bg-white text-blue-600 shadow-lg border-2 border-blue-600 scale-105'
-                  : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 hover:border-blue-300'
+                  ? 'bg-white/20 text-white shadow-lg border-2 border-white/40 scale-105'
+                  : 'bg-white/10 text-white/80 hover:bg-white/15 border border-white/20 hover:border-white/30'
                 }
               `}
               style={{
@@ -198,10 +198,10 @@ const StandingsPage = () => {
             >
               <span>{group.name}</span>
               <span className={`
-                px-2 py-1 rounded-lg text-xs font-bold
+                px-2 py-1 rounded-lg text-xs font-bold backdrop-blur-sm
                 ${selectedGroup === group.id
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'bg-slate-100 text-slate-600'
+                  ? 'bg-white/30 text-white'
+                  : 'bg-white/10 text-white/70'
                 }
               `}>
                 {group.count}
@@ -212,9 +212,9 @@ const StandingsPage = () => {
 
         {/* Error Message */}
         {error && (
-          <div className="rounded-2xl bg-rose-500/10 backdrop-blur-md border-2 border-rose-500/30 p-6 flex items-center gap-4 animate-shake shadow-2xl">
-            <div className="w-12 h-12 rounded-full bg-rose-500/20 flex items-center justify-center flex-shrink-0">
-              <Trophy size={24} className="text-rose-400" />
+          <div className="rounded-2xl bg-rose-500/20 backdrop-blur-xl border-2 border-rose-400/30 p-6 flex items-center gap-4 animate-shake">
+            <div className="w-12 h-12 rounded-full bg-rose-500/30 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-rose-400/30">
+              <Trophy size={24} className="text-rose-300" />
             </div>
             <div>
               <h3 className="font-bold text-white">Error Loading Data</h3>
@@ -228,7 +228,7 @@ const StandingsPage = () => {
           {/* Standings Table */}
           <div className="space-y-6">
             {isLoadingStandings ? (
-              <div className="rounded-2xl bg-white/5 backdrop-blur-md p-16 flex flex-col items-center justify-center gap-4 shadow-2xl border border-white/10">
+              <div className="rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 p-16 flex flex-col items-center justify-center gap-4 shadow-2xl">
                 <div className="w-16 h-16 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
                 <p className="text-white/80 font-medium">Loading standings...</p>
               </div>
@@ -237,24 +237,24 @@ const StandingsPage = () => {
             )}
 
             {/* Qualification Info Card */}
-            <div className="rounded-2xl bg-white/5 backdrop-blur-md p-6 border border-white/10 shadow-2xl hover:shadow-3xl hover:bg-white/10 transition-all duration-300">
+            <div className="rounded-3xl bg-white/5 backdrop-blur-xl p-6 border border-white/10 shadow-2xl hover:shadow-blue-500/20 hover:border-white/20 transition-all duration-300">
               <div className="flex items-start gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/50">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-400/30">
                   <Trophy size={28} className="text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-bold text-white mb-3 drop-shadow-sm">Qualification Rules</h3>
+                  <h3 className="text-lg font-bold text-white mb-2">Qualification Rules</h3>
                   <div className="space-y-2 text-sm text-white/80">
                     <p className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50"></span>
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/50"></span>
                       <span><strong className="text-white">Top 8 teams</strong> qualify directly to Round of 16</span>
                     </p>
                     <p className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-amber-500 shadow-lg shadow-amber-500/50"></span>
+                      <span className="w-2 h-2 rounded-full bg-amber-400 shadow-lg shadow-amber-400/50"></span>
                       <span><strong className="text-white">Teams 9-24</strong> enter playoff round</span>
                     </p>
                     <p className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-rose-500 shadow-lg shadow-rose-500/50"></span>
+                      <span className="w-2 h-2 rounded-full bg-rose-400 shadow-lg shadow-rose-400/50"></span>
                       <span><strong className="text-white">Bottom 12 teams</strong> are eliminated</span>
                     </p>
                   </div>
@@ -271,7 +271,7 @@ const StandingsPage = () => {
         </div>
       </div>
 
-      <style>{`
+      <style jsx>{`
         @keyframes fadeInUp {
           from {
             opacity: 0;

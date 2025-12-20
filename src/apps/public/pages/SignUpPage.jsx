@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import RegistrationService from '../../../layers/application/services/RegistrationService'
 
 const initialState = {
@@ -10,6 +11,7 @@ const initialState = {
 }
 
 const SignUpPage = () => {
+  const navigate = useNavigate()
   const [formData, setFormData] = useState(initialState)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [feedback, setFeedback] = useState({ type: null, message: '' })
@@ -25,11 +27,14 @@ const SignUpPage = () => {
     setFeedback({ type: null, message: '' })
     try {
       await RegistrationService.register(formData)
-      setFeedback({
-        type: 'success',
-        message: 'Account created successfully. You can now sign in to personalize your public experience.'
-      })
       setFormData(initialState)
+      navigate('/login', {
+        replace: true,
+        state: {
+          registrationSuccess: true,
+          username: formData.username
+        }
+      })
     } catch (error) {
       const message = error?.message ?? 'Unable to create the account. Please try again.'
       setFeedback({ type: 'error', message })

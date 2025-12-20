@@ -11,6 +11,7 @@ const STATUS_STYLES = {
   scheduled: 'bg-sky-100 text-sky-700',
   in_progress: 'bg-green-100 text-green-700',
   completed: 'bg-emerald-100 text-emerald-700',
+  locked: 'bg-red-100 text-red-700',
   archived: 'bg-slate-200 text-slate-600'
 }
 
@@ -21,8 +22,11 @@ const STATUS_LABELS = {
   scheduled: 'Lên lịch',
   in_progress: 'Đang diễn ra',
   completed: 'Đã kết thúc',
+  locked: 'Đã khóa',
   archived: 'Lưu trữ'
 }
+
+const LOCKED_STATUSES = new Set(['locked', 'completed', 'archived'])
 
 const formatDateRange = (start, end) => {
   if (!start && !end) {
@@ -91,6 +95,11 @@ const SeasonManagement = () => {
   }, [loadMetadata, loadSeasons])
 
   const handleOpenModal = (season = null) => {
+    if (season && LOCKED_STATUSES.has(String(season.status).toLowerCase())) {
+      setError('Mùa giải đang bị khóa và không thể chỉnh sửa.')
+      setSuccess(null)
+      return
+    }
     setEditingSeason(season)
     setIsModalOpen(true)
     setError(null)

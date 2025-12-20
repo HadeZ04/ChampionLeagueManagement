@@ -10,6 +10,23 @@ const DEFAULT_PLAYER_STATS = {
   minutes: []
 }
 
+const DEFAULT_OVERVIEW = {
+  totals: {
+    teams: 0,
+    matches: 0,
+    goals: 0,
+    players: 0
+  },
+  trends: {
+    teams: 0,
+    matches: 0,
+    goals: 0,
+    players: 0
+  },
+  topPerformers: {},
+  updatedAt: null
+}
+
 const FALLBACK_STATS = {
   goals: [
     {
@@ -189,6 +206,28 @@ const normalizePlayerStatsPayload = (payload = {}) => {
   return base
 }
 
+const normalizeOverview = (payload = {}) => {
+  const totals = payload.totals ?? {}
+  const trends = payload.trends ?? payload.change ?? {}
+  const top = payload.topPerformers ?? payload.top ?? {}
+  return {
+    totals: {
+      teams: Number(totals.teams ?? totals.totalTeams ?? 0),
+      matches: Number(totals.matches ?? totals.totalMatches ?? 0),
+      goals: Number(totals.goals ?? totals.totalGoals ?? 0),
+      players: Number(totals.players ?? totals.totalPlayers ?? 0)
+    },
+    trends: {
+      teams: Number(trends.teams ?? trends.totalTeams ?? 0),
+      matches: Number(trends.matches ?? trends.totalMatches ?? 0),
+      goals: Number(trends.goals ?? trends.totalGoals ?? 0),
+      players: Number(trends.players ?? trends.totalPlayers ?? 0)
+    },
+    topPerformers: top,
+    updatedAt: payload.updatedAt ?? payload.generatedAt ?? null
+  }
+}
+
 const handleApiResponse = (response) => {
   if (!response) {
     return DEFAULT_PLAYER_STATS
@@ -200,6 +239,17 @@ const handleApiResponse = (response) => {
 }
 
 class StatsService {
+  async getOverview(params = {}) {
+    try {
+      const response = await ApiService.get(STATS_ENDPOINTS.OVERVIEW, params)
+      const payload = response?.data ?? response
+      return normalizeOverview(payload ?? {})
+    } catch (error) {
+      console.error('Failed to load overview stats', error)
+      return DEFAULT_OVERVIEW
+    }
+  }
+
   async getPlayerStats(params = {}) {
     try {
       const response = await ApiService.get(STATS_ENDPOINTS.PLAYERS, params)
