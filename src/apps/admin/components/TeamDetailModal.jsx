@@ -14,28 +14,28 @@ const TeamDetailModal = ({ isOpen, onClose, team, getStatusBadge }) => {
         <div className="p-6">
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <h3 className="font-semibold text-gray-900 mb-4">Team Information</h3>
+              <h3 className="font-semibold text-gray-900 mb-4">Thông tin đội</h3>
               <div className="space-y-3 text-sm">
-                <div className="flex justify-between"><span className="text-gray-600">Country:</span><span className="font-medium">{team.country}</span></div>
-                <div className="flex justify-between"><span className="text-gray-600">City:</span><span className="font-medium">{team.city}</span></div>
-                <div className="flex justify-between"><span className="text-gray-600">Stadium:</span><span className="font-medium">{team.stadium}</span></div>
-                <div className="flex justify-between"><span className="text-gray-600">Capacity:</span><span className="font-medium">{team.capacity.toLocaleString()}</span></div>
-                <div className="flex justify-between"><span className="text-gray-600">Founded:</span><span className="font-medium">{team.founded}</span></div>
-                <div className="flex justify-between"><span className="text-gray-600">Coach:</span><span className="font-medium">{team.coach}</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">Quốc gia:</span><span className="font-medium">{team.country}</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">Thành phố:</span><span className="font-medium">{team.city}</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">Sân vận động:</span><span className="font-medium">{team.stadium}</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">Sức chứa:</span><span className="font-medium">{team.capacity.toLocaleString('vi-VN')}</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">Năm thành lập:</span><span className="font-medium">{team.founded}</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">Huấn luyện viên:</span><span className="font-medium">{team.coach}</span></div>
               </div>
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900 mb-4">Current Season</h3>
+              <h3 className="font-semibold text-gray-900 mb-4">Mùa hiện tại</h3>
               <div className="space-y-3 text-sm">
-                <div className="flex justify-between"><span className="text-gray-600">Players:</span><span className="font-medium">{team.players}</span></div>
-                <div className="flex justify-between"><span className="text-gray-600">Status:</span>{getStatusBadge(team.status)}</div>
-                <div className="flex justify-between"><span className="text-gray-600">Last Updated:</span><span className="font-medium">{team.lastUpdated}</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">Cầu thủ:</span><span className="font-medium">{team.players}</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">Trạng thái:</span>{getStatusBadge(team.status)}</div>
+                <div className="flex justify-between"><span className="text-gray-600">Cập nhật lần cuối:</span><span className="font-medium">{team.lastUpdated}</span></div>
               </div>
             </div>
           </div>
           <div className="mt-6 flex space-x-3">
-            <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg">Edit Team</button>
-            <button className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg">View Players</button>
+            <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg">Sửa đội</button>
+            <button className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg">Xem cầu thủ</button>
           </div>
         </div>
       </div>

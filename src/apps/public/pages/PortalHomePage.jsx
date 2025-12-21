@@ -3,50 +3,51 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight, BadgeCheck, ClipboardList, FileText, LogOut, ShieldCheck, UserRound } from 'lucide-react'
 import { useAuth } from '../../../layers/application/context/AuthContext'
 import { hasAdminPortalAccess } from '../../admin/utils/accessControl'
+import { toRoleLabel } from '../../../shared/utils/vi'
 
 const VIEWER_MODULE = {
   key: 'viewer',
-  title: 'Fan & viewer access',
-  description: 'Check fixtures, standings, and news tailored to your account.',
+  title: 'Dành cho người xem',
+  description: 'Xem lịch thi đấu, bảng xếp hạng và tin tức phù hợp với tài khoản của bạn.',
   actions: [
-    { label: 'See standings', path: '/standings' },
-    { label: 'View fixtures', path: '/matches' }
+    { label: 'Xem bảng xếp hạng', path: '/standings' },
+    { label: 'Xem lịch thi đấu', path: '/matches' }
   ],
-  badge: 'viewer'
+  badge: 'người xem'
 }
 
 const MODULE_CATALOG = [
   {
     key: 'team_registrar',
-    title: 'Team registrar',
-    description: 'Submit rosters, upload documents, and track approval status.',
-    badge: 'team_registrar',
+    title: 'Quản lý đăng ký đội',
+    description: 'Gửi danh sách, tải tài liệu và theo dõi trạng thái phê duyệt.',
+    badge: 'đăng ký đội',
     roles: ['teamregistrar', 'team_registrar', 'team_manager', 'registrar'],
     actions: [
-      { label: 'Manage registrations', path: '/submit-lineup' },
-      { label: 'Upload documents', path: '/profile' }
+      { label: 'Quản lý đăng ký', path: '/submit-lineup' },
+      { label: 'Tải tài liệu', path: '/profile' }
     ]
   },
   {
     key: 'referee',
-    title: 'Referee',
-    description: 'Review your match assignments and jump into the live console.',
-    badge: 'referee',
+    title: 'Trọng tài',
+    description: 'Xem phân công trận đấu và truy cập bảng điều khiển trực tiếp.',
+    badge: 'trọng tài',
     roles: ['referee', 'match_official', 'official'],
     actions: [
-      { label: 'My assignments', path: '/matches' },
-      { label: 'Live console', path: '/match-center' }
+      { label: 'Phân công của tôi', path: '/matches' },
+      { label: 'Bảng trực tiếp', path: '/match-center' }
     ]
   },
   {
     key: 'supervisor',
-    title: 'Supervisor',
-    description: 'Monitor reports and keep competitions running smoothly.',
-    badge: 'supervisor',
+    title: 'Giám sát',
+    description: 'Theo dõi báo cáo và vận hành giải đấu trơn tru.',
+    badge: 'giám sát',
     roles: ['supervisor', 'competition_manager', 'competitionmanager'],
     actions: [
-      { label: 'Monitor reports', path: '/profile' },
-      { label: 'Review matches', path: '/matches' }
+      { label: 'Theo dõi báo cáo', path: '/profile' },
+      { label: 'Duyệt trận đấu', path: '/matches' }
     ]
   },
   {
@@ -59,12 +60,12 @@ const MODULE_CATALOG = [
 const COMMON_MODULES = [
   {
     key: 'profile',
-    title: 'Profile & security',
-    description: 'Update your contact info, password, and connected sessions.',
-    badge: 'account',
+    title: 'Hồ sơ & bảo mật',
+    description: 'Cập nhật thông tin liên hệ, mật khẩu và phiên đăng nhập.',
+    badge: 'tài khoản',
     roles: ['*'],
     actions: [
-      { label: 'Open profile', path: '/profile' }
+      { label: 'Mở hồ sơ', path: '/profile' }
     ]
   }
 ]
@@ -99,11 +100,11 @@ const PortalHomePage = () => {
   const navigate = useNavigate()
 
   const name = useMemo(() => {
-    if (!user) return 'Guest'
+    if (!user) return 'Khách'
     if (user.firstName || user.lastName) {
       return [user.firstName, user.lastName].filter(Boolean).join(' ').trim()
     }
-    return user.username ?? user.email ?? 'User'
+    return user.username ?? user.email ?? 'Người dùng'
   }, [user])
 
   const roles = useMemo(() => (Array.isArray(user?.roles) && user.roles.length ? user.roles : ['viewer']), [user])
@@ -132,12 +133,12 @@ const PortalHomePage = () => {
             {initials}
           </div>
           <div>
-            <p className="text-sm text-blue-100">Logged in</p>
-            <h1 className="text-2xl font-semibold leading-tight">Welcome, {name}</h1>
+            <p className="text-sm text-blue-100">Đã đăng nhập</p>
+            <h1 className="text-2xl font-semibold leading-tight">Xin chào, {name}</h1>
             <div className="mt-1 flex flex-wrap items-center gap-2 text-xs uppercase tracking-wide">
               {roles.map((role) => (
                 <span key={role} className="rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold">
-                  {role}
+                  {toRoleLabel(role)}
                 </span>
               ))}
             </div>
@@ -150,14 +151,14 @@ const PortalHomePage = () => {
             className="inline-flex items-center gap-2 rounded-lg bg-white/15 px-4 py-2 text-sm font-semibold text-white hover:bg-white/25 transition"
           >
             <UserRound size={16} />
-            Profile
+            Hồ sơ
           </Link>
           <button
             onClick={handleLogout}
             className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50 transition"
           >
             <LogOut size={16} />
-            Logout
+            Đăng xuất
           </button>
         </div>
       </div>
@@ -165,7 +166,7 @@ const PortalHomePage = () => {
       <div className="mb-4 flex items-center gap-3 text-gray-700">
         <ShieldCheck size={18} className="text-blue-600" />
         <p className="text-sm">
-          Portal access is scoped to your role. Modules below reflect what you can do today.
+          Quyền truy cập được giới hạn theo vai trò. Các mục dưới đây thể hiện những gì bạn có thể làm hôm nay.
         </p>
       </div>
 

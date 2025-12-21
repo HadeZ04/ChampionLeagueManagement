@@ -36,7 +36,7 @@ const SignUpPage = () => {
         }
       })
     } catch (error) {
-      const message = error?.message ?? 'Unable to create the account. Please try again.'
+      const message = error?.message ?? 'Không thể tạo tài khoản. Vui lòng thử lại.'
       setFeedback({ type: 'error', message })
     } finally {
       setIsSubmitting(false)
@@ -46,10 +46,9 @@ const SignUpPage = () => {
   return (
     <div className="bg-slate-50 py-12">
       <div className="uefa-container max-w-2xl bg-white shadow-lg rounded-xl p-8">
-        <h1 className="text-3xl font-bold text-uefa-dark mb-2">Create your UEFA account</h1>
+        <h1 className="text-3xl font-bold text-uefa-dark mb-2">Tạo tài khoản</h1>
         <p className="text-uefa-gray mb-8">
-          This signup flow is only for fan-facing experiences. Newly created users receive the viewer role and cannot
-          access the admin dashboard.
+          Trang đăng ký này dành cho người dùng. Tài khoản mới sẽ có vai trò người xem và không thể truy cập khu vực quản trị.
         </p>
 
         {feedback.type && (
@@ -67,7 +66,7 @@ const SignUpPage = () => {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-uefa-dark mb-1">First name</label>
+              <label className="block text-sm font-medium text-uefa-dark mb-1">Họ</label>
               <input
                 name="firstName"
                 value={formData.firstName}
@@ -77,7 +76,7 @@ const SignUpPage = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-uefa-dark mb-1">Last name</label>
+              <label className="block text-sm font-medium text-uefa-dark mb-1">Tên</label>
               <input
                 name="lastName"
                 value={formData.lastName}
@@ -89,7 +88,7 @@ const SignUpPage = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-uefa-dark mb-1">Username</label>
+            <label className="block text-sm font-medium text-uefa-dark mb-1">Tên đăng nhập</label>
             <input
               name="username"
               value={formData.username}
@@ -101,7 +100,7 @@ const SignUpPage = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-uefa-dark mb-1">Email</label>
+            <label className="block text-sm font-medium text-uefa-dark mb-1">Địa chỉ email</label>
             <input
               name="email"
               type="email"
@@ -113,7 +112,7 @@ const SignUpPage = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-uefa-dark mb-1">Password</label>
+            <label className="block text-sm font-medium text-uefa-dark mb-1">Mật khẩu</label>
             <input
               name="password"
               type="password"
@@ -123,7 +122,7 @@ const SignUpPage = () => {
               className="w-full rounded-lg border border-gray-200 px-4 py-2 focus:border-uefa-blue focus:outline-none"
               required
             />
-            <p className="text-xs text-uefa-gray mt-1">Password must contain at least 8 characters.</p>
+            <p className="text-xs text-uefa-gray mt-1">Mật khẩu phải có ít nhất 8 ký tự.</p>
           </div>
 
           <button
@@ -131,7 +130,7 @@ const SignUpPage = () => {
             disabled={isSubmitting}
             className="w-full rounded-lg bg-uefa-blue py-3 text-white font-semibold hover:bg-blue-700 transition disabled:opacity-60"
           >
-            {isSubmitting ? 'Creating account...' : 'Sign up'}
+            {isSubmitting ? 'Đang tạo tài khoản...' : 'Đăng ký'}
           </button>
         </form>
       </div>

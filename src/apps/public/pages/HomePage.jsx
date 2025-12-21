@@ -8,18 +8,19 @@ import NewsCard from '../components/NewsCard';
 import uefaWordmark from '@/assets/images/UEFA_CHAMPIONS_LEAGUE.png';
 import PlayersService from '../../../layers/application/services/PlayersService';
 import MatchesService from '../../../layers/application/services/MatchesService';
+import { toCompetitionStageLabel, toCountryLabel, toMatchStatusLabel, toPlayerPositionLabel } from '../../../shared/utils/vi';
 
 const heroStats = [
-  { label: 'Clubs', value: '36', icon: Users, gradient: 'from-[#003B73] via-[#0074F0] to-[#E3F2FF]' },
-  { label: 'Matches', value: '189', icon: CalendarDays, gradient: 'from-[#003B73] via-[#00C65A] to-[#FACC15]' },
-  { label: 'Goals', value: '312', icon: Activity, gradient: 'from-[#00924A] via-[#00C65A] to-[#FF9F1C]' },
-  { label: 'Nations', value: '17', icon: Trophy, gradient: 'from-[#003B73] via-[#00C65A] to-[#FACC15]' }
+  { label: 'CLB', value: '36', icon: Users, gradient: 'from-[#003B73] via-[#0074F0] to-[#E3F2FF]' },
+  { label: 'Trận', value: '189', icon: CalendarDays, gradient: 'from-[#003B73] via-[#00C65A] to-[#FACC15]' },
+  { label: 'Bàn thắng', value: '312', icon: Activity, gradient: 'from-[#00924A] via-[#00C65A] to-[#FF9F1C]' },
+  { label: 'Quốc gia', value: '17', icon: Trophy, gradient: 'from-[#003B73] via-[#00C65A] to-[#FACC15]' }
 ];
 
 const quickTiles = [
   {
-    title: 'Fixtures',
-    description: 'Filter by phase, date, or club with timeline-ready cards.',
+    title: 'Lịch thi đấu',
+    description: 'Lọc theo vòng đấu, ngày hoặc CLB với thẻ timeline trực quan.',
     to: '/matches',
     accent: 'from-[#0066FF] via-[#0099FF] to-[#00CCFF]',
     background: 'linear-gradient(150deg, rgba(0, 102, 255, 0.95), rgba(0, 153, 255, 0.9), rgba(0, 204, 255, 0.85))',
@@ -28,8 +29,8 @@ const quickTiles = [
     icon: CalendarDays
   },
   {
-    title: 'Standings',
-    description: 'Live table with qualification, playoff and elimination zones.',
+    title: 'Bảng xếp hạng',
+    description: 'Bảng điểm trực tiếp với khu vực giành vé, play-off và bị loại.',
     to: '/standings',
     accent: 'from-[#00AA44] via-[#00CC55] to-[#00EE66]',
     background: 'linear-gradient(150deg, rgba(0, 170, 68, 0.95), rgba(0, 204, 85, 0.9), rgba(0, 238, 102, 0.85))',
@@ -42,25 +43,25 @@ const quickTiles = [
 const featuredNews = [
   {
     id: 1,
-    title: 'Liverpool maintain perfect record with victory over Lille',
-    summary: 'Anfield lit up under the lights as Salah and Nunez sealed another Champions League classic.',
+    title: 'Liverpool giữ mạch toàn thắng sau chiến thắng trước Lille',
+    summary: 'Anfield bùng nổ dưới ánh đèn khi Salah và Nunez mang về thêm một đêm Cúp C1 kinh điển.',
     category: 'matches',
     date: '2025-02-10',
     time: '21:45',
     image: '',
     featured: true,
-    tags: ['Liverpool', 'Lille', 'Match Report']
+    tags: ['Liverpool', 'Lille', 'Tường thuật trận']
   },
   {
     id: 2,
-    title: 'Barcelona cruise past Atalanta to secure top-eight finish',
-    summary: 'Flick\'s side delivered a masterclass performance to guarantee their place in the Round of 16.',
+    title: 'Barcelona vượt qua Atalanta để chắc suất top 8',
+    summary: 'Đội bóng của Flick thể hiện đẳng cấp để đảm bảo suất vào vòng 1/8.',
     category: 'matches',
     date: '2025-02-09',
     time: '20:30',
     image: '',
     featured: true,
-    tags: ['Barcelona', 'Atalanta', 'Round of 16']
+    tags: ['Barcelona', 'Atalanta', 'Vòng 1/8']
   }
 ];
 
@@ -89,7 +90,7 @@ const HomePage = () => {
         setPlayerResults(playersResponse.players || []);
         setMatchResults((matchesResponse.matches || []).slice(0, 5));
       } catch (error) {
-        console.error('Search failed', error);
+        console.error('Tìm kiếm thất bại', error);
         setPlayerResults([]);
         setMatchResults([]);
       } finally {
@@ -139,7 +140,7 @@ const HomePage = () => {
               <div className="flex items-center gap-4">
                 <img
                   src={uefaWordmark}
-                  alt="UEFA Champions League wordmark"
+                  alt="Logo chữ Cúp C1 châu Âu"
                   className="h-12 md:h-14 w-auto drop-shadow-2xl opacity-90"
                   loading="lazy"
                 />
@@ -181,7 +182,7 @@ const HomePage = () => {
 
                       }}
                     >
-                      Champions League
+                      Cúp C1 châu Âu
                     </span>
                   </span>
                   
@@ -191,9 +192,9 @@ const HomePage = () => {
 
               <div className="relative mt-4">
                 <p className="text-base md:text-lg text-slate-200 max-w-2xl leading-relaxed font-light backdrop-blur-sm bg-black/10 p-4 rounded-2xl border border-white/10">
-                  Live fixtures, cinematic highlights, and premium data feed bringing the 
-                  <span className="text-cyan-300 font-semibold"> UEFA Champions League </span>
-                  atmosphere to every device.
+                  Lịch thi đấu trực tiếp, video tổng hợp giàu cảm xúc và nguồn dữ liệu cao cấp mang bầu không khí
+                  <span className="text-cyan-300 font-semibold"> Cúp C1 châu Âu </span>
+                  tới mọi thiết bị.
                 </p>
               </div>
 
@@ -205,7 +206,7 @@ const HomePage = () => {
                   <span className="relative z-10 flex items-center gap-2">
                     <Play size={20} className="group-hover:scale-125 transition-transform drop-shadow-[0_0_10px_rgba(255,255,255,1)]" />
                     <span className="relative drop-shadow-[0_2px_4px rgba(0,0,0,0.5)]">
-                      Watch Live
+                      Xem trực tiếp
                     </span>
                   </span>
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-blue-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -229,7 +230,7 @@ const HomePage = () => {
                   to="/standings"
                   className="group relative px-8 py-4 bg-white/10 backdrop-blur-md border-2 border-cyan-400/40 rounded-full font-bold text-white text-sm uppercase tracking-wider hover:bg-white/20 hover:border-cyan-300 transition-all hover:scale-110 overflow-hidden hover:shadow-[0_0_40px rgba(0,217,255,0.6)]"
                 >
-                  <span className="relative z-10 drop-shadow-[0_2px_4px rgba(0,0,0,0.5)]">View Standings</span>
+                  <span className="relative z-10 drop-shadow-[0_2px_4px rgba(0,0,0,0.5)]">Xem bảng xếp hạng</span>
                   
                   {/* Animated gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -281,10 +282,10 @@ const HomePage = () => {
                   <div className="w-9 h-9 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform bg-green-500/20">
                     <div className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse shadow-[0_0_10px rgba(74,222,128,0.6)]"></div>
                   </div>
-                  <span className="text-[10px] uppercase tracking-wider text-green-300 font-bold drop-shadow-[0_2px_4px rgba(0,0,0,0.8)]">Live Now</span>
+                  <span className="text-[10px] uppercase tracking-wider text-green-300 font-bold drop-shadow-[0_2px_4px rgba(0,0,0,0.8)]">Đang diễn ra</span>
                 </div>
-                <p className="text-xl font-bold text-white mb-0.5 text-3d">3 Matches</p>
-                <p className="text-xs text-slate-300">Currently in progress</p>
+                <p className="text-xl font-bold text-white mb-0.5 text-3d">3 trận</p>
+                <p className="text-xs text-slate-300">Đang thi đấu</p>
                 
                 {/* Live pulse effect */}
                 <div className="absolute top-4 right-4 w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
@@ -295,10 +296,10 @@ const HomePage = () => {
                   <div className="w-9 h-9 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform bg-blue-500/20">
                     <CalendarDays size={18} className="text-blue-400 drop-shadow-[0_0_10px rgba(59,130,246,0.8)]" />
                   </div>
-                  <span className="text-[10px] uppercase tracking-wider text-blue-300 font-bold drop-shadow-[0_2px_4px rgba(0,0,0,0.8)]">Next Match</span>
+                  <span className="text-[10px] uppercase tracking-wider text-blue-300 font-bold drop-shadow-[0_2px_4px rgba(0,0,0,0.8)]">Trận kế tiếp</span>
                 </div>
-                <p className="text-xl font-bold text-white mb-0.5 text-3d">Tomorrow 21:00</p>
-                <p className="text-xs text-slate-300">Real Madrid vs Man City</p>
+                <p className="text-xl font-bold text-white mb-0.5 text-3d">Ngày mai 21:00</p>
+                <p className="text-xs text-slate-300">Real Madrid gặp Man City</p>
               </div>
 
               <div className="p-5 transition-all group hover:scale-105 backdrop-blur-sm bg-black/10 rounded-2xl border border-white/10 hover:border-yellow-400/30">
@@ -306,10 +307,10 @@ const HomePage = () => {
                   <div className="w-9 h-9 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform bg-yellow-500/20">
                     <Trophy size={18} className="text-yellow-400 drop-shadow-[0_0_10px rgba(251,191,36,0.8)]" />
                   </div>
-                  <span className="text-[10px] uppercase tracking-wider text-yellow-300 font-bold drop-shadow-[0_2px_4px rgba(0,0,0,0.8)]">Top Scorer</span>
+                  <span className="text-[10px] uppercase tracking-wider text-yellow-300 font-bold drop-shadow-[0_2px_4px rgba(0,0,0,0.8)]">Vua phá lưới</span>
                 </div>
                 <p className="text-xl font-bold text-white mb-0.5 text-3d-gold">Erling Haaland</p>
-                <p className="text-xs text-slate-300">12 Goals this season</p>
+                <p className="text-xs text-slate-300">12 bàn mùa này</p>
                 
                 {/* Crown icon for top scorer */}
                 <Star size={12} className="absolute top-4 right-4 text-yellow-400 animate-pulse" />
@@ -319,7 +320,7 @@ const HomePage = () => {
             {/* Enhanced Scroll Indicator */}
             <div className="flex justify-center pt-8">
               <div className="flex flex-col items-center gap-2 animate-bounce opacity-60 hover:opacity-100 transition-opacity group cursor-pointer">
-                <span className="text-[10px] uppercase tracking-[0.3em] text-cyan-300/70 font-semibold group-hover:text-cyan-300 transition-colors">Scroll to explore</span>
+                <span className="text-[10px] uppercase tracking-[0.3em] text-cyan-300/70 font-semibold group-hover:text-cyan-300 transition-colors">Cuộn để khám phá</span>
                 <div className="w-5 h-8 border-2 border-cyan-400/40 rounded-full flex items-start justify-center p-1.5 group-hover:border-cyan-300 transition-colors">
                   <div className="w-1 h-2 bg-cyan-400/60 rounded-full animate-pulse group-hover:bg-cyan-300"></div>
                 </div>
@@ -336,10 +337,10 @@ const HomePage = () => {
             <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
             
             <div className="relative mt-4">
-              <p className="text-xs uppercase tracking-[0.4em] text-white/90 mb-4 font-semibold">Featured Match</p>
+              <p className="text-xs uppercase tracking-[0.4em] text-white/90 mb-4 font-semibold">Trận tâm điểm</p>
               <div className="flex items-center justify-between mb-6">
-                <p className="text-2xl font-bold text-white">PSG vs Dortmund</p>
-                <span className="text-sm font-mono text-white bg-red-600 px-3 py-1 rounded-full shadow-lg animate-pulse">Live 78'</span>
+                <p className="text-2xl font-bold text-white">PSG gặp Dortmund</p>
+                <span className="text-sm font-mono text-white bg-red-600 px-3 py-1 rounded-full shadow-lg animate-pulse">Trực tiếp 78'</span>
               </div>
               <div className="flex items-center justify-between py-6 border-y border-white/20">
                 <div>
@@ -354,7 +355,7 @@ const HomePage = () => {
               </div>
               <div className="mt-6 flex items-center justify-between text-xs uppercase tracking-[0.35em] text-white/80 font-medium">
                 <span>Parc des Princes</span>
-                <span>Group H</span>
+                <span>Bảng H</span>
               </div>
             </div>
             
@@ -378,11 +379,11 @@ const HomePage = () => {
                 </div>
                 
                 <div className="relative mt-4">
-                  <p className="text-xs uppercase tracking-[0.35em] text-white/90 mb-3 font-semibold">Explore</p>
+                  <p className="text-xs uppercase tracking-[0.35em] text-white/90 mb-3 font-semibold">Khám phá</p>
                   <p className="text-2xl font-bold mb-2 text-white drop-shadow-lg">{tile.title}</p>
                   <p className="text-sm text-white/95 mb-6 font-medium">{tile.description}</p>
                   <div className="inline-flex items-center gap-2 text-sm font-bold text-white group-hover:gap-3 transition-all">
-                    Go now <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                    Xem ngay <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                   </div>
                 </div>
                 
@@ -398,9 +399,9 @@ const HomePage = () => {
       <section className="bg-white/5 border border-white/10 rounded-[32px] p-8 backdrop-blur-md">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-2xl font-semibold text-white">Search clubs, players & fixtures</h2>
+            <h2 className="text-2xl font-semibold text-white">Tìm kiếm CLB, cầu thủ & lịch thi đấu</h2>
             <p className="text-white/70 text-sm">
-              Live data pulled from the Football-Data API with instant filtering.
+              Dữ liệu trực tiếp từ Football-Data API với bộ lọc tức thì.
             </p>
           </div>
           <div className="relative w-full md:w-96">
@@ -408,12 +409,12 @@ const HomePage = () => {
               type="text"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Type at least 2 characters..."
+              placeholder="Nhập ít nhất 2 ký tự..."
               className="w-full rounded-full bg-black/40 border border-white/20 text-white px-5 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400/60 placeholder:text-white/50"
             />
             {searching && (
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs uppercase tracking-[0.3em] text-cyan-300">
-                Searching...
+                Đang tìm...
               </span>
             )}
           </div>
@@ -422,50 +423,50 @@ const HomePage = () => {
         {(playerResults.length > 0 || matchResults.length > 0) && (
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-black/30 border border-white/10 rounded-2xl p-5">
-              <h3 className="text-white/80 text-sm uppercase tracking-[0.3em] mb-3">Players</h3>
+              <h3 className="text-white/80 text-sm uppercase tracking-[0.3em] mb-3">Cầu thủ</h3>
               <ul className="space-y-3">
                 {playerResults.map((player) => (
                   <li key={player.id} className="flex items-center justify-between text-white/90">
                     <div>
                       <div className="font-semibold text-white">{player.name}</div>
                       <div className="text-xs text-white/60">
-                        {player.teamName} · {player.position || 'N/A'}
+                        {player.teamName} · {toPlayerPositionLabel(player.position)}
                       </div>
                     </div>
                     <div className="text-right text-xs text-white/60">
-                      Shirt #{player.shirtNumber ?? '—'}
-                      <div>{player.nationality || 'Nationality TBC'}</div>
+                      Áo #{player.shirtNumber ?? '—'}
+                      <div>{toCountryLabel(player.nationality)}</div>
                     </div>
                   </li>
                 ))}
               </ul>
               {playerResults.length === 0 && !searching && (
-                <div className="text-white/60 text-sm">No players match this search.</div>
+                <div className="text-white/60 text-sm">Không tìm thấy cầu thủ phù hợp.</div>
               )}
             </div>
 
             <div className="bg-black/30 border border-white/10 rounded-2xl p-5">
-              <h3 className="text-white/80 text-sm uppercase tracking-[0.3em] mb-3">Matches</h3>
+              <h3 className="text-white/80 text-sm uppercase tracking-[0.3em] mb-3">Trận đấu</h3>
               <ul className="space-y-3">
                 {matchResults.map((match) => (
                   <li key={match.id} className="flex items-center justify-between text-white/90">
                     <div>
                       <div className="font-semibold text-white">
-                        {match.homeTeamName} vs {match.awayTeamName}
+                        {match.homeTeamName} gặp {match.awayTeamName}
                       </div>
                       <div className="text-xs text-white/60">
-                        {new Date(match.utcDate).toLocaleDateString('en-GB')} · {match.stage || match.groupName || 'League Phase'}
+                        {new Date(match.utcDate).toLocaleDateString('vi-VN')} · {toCompetitionStageLabel(match.stage || match.groupName || 'Vòng phân hạng')}
                       </div>
                     </div>
                     <div className="text-right text-xs text-white/60">
-                      Status: {match.status}
-                      <div>{match.venue || 'Venue TBC'}</div>
+                      Trạng thái: {toMatchStatusLabel(match.status)}
+                      <div>{match.venue || 'Đang cập nhật sân'}</div>
                     </div>
                   </li>
                 ))}
               </ul>
               {matchResults.length === 0 && !searching && (
-                <div className="text-white/60 text-sm">No fixtures found.</div>
+                <div className="text-white/60 text-sm">Không tìm thấy lịch thi đấu.</div>
               )}
             </div>
           </div>

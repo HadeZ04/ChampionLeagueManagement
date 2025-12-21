@@ -79,10 +79,10 @@ const TopScorers = () => {
     <div className="glass-card p-6">
       <div className="flex items-center space-x-3 mb-6">
         <Target className="text-[#0055FF]" size={24} />
-        <h2 className="text-2xl font-bold text-slate-900">Top Scorers</h2>
+        <h2 className="text-2xl font-bold text-slate-900">Vua phá lưới</h2>
         <div className="flex-1" />
         <button className="text-[#0055FF] hover:text-[#8454FF] text-sm font-medium transition-colors">
-          View All →
+          Xem tất cả →
         </button>
       </div>
 
@@ -119,11 +119,11 @@ const TopScorers = () => {
             <div className="text-right">
               <div className="text-2xl font-bold text-[#0055FF]">{scorer.goals}</div>
               <div className="text-slate-400 text-sm">
-                {scorer.matches} matches - {Math.round(scorer.minutes / scorer.matches)}' avg
+                {scorer.matches} trận • TB {Math.round(scorer.minutes / scorer.matches)} phút/trận
               </div>
               {scorer.penalties > 0 && (
                 <div className="text-slate-400 text-xs">
-                  {scorer.penalties} penalties
+                  {scorer.penalties} bàn phạt đền
                 </div>
               )}
             </div>
@@ -135,15 +135,15 @@ const TopScorers = () => {
         <div className="grid grid-cols-3 gap-4 text-center text-sm">
           <div>
             <div className="text-xl font-bold text-slate-900">312</div>
-            <div className="text-slate-400">Total Goals</div>
+            <div className="text-slate-400">Tổng bàn thắng</div>
           </div>
           <div>
             <div className="text-xl font-bold text-slate-900">2.89</div>
-            <div className="text-slate-400">Goals/Match</div>
+            <div className="text-slate-400">Bàn/trận</div>
           </div>
           <div>
             <div className="text-xl font-bold text-slate-900">67%</div>
-            <div className="text-slate-400">From Play</div>
+            <div className="text-slate-400">Từ bóng sống</div>
           </div>
         </div>
       </div>

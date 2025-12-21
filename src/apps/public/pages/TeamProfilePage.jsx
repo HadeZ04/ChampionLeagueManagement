@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Activity, Calendar, Flag, MapPin, Shield, Shirt } from 'lucide-react';
 import TeamsService from '../../../layers/application/services/TeamsService';
+import { toCompetitionNameLabel, toCountryLabel, toPlayerPositionLabel } from '../../../shared/utils/vi';
 
 const TeamProfilePage = () => {
   const { teamId } = useParams();
@@ -38,7 +39,7 @@ const TeamProfilePage = () => {
           });
         }
       } catch (err) {
-        console.error('Failed to fetch seasons', err);
+        console.error('Không thể tải danh sách mùa giải', err);
       } finally {
         setIsLoadingSeasons(false);
       }
@@ -67,7 +68,7 @@ const TeamProfilePage = () => {
 
         setError(null);
       } catch (err) {
-        console.error('Failed to load team profile', err);
+        console.error('Không thể tải hồ sơ đội bóng', err);
         setError('Không thể tải thông tin chi tiết đội bóng ngay lúc này.');
       } finally {
         setIsLoading(false);
@@ -79,7 +80,7 @@ const TeamProfilePage = () => {
 
   const groupedSquad = useMemo(() => {
     const groups = squad.reduce((acc, player) => {
-      const key = player.position || 'Utility';
+      const key = player.position ? toPlayerPositionLabel(player.position) : 'Khác';
       if (!acc[key]) {
         acc[key] = [];
       }
@@ -136,9 +137,11 @@ const TeamProfilePage = () => {
     <div className="uefa-container py-8 space-y-10">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.35em] text-white/60">Team profile</p>
+          <p className="text-xs uppercase tracking-[0.35em] text-white/60">Hồ sơ đội bóng</p>
           <h1 className="text-4xl font-display text-white mt-2">{team.name}</h1>
-          <p className="text-white/70 text-sm mt-1">{team.country ?? 'Europe'}</p>
+          <p className="text-white/70 text-sm mt-1">
+            {team.country && String(team.country).trim().toLowerCase() !== 'europe' ? toCountryLabel(team.country) : 'Châu Âu'}
+          </p>
         </div>
         <div className="flex flex-wrap gap-3">
           <select
@@ -147,7 +150,7 @@ const TeamProfilePage = () => {
             onChange={(event) => handleSeasonChange(event.target.value)}
             disabled={isLoadingSeasons || seasonOptions.length === 0}
           >
-            {isLoadingSeasons && <option>Loading seasons...</option>}
+            {isLoadingSeasons && <option>Đang tải mùa giải...</option>}
             {!isLoadingSeasons &&
               seasonOptions.map((season) => (
                 <option key={season.id} value={season.year}>
@@ -159,7 +162,7 @@ const TeamProfilePage = () => {
             to={selectedSeason ? `/teams?season=${selectedSeason}` : '/teams'}
             className="uefa-btn-secondary px-5 py-2 text-xs uppercase tracking-[0.3em]"
           >
-            Back to teams
+            Quay lại danh sách đội
           </Link>
           {team.website && (
             <a
@@ -168,7 +171,7 @@ const TeamProfilePage = () => {
               rel="noreferrer"
               className="uefa-btn-primary px-5 py-2 text-xs uppercase tracking-[0.3em]"
             >
-              Official site
+              Trang chính thức
             </a>
           )}
         </div>
@@ -186,37 +189,37 @@ const TeamProfilePage = () => {
           <div className="mt-6 text-center text-white/80 space-y-1">
             <p>{team.tla}</p>
             <p className="text-sm flex items-center justify-center gap-2">
-              <MapPin size={14} /> {team.venue ?? 'Stadium TBD'}
+              <MapPin size={14} /> {team.venue ?? 'Đang cập nhật sân vận động'}
             </p>
             <p className="text-sm flex items-center justify-center gap-2">
-              <Calendar size={14} /> Founded {team.founded ?? '—'}
+              <Calendar size={14} /> Thành lập {team.founded ?? '—'}
             </p>
           </div>
         </div>
 
         <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-5 text-white/80">
           <div className="rounded-2xl border border-white/10 p-5">
-            <p className="text-xs uppercase tracking-[0.3em] text-white/60 mb-2">Coach</p>
-            <p className="text-xl font-semibold text-white">{team.coach || 'Updating'}</p>
-            <p className="text-sm text-white/60">{team.coachNationality || ''}</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-white/60 mb-2">Huấn luyện viên</p>
+            <p className="text-xl font-semibold text-white">{team.coach || 'Đang cập nhật'}</p>
+            <p className="text-sm text-white/60">{team.coachNationality ? toCountryLabel(team.coachNationality) : ''}</p>
           </div>
           <div className="rounded-2xl border border-white/10 p-5">
-            <p className="text-xs uppercase tracking-[0.3em] text-white/60 mb-2">Colours</p>
-            <p className="text-xl font-semibold text-white">{team.clubColors || 'Official palette pending'}</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-white/60 mb-2">Màu áo</p>
+            <p className="text-xl font-semibold text-white">{team.clubColors || 'Đang cập nhật màu áo'}</p>
           </div>
           <div className="rounded-2xl border border-white/10 p-5">
-            <p className="text-xs uppercase tracking-[0.3em] text-white/60 mb-2">Address</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-white/60 mb-2">Địa chỉ</p>
             <p className="text-sm">{team.address || '—'}</p>
           </div>
           <div className="rounded-2xl border border-white/10 p-5">
-            <p className="text-xs uppercase tracking-[0.3em] text-white/60 mb-2">Competitions</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-white/60 mb-2">Giải đấu</p>
             <div className="flex flex-wrap gap-2">
               {(team.runningCompetitions ?? []).map((competition) => (
                 <span key={competition.id} className="px-3 py-1 rounded-full bg-white/10 text-xs">
-                  {competition.code || competition.name}
+                  {competition.code || toCompetitionNameLabel(competition.name)}
                 </span>
               ))}
-              {(!team.runningCompetitions || team.runningCompetitions.length === 0) && <span>UEFA Champions League</span>}
+              {(!team.runningCompetitions || team.runningCompetitions.length === 0) && <span>Cúp C1 châu Âu</span>}
             </div>
           </div>
         </div>
@@ -225,9 +228,9 @@ const TeamProfilePage = () => {
       <section className="rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-2xl p-8">
         <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-white/60">Official Squad</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-white/60">Danh sách đăng ký</p>
             <h2 className="text-2xl font-semibold text-white">
-              {squad.length} registered players • Season {selectedSeason || 'current'}
+              {squad.length} cầu thủ đăng ký • Mùa {selectedSeason || 'hiện tại'}
             </h2>
           </div>
         </div>
@@ -255,7 +258,7 @@ const TeamProfilePage = () => {
                       <div>
                         <p className="font-semibold text-white">{player.name}</p>
                         <p className="text-xs text-white/60 flex items-center gap-2">
-                          <Flag size={12} /> {player.nationality || '—'}
+                          <Flag size={12} /> {player.nationality ? toCountryLabel(player.nationality) : '—'}
                         </p>
                         <p className="text-xs text-white/60 flex items-center gap-2">
                           <Calendar size={12} /> {player.dateOfBirth || '—'}
@@ -263,7 +266,7 @@ const TeamProfilePage = () => {
                       </div>
                       <div className="flex items-center gap-3 text-white/80">
                         <div className="text-right">
-                          <p className="text-xs uppercase tracking-[0.3em] text-white/60">Kit</p>
+                          <p className="text-xs uppercase tracking-[0.3em] text-white/60">Số áo</p>
                           <p className="text-lg font-semibold">{player.shirtNumber ?? '—'}</p>
                         </div>
                         <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-white/10">
@@ -283,7 +286,7 @@ const TeamProfilePage = () => {
         <div className="flex items-center gap-3 text-white/80">
           <Activity size={20} className="text-uefa-green" />
           <p>
-            Dữ liệu đội và cầu thủ được đồng bộ trực tiếp từ Football-Data.org (Competition code: CL – Champions League).
+            Dữ liệu đội và cầu thủ được đồng bộ trực tiếp từ Football-Data.org (mã giải: CL – Cúp C1 châu Âu).
           </p>
         </div>
       </section>

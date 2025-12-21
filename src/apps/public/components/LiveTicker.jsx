@@ -41,14 +41,14 @@ const LiveTicker = () => {
         <div className="relative px-4 py-3 border-b border-[var(--color-border-soft)] flex items-center justify-between">
           <div className="flex items-center gap-2 text-[0.65rem] uppercase tracking-[0.35em] text-[var(--color-muted)]">
             <span className="live-dot" />
-            Live Ticker
+            Bảng trực tiếp
           </div>
           <div className="flex items-center gap-2 text-xs font-mono text-[var(--color-muted)]">
-            {currentTime.toLocaleTimeString('en-GB')}
-            <button onClick={() => setIsMinimized(v => !v)} className="h-8 w-8 rounded-full border border-[var(--color-border-soft)] flex items-center justify-center text-[var(--color-muted)] hover:text-[var(--color-text-main)]" aria-label="Toggle ticker size">
+            {currentTime.toLocaleTimeString('vi-VN')}
+            <button onClick={() => setIsMinimized(v => !v)} className="h-8 w-8 rounded-full border border-[var(--color-border-soft)] flex items-center justify-center text-[var(--color-muted)] hover:text-[var(--color-text-main)]" aria-label="Thu/phóng bảng trực tiếp">
               <Maximize2 size={14} />
             </button>
-            <button onClick={() => setIsVisible(false)} className="h-8 w-8 rounded-full border border-[var(--color-border-soft)] flex items-center justify-center text-[var(--color-muted)] hover:text-[var(--color-text-main)]" aria-label="Close ticker">
+            <button onClick={() => setIsVisible(false)} className="h-8 w-8 rounded-full border border-[var(--color-border-soft)] flex items-center justify-center text-[var(--color-muted)] hover:text-[var(--color-text-main)]" aria-label="Đóng bảng trực tiếp">
               <X size={14} />
             </button>
           </div>
@@ -72,7 +72,7 @@ const LiveTicker = () => {
                         </p>
                         <p className="text-xs text-[var(--color-muted)]">{event.player} ({event.team})</p>
                       </div>
-                      <span className="text-xs text-[var(--color-muted)]">{currentTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
+                      <span className="text-xs text-[var(--color-muted)]">{currentTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                   );
                 })}
@@ -80,8 +80,8 @@ const LiveTicker = () => {
             ) : (
               <div className="text-center py-10 text-[var(--color-muted)]">
                 <Clock size={32} className="mx-auto mb-2 opacity-60" />
-                <p className="text-sm">No live events at the moment</p>
-                <p className="text-xs mt-1">Check back during match times</p>
+                <p className="text-sm">Hiện chưa có sự kiện trực tiếp</p>
+                <p className="text-xs mt-1">Hãy quay lại khi trận đấu diễn ra</p>
               </div>
             )}
           </div>
@@ -90,7 +90,7 @@ const LiveTicker = () => {
         {!isMinimized && (
           <div className="px-4 py-3 border-t border-[var(--color-border-soft)] text-center">
             <button className="text-xs uppercase tracking-[0.4em] text-[var(--color-blue)] hover:text-[var(--color-navy)] transition-colors">
-              View All Live Matches +
+              Xem tất cả trận trực tiếp +
             </button>
           </div>
         )}

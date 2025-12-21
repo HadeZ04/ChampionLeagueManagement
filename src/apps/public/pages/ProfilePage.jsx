@@ -3,6 +3,7 @@ import { ShieldCheck, LogOut, RefreshCw, User, Mail, Lock } from 'lucide-react'
 import toast, { Toaster } from 'react-hot-toast'
 import AuthService from '../../../layers/application/services/AuthService'
 import { useAuth } from '../../../layers/application/context/AuthContext'
+import { toRoleLabel, toUserStatusLabel } from '../../../shared/utils/vi'
 
 const initialProfileForm = {
   firstName: '',
@@ -45,7 +46,7 @@ const ProfilePage = () => {
       })
     } catch (error) {
       console.error(error)
-      toast.error('Unable to load your profile details.')
+      toast.error('Không thể tải thông tin hồ sơ của bạn.')
       setProfile(null)
     } finally {
       setIsLoadingProfile(false)
@@ -71,11 +72,11 @@ const ProfilePage = () => {
     try {
       await login(loginForm)
       await bootstrapProfile()
-      toast.success('Signed in successfully.')
+      toast.success('Đăng nhập thành công.')
       setLoginForm(initialLoginForm)
     } catch (error) {
       console.error(error)
-      toast.error(error?.message ?? 'Unable to sign in with those credentials.')
+      toast.error('Không thể đăng nhập với thông tin này.')
     }
   }
 
@@ -97,18 +98,18 @@ const ProfilePage = () => {
     }
     if (profileForm.password || profileForm.confirmPassword) {
       if (profileForm.password !== profileForm.confirmPassword) {
-        toast.error('New password confirmation does not match.')
+        toast.error('Xác nhận mật khẩu mới không khớp.')
         return
       }
       if (profileForm.password.length < 8) {
-        toast.error('Password must contain at least 8 characters.')
+        toast.error('Mật khẩu phải có ít nhất 8 ký tự.')
         return
       }
       updates.password = profileForm.password
     }
 
     if (Object.keys(updates).length === 0) {
-      toast('No changes detected.')
+      toast('Không có thay đổi nào.')
       return
     }
 
@@ -121,10 +122,10 @@ const ProfilePage = () => {
         password: '',
         confirmPassword: ''
       }))
-      toast.success('Profile updated.')
+      toast.success('Đã cập nhật hồ sơ.')
     } catch (error) {
       console.error(error)
-      toast.error(error?.message ?? 'Unable to update your profile right now.')
+      toast.error('Hiện không thể cập nhật hồ sơ. Vui lòng thử lại sau.')
     } finally {
       setIsUpdating(false)
     }
@@ -134,7 +135,7 @@ const ProfilePage = () => {
     await logout()
     setProfile(null)
     setProfileForm(initialProfileForm)
-    toast.success('You have been signed out.')
+    toast.success('Bạn đã đăng xuất.')
   }
 
   const isProfileLoaded = Boolean(profile)
@@ -147,11 +148,11 @@ const ProfilePage = () => {
         <div className="mb-8 text-center">
           <p className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-700">
             <ShieldCheck size={14} />
-            Secure account
+            Tài khoản an toàn
           </p>
-          <h1 className="mt-3 text-3xl font-bold text-gray-900">Your UEFA profile</h1>
+          <h1 className="mt-3 text-3xl font-bold text-gray-900">Hồ sơ UEFA của bạn</h1>
           <p className="text-gray-600">
-            Manage your contact details, linked email, and secure password for all public experiences.
+            Quản lý thông tin liên hệ, email liên kết và mật khẩu để sử dụng các tính năng công khai.
           </p>
         </div>
 
@@ -163,21 +164,21 @@ const ProfilePage = () => {
                   <User size={20} />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Signed in as</p>
+                  <p className="text-sm text-gray-500">Đăng nhập với</p>
                   <p className="text-lg font-semibold text-gray-900">{profile.username}</p>
                 </div>
               </div>
               <dl className="mt-6 space-y-3 text-sm text-gray-600">
                 <div>
-                  <dt className="uppercase tracking-wide text-xs text-gray-400">Email</dt>
+                  <dt className="uppercase tracking-wide text-xs text-gray-400">Thư điện tử</dt>
                   <dd className="font-medium">{profile.email}</dd>
                 </div>
                 <div>
-                  <dt className="uppercase tracking-wide text-xs text-gray-400">Status</dt>
-                  <dd className="font-medium capitalize">{profile.status}</dd>
+                  <dt className="uppercase tracking-wide text-xs text-gray-400">Trạng thái</dt>
+                  <dd className="font-medium">{toUserStatusLabel(profile.status)}</dd>
                 </div>
                 <div>
-                  <dt className="uppercase tracking-wide text-xs text-gray-400">Roles</dt>
+                  <dt className="uppercase tracking-wide text-xs text-gray-400">Vai trò</dt>
                   <dd className="mt-1 flex flex-wrap gap-2">
                     {profile.roles?.length > 0 ? (
                       profile.roles.map((role) => (
@@ -185,11 +186,11 @@ const ProfilePage = () => {
                           key={role}
                           className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600"
                         >
-                          {role}
+                          {toRoleLabel(role)}
                         </span>
                       ))
                     ) : (
-                      <span className="text-gray-500">viewer</span>
+                      <span className="text-gray-500">{toRoleLabel('viewer')}</span>
                     )}
                   </dd>
                 </div>
@@ -202,7 +203,7 @@ const ProfilePage = () => {
                   className="flex w-full items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black"
                 >
                   <LogOut size={16} />
-                  Sign out
+                  Đăng xuất
                 </button>
                 <button
                   type="button"
@@ -211,20 +212,20 @@ const ProfilePage = () => {
                   className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
                 >
                   <RefreshCw size={16} className={isLoadingProfile ? 'animate-spin' : ''} />
-                  Refresh data
+                  Làm mới dữ liệu
                 </button>
               </div>
             </aside>
 
             <form onSubmit={handleProfileSubmit} className="lg:col-span-2 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
               <div className="mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Personal information</h2>
-                <p className="text-sm text-gray-500">Update your basic contact details used for fan experiences.</p>
+                <h2 className="text-xl font-semibold text-gray-900">Thông tin cá nhân</h2>
+                <p className="text-sm text-gray-500">Cập nhật thông tin liên hệ cơ bản dùng cho trải nghiệm người hâm mộ.</p>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                  First name
+                  Tên
                   <div className="relative">
                     <input
                       type="text"
@@ -238,7 +239,7 @@ const ProfilePage = () => {
                   </div>
                 </label>
                 <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                  Last name
+                  Họ
                   <div className="relative">
                     <input
                       type="text"
@@ -254,7 +255,7 @@ const ProfilePage = () => {
               </div>
 
               <label className="mt-4 flex flex-col gap-1 text-sm font-medium text-gray-700">
-                Email address
+                Địa chỉ email
                 <div className="relative">
                   <input
                     type="email"
@@ -269,12 +270,12 @@ const ProfilePage = () => {
               </label>
 
               <div className="mt-8 border-t border-gray-100 pt-6">
-                <h3 className="text-lg font-semibold text-gray-900">Password</h3>
-                <p className="text-sm text-gray-500">Leave blank unless you want to change your password.</p>
+                <h3 className="text-lg font-semibold text-gray-900">Mật khẩu</h3>
+                <p className="text-sm text-gray-500">Để trống nếu bạn không muốn đổi mật khẩu.</p>
 
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
                   <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                    New password
+                    Mật khẩu mới
                     <div className="relative">
                       <input
                         type="password"
@@ -288,7 +289,7 @@ const ProfilePage = () => {
                     </div>
                   </label>
                   <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                    Confirm password
+                    Xác nhận mật khẩu
                     <div className="relative">
                       <input
                         type="password"
@@ -313,10 +314,10 @@ const ProfilePage = () => {
                   {isUpdating ? (
                     <>
                       <RefreshCw size={16} className="animate-spin" />
-                      Saving...
+                      Đang lưu...
                     </>
                   ) : (
-                    'Save profile'
+                    'Lưu hồ sơ'
                   )}
                 </button>
                 <button
@@ -325,7 +326,7 @@ const ProfilePage = () => {
                   disabled={isLoadingProfile}
                   className="flex items-center justify-center gap-2 rounded-lg border border-gray-200 px-5 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
                 >
-                  Refresh
+                  Làm mới
                 </button>
               </div>
             </form>
@@ -333,13 +334,13 @@ const ProfilePage = () => {
         ) : (
           <div className="grid gap-6 lg:grid-cols-5">
             <form onSubmit={handleLoginSubmit} className="lg:col-span-3 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="text-xl font-semibold text-gray-900">Sign in to continue</h2>
+              <h2 className="text-xl font-semibold text-gray-900">Đăng nhập để tiếp tục</h2>
               <p className="text-sm text-gray-500">
-                Use the credentials you created during signup to access your viewer dashboard.
+                Dùng tài khoản bạn đã tạo khi đăng ký để truy cập trang người xem.
               </p>
 
               <label className="mt-6 flex flex-col gap-1 text-sm font-medium text-gray-700">
-                Username
+                Tên đăng nhập
                 <div className="relative">
                   <input
                     type="text"
@@ -355,7 +356,7 @@ const ProfilePage = () => {
               </label>
 
               <label className="mt-4 flex flex-col gap-1 text-sm font-medium text-gray-700">
-                Password
+                Mật khẩu
                 <div className="relative">
                   <input
                     type="password"
@@ -376,35 +377,34 @@ const ProfilePage = () => {
                 disabled={isAuthenticating}
                 className="mt-6 w-full rounded-lg bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
               >
-                {isAuthenticating ? 'Signing in...' : 'Sign in'}
+                {isAuthenticating ? 'Đang đăng nhập...' : 'Đăng nhập'}
               </button>
 
               <p className="mt-4 text-xs text-gray-500">
-                Viewer accounts use the same authentication service as administrators but only receive the `viewer`
-                role, which limits access to public-only APIs.
+                Tài khoản người xem dùng chung dịch vụ xác thực với quản trị viên nhưng chỉ nhận vai trò `viewer`, nên chỉ truy cập được các API công khai.
               </p>
             </form>
 
             <div className="lg:col-span-2 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-600 to-blue-800 p-6 text-white">
-              <h3 className="text-xl font-semibold">Why complete your profile?</h3>
+              <h3 className="text-xl font-semibold">Vì sao nên hoàn thiện hồ sơ?</h3>
               <ul className="mt-4 space-y-3 text-sm">
                 <li className="flex items-start gap-3">
                   <ShieldCheck size={16} className="mt-1" />
-                  Secure access across fantasy, gaming, and ticketing experiences.
+                  Truy cập an toàn cho các tính năng bóng đá ảo, trò chơi và vé.
                 </li>
                 <li className="flex items-start gap-3">
                   <ShieldCheck size={16} className="mt-1" />
-                  Update contact details that UEFA uses for notifications.
+                  Cập nhật thông tin liên hệ dùng cho thông báo.
                 </li>
                 <li className="flex items-start gap-3">
                   <ShieldCheck size={16} className="mt-1" />
-                  Seamlessly upgrade to higher roles when an administrator invites you.
+                  Dễ dàng nâng vai trò cao hơn khi được quản trị viên mời.
                 </li>
               </ul>
               <p className="mt-4 text-xs text-blue-100">
-                Need an account?{' '}
+                Chưa có tài khoản?{' '}
                 <a href="/register" className="font-semibold text-white underline">
-                  Create one here
+                  Tạo tại đây
                 </a>
                 .
               </p>

@@ -5,16 +5,16 @@ const MatchCard = ({ match }) => {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'live':
-        return <span className="status-pill text-[#F05252]">Live</span>;
+        return <span className="status-pill text-[#F05252]">Trực tiếp</span>;
       case 'finished':
-        return <span className="status-pill text-slate-500">FT</span>;
+        return <span className="status-pill text-slate-500">Hết giờ</span>;
       default:
-        return <span className="status-pill text-[#0055FF]">Upcoming</span>;
+        return <span className="status-pill text-[#0055FF]">Sắp diễn ra</span>;
     }
   };
 
   const formatTime = (time) =>
-    new Date(`2000-01-01T${time}`).toLocaleTimeString('en-GB', {
+    new Date(`2000-01-01T${time}`).toLocaleTimeString('vi-VN', {
       hour: '2-digit',
       minute: '2-digit'
     });
@@ -26,7 +26,7 @@ const MatchCard = ({ match }) => {
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1">
             <Calendar size={14} />
-            {new Date(match.date).toLocaleDateString('en-GB')}
+            {new Date(match.date).toLocaleDateString('vi-VN')}
           </span>
           <span className="flex items-center gap-1">
             <Clock size={14} />
@@ -55,7 +55,7 @@ const MatchCard = ({ match }) => {
           ) : (
             <p className="text-xl font-semibold text-slate-900">{formatTime(match.time)}</p>
           )}
-          <p className="text-xs text-slate-400 uppercase tracking-[0.3em]">{match.status === 'live' ? 'Live' : 'Kick-off'}</p>
+          <p className="text-xs text-slate-400 uppercase tracking-[0.3em]">{match.status === 'live' ? 'Trực tiếp' : 'Giờ bóng lăn'}</p>
         </div>
         <div className="flex items-center gap-3 flex-1 justify-end">
           <div className="text-right">
@@ -76,9 +76,7 @@ const MatchCard = ({ match }) => {
             {match.city}
           </span>
         </div>
-        <button className="text-[#0055FF] text-xs uppercase tracking-[0.4em]">
-          Details
-        </button>
+        <button className="text-[#0055FF] text-xs uppercase tracking-[0.4em]">Chi tiết</button>
       </div>
     </article>
   );

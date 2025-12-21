@@ -11,14 +11,14 @@ const LoginPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const successMessage = location.state?.registrationSuccess
-    ? 'Account created successfully. Please sign in to continue.'
+    ? 'Tạo tài khoản thành công. Vui lòng đăng nhập để tiếp tục.'
     : ''
 
   const authStateLabel = useMemo(() => {
-    if (status === 'checking') return 'Restoring session...'
-    if (status === 'authenticating') return 'Logging in...'
-    if (status === 'authenticated') return 'Logged in'
-    return 'Logged out'
+    if (status === 'checking') return 'Đang khôi phục phiên...'
+    if (status === 'authenticating') return 'Đang đăng nhập...'
+    if (status === 'authenticated') return 'Đã đăng nhập'
+    return 'Chưa đăng nhập'
   }, [status])
 
   const resolveRedirect = (signedInUser) => {
@@ -56,7 +56,7 @@ const LoginPage = () => {
       const signedInUser = await login(formData)
       navigate(resolveRedirect(signedInUser), { replace: true })
     } catch (err) {
-      setError(err?.message ?? 'Unable to sign in. Please check your credentials.')
+      setError(err?.message ?? 'Không thể đăng nhập. Vui lòng kiểm tra lại thông tin.')
     }
   }
 
@@ -68,10 +68,10 @@ const LoginPage = () => {
         <div className="mb-8 text-center">
           <p className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-700">
             <ShieldCheck size={14} />
-            Secure Sign In
+            Đăng nhập an toàn
           </p>
-          <h1 className="mt-3 text-3xl font-bold text-gray-900">Welcome back</h1>
-          <p className="text-gray-600">Sign in to access your portal experience.</p>
+          <h1 className="mt-3 text-3xl font-bold text-gray-900">Chào mừng quay lại</h1>
+          <p className="text-gray-600">Đăng nhập để truy cập cổng trải nghiệm của bạn.</p>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-5">
@@ -81,36 +81,36 @@ const LoginPage = () => {
                 <LogIn size={18} />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Authentication state</p>
+                <p className="text-sm text-gray-500">Trạng thái xác thực</p>
                 <p className="text-lg font-semibold text-gray-900">{authStateLabel}</p>
               </div>
             </div>
             <ul className="mt-4 space-y-2 text-sm text-gray-600">
               <li className="flex items-center gap-2">
                 <span className={`h-2 w-2 rounded-full ${status === 'authenticated' ? 'bg-green-500' : 'bg-gray-300'}`} />
-                Logged in users are redirected to their portal automatically.
+                Người dùng đã đăng nhập sẽ được chuyển về cổng phù hợp tự động.
               </li>
               <li className="flex items-center gap-2">
                 <span className={`h-2 w-2 rounded-full ${status === 'authenticating' ? 'bg-amber-400' : 'bg-gray-300'}`} />
-                Logging in shows a loading state and prevents double submissions.
+                Khi đang đăng nhập sẽ hiển thị trạng thái tải và ngăn gửi trùng.
               </li>
               <li className="flex items-center gap-2">
                 <span className={`h-2 w-2 rounded-full ${status === 'anonymous' ? 'bg-blue-400' : 'bg-gray-300'}`} />
-                Logged out visitors see the sign-in and create-account buttons.
+                Khi chưa đăng nhập sẽ hiển thị nút đăng nhập và tạo tài khoản.
               </li>
             </ul>
 
             <div className="mt-6 rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
-              <p className="font-semibold mb-1">Role-based redirects</p>
+              <p className="font-semibold mb-1">Điều hướng theo vai trò</p>
               <p className="leading-relaxed">
-                Admin roles (admin, super_admin, competition manager) go to the admin dashboard. All other roles land in the user portal.
+                Vai trò quản trị (admin, super_admin, quản lý giải đấu) sẽ vào trang quản trị. Các vai trò khác sẽ vào cổng người dùng.
               </p>
             </div>
 
             <div className="mt-4 text-sm text-gray-600">
-              Need an account?{' '}
+              Chưa có tài khoản?{' '}
               <Link to="/register" className="font-semibold text-blue-700 hover:text-blue-800">
-                Create one
+                Tạo mới
               </Link>
               .
             </div>
@@ -131,7 +131,7 @@ const LoginPage = () => {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Username or email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Tên đăng nhập hoặc email</label>
                 <div className="relative">
                   <UserRound size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
@@ -140,14 +140,14 @@ const LoginPage = () => {
                     onChange={handleChange}
                     autoComplete="username"
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 pl-10 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                    placeholder="your.email@uefa.com"
+                    placeholder="ten.email@vidu.com"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Mật khẩu</label>
                 <div className="relative">
                   <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
@@ -166,10 +166,10 @@ const LoginPage = () => {
               <div className="flex items-center justify-between text-sm text-gray-600">
                 <label className="flex items-center gap-2">
                   <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                  Remember me on this device
+                  Ghi nhớ trên thiết bị này
                 </label>
                 <Link to="/reset-password" className="font-semibold text-blue-700 hover:text-blue-800">
-                  Forgot password?
+                  Quên mật khẩu?
                 </Link>
               </div>
 
@@ -181,12 +181,12 @@ const LoginPage = () => {
                 {isLoading ? (
                   <>
                     <Loader2 size={18} className="animate-spin" />
-                    Signing in...
+                    Đang đăng nhập...
                   </>
                 ) : (
                   <>
                     <LogIn size={18} />
-                    Sign In
+                    Đăng nhập
                   </>
                 )}
               </button>

@@ -27,12 +27,12 @@ const UpcomingMatches = () => {
             name: match.awayTeamName,
             shortName: match.awayTeamTla || match.awayTeamName.slice(0, 3).toUpperCase()
           },
-          venue: match.venue || 'To be confirmed',
-          group: match.groupName || match.stage || 'League Phase'
+          venue: match.venue || 'Chưa xác định',
+          group: match.groupName || match.stage || 'Vòng phân hạng'
         }))
         setUpcomingMatches(mapped)
       } catch (err) {
-        console.error('Failed to load upcoming matches', err)
+        console.error('Không thể tải các trận sắp diễn ra', err)
       } finally {
         if (isMounted) setLoading(false)
       }
@@ -64,7 +64,7 @@ const UpcomingMatches = () => {
   }
 
   const formatTime = (date) => {
-    return date.toLocaleTimeString('en-GB', {
+    return date.toLocaleTimeString('vi-VN', {
       hour: '2-digit',
       minute: '2-digit'
     })
@@ -76,11 +76,11 @@ const UpcomingMatches = () => {
     tomorrow.setDate(tomorrow.getDate() + 1)
 
     if (date.toDateString() === today.toDateString()) {
-      return 'Today'
+      return 'Hôm nay'
     } else if (date.toDateString() === tomorrow.toDateString()) {
-      return 'Tomorrow'
+      return 'Ngày mai'
     } else {
-      return date.toLocaleDateString('en-GB', {
+      return date.toLocaleDateString('vi-VN', {
         weekday: 'short',
         day: 'numeric',
         month: 'short'
@@ -92,23 +92,23 @@ const UpcomingMatches = () => {
     <div className="rounded-[32px] border border-white/15 bg-gradient-to-br from-[#003B73] via-[#00924A] to-[#00C65A] p-6 text-white shadow-[0_35px_90px_rgba(0,59,115,0.45)]">
       <div className="flex items-center space-x-3 mb-6">
         <Calendar className="text-white" size={24} />
-        <h2 className="text-2xl font-bold">Upcoming Matches</h2>
+        <h2 className="text-2xl font-bold">Trận sắp diễn ra</h2>
         <div className="flex-1" />
         <a
           href="/matches"
           className="inline-flex items-center gap-2 rounded-full border border-white/30 px-4 py-2 text-xs uppercase tracking-[0.3em] text-white/80 transition-colors hover:bg-white/10"
         >
-          View Fixtures
+          Xem lịch thi đấu
         </a>
       </div>
 
       <div className="space-y-4">
         {loading && (
-          <div className="text-white/80 text-sm">Loading next fixtures...</div>
+          <div className="text-white/80 text-sm">Đang tải lịch thi đấu sắp tới...</div>
         )}
         {!loading && upcomingMatches.length === 0 && (
           <div className="text-white/80 text-sm">
-            No scheduled fixtures available in the selected window.
+            Không có trận đã lên lịch trong khoảng thời gian đã chọn.
           </div>
         )}
         {upcomingMatches.map((match) => {
@@ -134,7 +134,7 @@ const UpcomingMatches = () => {
                 </div>
                 <div className="flex items-center space-x-2 text-white/70 text-sm">
                   <Tv size={14} />
-                  <span>Global Broadcast Partners</span>
+                  <span>Đối tác phát sóng</span>
                 </div>
               </div>
 
@@ -161,11 +161,11 @@ const UpcomingMatches = () => {
               <div className="flex items-center justify-between pt-3 border-t border-white/10 text-sm text-white/80">
                 <div className="flex items-center space-x-2">
                   <MapPin size={14} />
-                  <span>{match.venue} · {match.group}</span>
+                  <span>{match.venue} • {match.group}</span>
                 </div>
                 <div className="flex space-x-3">
-                  <a href="/match-center" className="text-white/80 hover:text-white">Preview</a>
-                  <a href="/tickets" className="text-white/80 hover:text-white">Tickets</a>
+                  <a href="/match-center" className="text-white/80 hover:text-white">Nhận định</a>
+                  <a href="/tickets" className="text-white/80 hover:text-white">Vé</a>
                 </div>
               </div>
             </div>
@@ -178,7 +178,7 @@ const UpcomingMatches = () => {
           href="/matches"
           className="inline-flex items-center justify-center rounded-full border border-white/30 px-6 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-white transition-colors hover:bg-white/10"
         >
-          Full Fixture List
+          Danh sách lịch thi đấu
         </a>
       </div>
     </div>

@@ -14,6 +14,13 @@ import {
 } from 'lucide-react'
 import PlayersService from '../layers/application/services/PlayersService'
 import MatchesService from '../layers/application/services/MatchesService'
+import {
+  toCompetitionNameLabel,
+  toCompetitionStageLabel,
+  toCountryLabel,
+  toMatchStatusLabel,
+  toPlayerPositionLabel
+} from '../shared/utils/vi'
 
 const PlayerLookup = () => {
   const [ref, inView] = useInView({
@@ -131,7 +138,7 @@ const PlayerLookup = () => {
   }, [selectedPlayer])
 
   const calculateAge = (birthdate) => {
-    if (!birthdate) return 'N/A'
+    if (!birthdate) return 'Không rõ'
     const today = new Date()
     const birth = new Date(birthdate)
     let age = today.getFullYear() - birth.getFullYear()
@@ -142,7 +149,7 @@ const PlayerLookup = () => {
     return age
   }
 
-  const formatDate = (dateString, fallback = 'N/A') => {
+  const formatDate = (dateString, fallback = 'Không rõ') => {
     if (!dateString) return fallback
     const date = new Date(dateString)
     if (Number.isNaN(date.getTime())) return fallback
@@ -231,7 +238,7 @@ const PlayerLookup = () => {
               <div className="professional-card rounded-xl p-6">
                 <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
                   <Search className="mr-3 text-football-green" size={28} />
-                  Search Players
+                  Tìm kiếm cầu thủ
                 </h2>
 
                 <div className="flex items-center justify-between mb-4">
@@ -241,7 +248,7 @@ const PlayerLookup = () => {
                     className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.2em] text-white/80 transition hover:bg-white/10 disabled:opacity-40"
                   >
                     <RefreshCw size={16} className={syncing ? 'animate-spin' : ''} />
-                    <span>Sync Players</span>
+                    <span>Đồng bộ cầu thủ</span>
                   </button>
                   <span className="text-xs text-white/60">
                     Tổng cộng: {players.length}
@@ -302,7 +309,7 @@ const PlayerLookup = () => {
                       <InfoField
                         icon={<User className="text-football-green" size={20} />}
                         label="Vị trí"
-                        value={selectedPlayer.position || 'Không rõ'}
+                        value={toPlayerPositionLabel(selectedPlayer.position)}
                       />
                       <InfoField
                         icon={<Shirt className="text-football-green" size={20} />}
@@ -316,7 +323,7 @@ const PlayerLookup = () => {
                       <InfoField
                         icon={<Globe className="text-football-green" size={20} />}
                         label="Quốc tịch"
-                        value={selectedPlayer.nationality || 'Không rõ'}
+                        value={selectedPlayer.nationality ? toCountryLabel(selectedPlayer.nationality) : 'Không rõ'}
                       />
                       <InfoField
                         icon={<Layers className="text-football-green" size={20} />}
@@ -357,15 +364,15 @@ const PlayerLookup = () => {
                           <div key={match.id} className="bg-white/5 rounded-lg p-4 border border-white/10">
                             <div className="flex items-center justify-between">
                               <div>
-                                <p className="text-white font-medium">
-                                  {match.homeTeamName} vs {match.awayTeamName}
-                                </p>
-                                <p className="text-gray-400 text-sm">
-                                  {formatDate(match.utcDate)} · {match.competitionName || match.stage || 'League Phase'}
-                                </p>
-                              </div>
+                                  <p className="text-white font-medium">
+                                  {match.homeTeamName} gặp {match.awayTeamName}
+                                  </p>
+                                  <p className="text-gray-400 text-sm">
+                                  {formatDate(match.utcDate)} · {match.competitionName ? toCompetitionNameLabel(match.competitionName) : toCompetitionStageLabel(match.stage || 'Vòng phân hạng')}
+                                  </p>
+                                </div>
                               <div className="text-right text-white font-semibold">
-                                {match.status}
+                                {toMatchStatusLabel(match.status)}
                               </div>
                             </div>
                           </div>

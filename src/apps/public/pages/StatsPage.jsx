@@ -18,10 +18,10 @@ const TopScorersList = ({ data }) => {
             <table className="w-full">
                 <thead className="bg-gray-50">
                     <tr>
-                        <th className="p-4 text-center text-xs font-medium text-gray-500 uppercase">Rank</th>
-                        <th className="p-4 text-left text-xs font-medium text-gray-500 uppercase">Player</th>
-                        <th className="p-4 text-left text-xs font-medium text-gray-500 uppercase">Team</th>
-                        <th className="p-4 text-center text-xs font-medium text-gray-500 uppercase">Goals</th>
+                        <th className="p-4 text-center text-xs font-medium text-gray-500 uppercase">Hạng</th>
+                        <th className="p-4 text-left text-xs font-medium text-gray-500 uppercase">Cầu thủ</th>
+                        <th className="p-4 text-left text-xs font-medium text-gray-500 uppercase">Đội</th>
+                        <th className="p-4 text-center text-xs font-medium text-gray-500 uppercase">Bàn thắng</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -58,14 +58,14 @@ const StatsPage = () => {
     }, [activeTab]);
 
     const tabs = [
-        { id: 'top_scorers', name: 'Top Scorers', icon: Award },
-        { id: 'top_assists', name: 'Top Assists', icon: BarChartHorizontal },
-        { id: 'discipline', name: 'Discipline', icon: ShieldAlert },
+        { id: 'top_scorers', name: 'Vua phá lưới', icon: Award },
+        { id: 'top_assists', name: 'Vua kiến tạo', icon: BarChartHorizontal },
+        { id: 'discipline', name: 'Thẻ phạt', icon: ShieldAlert },
     ];
 
     return (
         <div className="uefa-container py-8">
-            <h1 className="uefa-section-title mb-6">Player & Team Statistics</h1>
+            <h1 className="uefa-section-title mb-6">Thống kê cầu thủ & đội bóng</h1>
             
             <div className="border-b border-gray-200 mb-6">
                 <nav className="-mb-px flex space-x-6">
@@ -82,7 +82,7 @@ const StatsPage = () => {
             </div>
 
             <div>
-                {isLoading ? <p>Loading stats...</p> : (
+                {isLoading ? <p>Đang tải thống kê...</p> : (
                     <>
                         {activeTab === 'top_scorers' && <TopScorersList data={topScorers} />}
                         {/* Render content for other tabs here */}

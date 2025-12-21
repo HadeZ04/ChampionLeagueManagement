@@ -49,11 +49,11 @@ const matchService = {
 };
 
 const filters = [
-  { id: 'all', name: 'All Matches' },
-  { id: 'today', name: 'Today' },
-  { id: 'live', name: 'Live' },
-  { id: 'upcoming', name: 'Upcoming' },
-  { id: 'finished', name: 'Finished' }
+  { id: 'all', name: 'Tất cả' },
+  { id: 'today', name: 'Hôm nay' },
+  { id: 'live', name: 'Trực tiếp' },
+  { id: 'upcoming', name: 'Sắp diễn ra' },
+  { id: 'finished', name: 'Đã kết thúc' }
 ];
 
 const MatchesPage = () => {
@@ -84,7 +84,7 @@ const MatchesPage = () => {
   }, {});
 
   const formatDate = (dateString) =>
-    new Date(dateString).toLocaleDateString('en-GB', {
+    new Date(dateString).toLocaleDateString('vi-VN', {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
@@ -97,10 +97,10 @@ const MatchesPage = () => {
         <div className="absolute -right-12 -top-24 h-56 w-56 rounded-full bg-gradient-to-br from-[#0055FF]/15 to-[#8454FF]/15 blur-3xl" />
         <div className="relative flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Fixtures</p>
-            <h1 className="text-4xl font-display text-slate-900">Match Schedule</h1>
+            <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Lịch thi đấu</p>
+            <h1 className="text-4xl font-display text-slate-900">Lịch trận đấu</h1>
             <p className="text-slate-500 max-w-xl">
-              Plan your Champions League nights with quick filters, hover micro-interactions, and live-ready match cards.
+              Lên kế hoạch theo dõi các trận đấu với bộ lọc nhanh, hiệu ứng trực quan và thẻ trận sẵn sàng cho dữ liệu trực tiếp.
             </p>
           </div>
           <label className="flex items-center gap-2 text-sm font-semibold text-slate-500">
@@ -145,10 +145,10 @@ const MatchesPage = () => {
                 <div key={date} className="space-y-4" style={{ animation: `fadeUp 500ms ease ${idx * 80}ms both` }}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Matchday {dayMatches[0]?.matchday}</p>
+                      <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Vòng {dayMatches[0]?.matchday}</p>
                       <h3 className="text-xl font-semibold text-slate-900">{formatDate(date)}</h3>
                     </div>
-                    <span className="text-slate-400 text-sm">{dayMatches.length} fixtures</span>
+                    <span className="text-slate-400 text-sm">{dayMatches.length} trận</span>
                   </div>
                   <div className="space-y-4">
                     {dayMatches.map((match, matchIdx) => (
@@ -162,8 +162,8 @@ const MatchesPage = () => {
             ) : (
               <div className="glass-card p-10 text-center">
                 <Calendar size={48} className="mx-auto text-slate-300 mb-4" />
-                <p className="text-slate-700 text-lg">No matches found</p>
-                <p className="text-slate-400">Adjust filters or choose another date.</p>
+                <p className="text-slate-700 text-lg">Không tìm thấy trận đấu</p>
+                <p className="text-slate-400">Hãy điều chỉnh bộ lọc hoặc chọn ngày khác.</p>
               </div>
             )}
           </div>
@@ -172,7 +172,7 @@ const MatchesPage = () => {
             <WeatherWidget city="Liverpool" temperature={'8\u00B0C'} condition="Partly Cloudy" />
             <div className="glass-card p-6">
               <h3 className="text-xl font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                <Tv size={20} className="text-[#0055FF]" /> Broadcast
+                <Tv size={20} className="text-[#0055FF]" /> Phát sóng
               </h3>
               <div className="space-y-3">
                 {matches
@@ -181,7 +181,7 @@ const MatchesPage = () => {
                   .map(match => (
                     <div key={match.id} className="p-3 rounded-2xl border border-slate-100 bg-slate-50/70">
                       <p className="text-sm font-semibold text-slate-900">
-                        {match.homeTeam.shortName} vs {match.awayTeam.shortName}
+                        {match.homeTeam.shortName} gặp {match.awayTeam.shortName}
                       </p>
                       <p className="text-xs text-slate-500">{match.time} - {match.tvChannels.join(', ')}</p>
                     </div>
@@ -196,11 +196,11 @@ const MatchesPage = () => {
       <div className="flex items-center justify-between border-t border-slate-200 pt-6 text-sm text-slate-500">
         <button className="flex items-center gap-2 text-[#0055FF] font-semibold">
           <ChevronLeft size={16} />
-          Previous Matchday
+          Vòng trước
         </button>
-        <span>Matchday 1</span>
+        <span>Vòng 1</span>
         <button className="flex items-center gap-2 text-[#0055FF] font-semibold">
-          Next Matchday
+          Vòng sau
           <ChevronRight size={16} />
         </button>
       </div>
