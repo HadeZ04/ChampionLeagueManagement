@@ -17,22 +17,37 @@ class MatchesService {
       }
 
       const response = await ApiService.get(APP_CONFIG.API.ENDPOINTS.MATCHES.LIST, params)
-      
+
       // Map backend structure to frontend
       const matches = (response?.data || []).map(match => ({
         id: match.matchId,
+        homeTeamId: match.homeTeamId, // Added ID
         homeTeamName: match.homeTeamName,
+        homeTeamShortName: match.homeTeamShortName,
+        homeTeamLogo: match.homeTeamName?.includes("Monaco")
+          ? "https://tmssl.akamaized.net/images/wappen/head/162.png"
+          : match.homeTeamLogo,
+        awayTeamId: match.awayTeamId, // Added ID
         awayTeamName: match.awayTeamName,
-        utcDate: match.scheduledKickoff,
+        awayTeamShortName: match.awayTeamShortName,
+        awayTeamLogo: match.awayTeamName?.includes("Monaco")
+          ? "https://tmssl.akamaized.net/images/wappen/head/162.png"
+          : match.awayTeamLogo,
+        utcDate: match.scheduledKickoff && !match.scheduledKickoff.endsWith('Z') ? match.scheduledKickoff + 'Z' : match.scheduledKickoff,
+        scheduledKickoff: match.scheduledKickoff && !match.scheduledKickoff.endsWith('Z') ? match.scheduledKickoff + 'Z' : match.scheduledKickoff, // Explicitly mapped for edit modal
         status: match.status,
         scoreHome: match.homeScore,
         scoreAway: match.awayScore,
         venue: match.stadiumName,
         matchday: match.matchdayNumber,
         updatedAt: match.updatedAt,
-        seasonId: match.seasonId
+        seasonId: match.seasonId,
+        // Detailed Infos
+        mvp: match.mvp,
+        events: match.events || [],
+        stats: match.stats || { home: null, away: null }
       }))
-      
+
       return {
         matches,
         pagination: response?.pagination || { page: params.page, limit: params.limit, totalPages: 1 },
@@ -60,7 +75,11 @@ class MatchesService {
     try {
       const endpoint = APP_CONFIG.API.ENDPOINTS.MATCHES.DETAIL.replace(':id', matchId)
       const response = await ApiService.get(endpoint)
-      return response?.data
+      const match = response?.data
+      if (match && match.scheduledKickoff && !match.scheduledKickoff.endsWith('Z')) {
+        match.scheduledKickoff += 'Z'
+      }
+      return match
     } catch (error) {
       console.error('Failed to fetch match:', error)
       throw error
@@ -94,10 +113,13 @@ class MatchesService {
         status: matchData.status,
         homeScore: matchData.scoreHome,
         awayScore: matchData.scoreAway,
-        attendance: matchData.attendance
+        attendance: matchData.attendance,
+        scheduledKickoff: matchData.scheduledKickoff,
+        stadiumId: matchData.stadiumId,
+        description: matchData.description
       }
       const response = await ApiService.put(endpoint, payload)
-      
+
       // Map response back
       if (response?.data) {
         return {
@@ -168,12 +190,14 @@ class MatchesService {
       }
 
       const response = await ApiService.get('/matches/external', params)
-      
+
       // Map backend structure to frontend
       const matches = (response?.data || []).map(match => ({
         id: match.id,
         externalId: match.externalId,
+        homeTeamId: match.homeTeamId, // Added
         homeTeamName: match.homeTeamName,
+        awayTeamId: match.awayTeamId, // Added
         awayTeamName: match.awayTeamName,
         utcDate: match.utcDate,
         status: match.status,
@@ -187,7 +211,7 @@ class MatchesService {
         season: match.season,
         updatedAt: match.lastUpdated
       }))
-      
+
       return {
         matches,
         pagination: response?.pagination || { page: params.page, limit: params.limit, totalPages: 1 },
@@ -206,6 +230,101 @@ class MatchesService {
       startDate: options.startDate || new Date().toISOString()
     }
     return ApiService.post('/matches/generate/random', payload)
+  }
+
+  // Create matches in bulk
+  async createBulkMatches(matches) {
+    try {
+      const response = await ApiService.post('/matches/bulk', { matches })
+      return response?.count
+    } catch (error) {
+      console.error('Failed to create bulk matches:', error)
+      throw error
+    }
+  }
+
+  // Generate Round Robin Schedule on Backend
+  async generateRoundRobinSchedule(teamIds, seasonId = null, startDate = null) {
+    try {
+      const payload = {
+        teamIds,
+        seasonId,
+        startDate
+      }
+      const response = await ApiService.post('/matches/generate/round-robin', payload)
+      return response?.data || []
+    } catch (error) {
+      console.error('Failed to generate round robin schedule:', error)
+      throw error
+    }
+  }
+
+  // Delete all matches (bulk delete)
+  async deleteAllMatches(seasonId = null) {
+    try {
+      const params = seasonId ? { seasonId } : {}
+      const response = await ApiService.delete('/matches/bulk', params)
+      return response?.count
+    } catch (error) {
+      console.error('Failed to delete all matches:', error)
+      throw error
+    }
+  }
+
+  // --- Match Details (Events, Lineups) ---
+
+  async getMatchEvents(matchId) {
+    try {
+      const response = await ApiService.get(`/matches/${matchId}/events`)
+      return response?.data?.data || []
+    } catch (error) {
+      console.error('Failed to fetch match events:', error)
+      return []
+    }
+  }
+
+  async createMatchEvent(matchId, eventData) {
+    try {
+      const response = await ApiService.post(`/matches/${matchId}/events`, eventData)
+      return response?.data
+    } catch (error) {
+      console.error('Failed to create match event:', error)
+      throw error
+    }
+  }
+
+  async deleteMatchEvent(eventId) {
+    try {
+      await ApiService.delete(`/matches/events/${eventId}`)
+      return true
+    } catch (error) {
+      console.error('Failed to delete match event:', error)
+      throw error
+    }
+  }
+
+  async getMatchLineups(matchId) {
+    try {
+      const response = await ApiService.get(`/matches/${matchId}/lineups`)
+      return response?.data?.data || []
+    } catch (error) {
+      console.error('Failed to fetch match lineups:', error)
+      return []
+    }
+  }
+
+  async updateMatchLineups(matchId, lineups) {
+    try {
+      const response = await ApiService.post(`/matches/${matchId}/lineups`, lineups)
+      return response?.data
+    } catch (error) {
+      console.error('Failed to update match lineups:', error)
+      throw error
+    }
+  }
+
+  async finalizeMatch(matchId) {
+    return this.updateMatch(matchId, { status: 'completed' })
   }
 }
 

@@ -1,7 +1,44 @@
-import React from 'react';
-import { Calendar, Clock, MapPin, Users } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, Clock, MapPin, Users, ChevronDown, ChevronUp, Trophy, Activity, Flag } from 'lucide-react';
+import { getLogoByTeamName } from '../data/teamLogos';
+
+// Smarter Image Component with Fallback
+const TeamLogo = ({ src, alt, className }) => {
+  const [imgSrc, setImgSrc] = useState(src);
+  const [hasError, setHasError] = useState(false);
+
+  // Initialize with Mapping if available, otherwise use provided src
+  useEffect(() => {
+    const mappedLogo = getLogoByTeamName(alt);
+    setImgSrc(mappedLogo || src);
+    setHasError(false);
+  }, [src, alt]);
+
+  const handleError = () => {
+    // Only try to replace .svg with .png if it DOES NOT already end in .png
+    // The previous logic was breaking wikimedia urls like .../Logo.svg.png -> .../Logo.png.png
+    if (!hasError && imgSrc && imgSrc.includes('.svg') && !imgSrc.endsWith('.png')) {
+      setImgSrc(imgSrc.replace('.svg', '.png'));
+      setHasError(true);
+    } else {
+      // Fallback to generic if both fail
+      setImgSrc('https://img.uefa.com/imgml/TP/teams/logos/50x50/generic.png');
+    }
+  };
+
+  return (
+    <img
+      src={imgSrc}
+      alt={alt}
+      className={className}
+      onError={handleError}
+    />
+  );
+};
 
 const MatchCard = ({ match }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
   const getStatusBadge = (status) => {
     switch (status) {
       case 'live':
@@ -35,9 +72,11 @@ const MatchCard = ({ match }) => {
         </div>
         {getStatusBadge(match.status)}
       </div>
+
+      {/* SCORE SECTION */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3 flex-1">
-          <img
+          <TeamLogo
             src={match.homeTeam.logo}
             alt={match.homeTeam.name}
             className="h-10 w-10 object-contain"
@@ -47,24 +86,40 @@ const MatchCard = ({ match }) => {
             <p className="text-xs text-slate-400 uppercase tracking-[0.3em]">{match.homeTeam.shortName}</p>
           </div>
         </div>
-        <div className="text-center min-w-[120px] score-flip">
-          {match.status === 'finished' && match.score ? (
-            <p className="text-3xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#0055FF] to-[#00E5FF]">
-              {match.score.home} - {match.score.away}
-            </p>
+        <div className="text-center min-w-[140px] flex flex-col items-center justify-center score-flip">
+          {match.status === 'finished' && (match.scoreHome !== undefined || match.score?.home !== undefined) ? (
+            <>
+              <div className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-slate-800 to-slate-600 mb-1">
+                {match.scoreHome ?? match.score?.home} : {match.scoreAway ?? match.score?.away}
+              </div>
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded-full">
+                Full Time
+              </div>
+            </>
           ) : (
-            <p className="text-xl font-semibold text-slate-900">{formatTime(match.time)}</p>
+            <>
+              <p className="text-2xl font-bold text-slate-800 tracking-tight font-display mb-1">
+                {formatTime(match.time)}
+              </p>
+              <div className={`text-[10px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full ${match.status === 'live' ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-slate-100 text-slate-500'}`}>
+                {match.status === 'live' ? 'Live Match' : 'Kick-off'}
+              </div>
+            </>
           )}
+<<<<<<< HEAD
           <p className="text-xs text-slate-400 uppercase tracking-[0.3em]">{match.status === 'live' ? 'Trực tiếp' : 'Giờ bóng lăn'}</p>
+=======
+>>>>>>> 34600db (Fix match time update, timezone display, and live timer issues)
         </div>
         <div className="flex items-center gap-3 flex-1 justify-end">
           <div className="text-right">
             <p className="text-slate-900 font-semibold">{match.awayTeam.name}</p>
             <p className="text-xs text-slate-400 uppercase tracking-[0.3em]">{match.awayTeam.shortName}</p>
           </div>
-          <img src={match.awayTeam.logo} alt={match.awayTeam.name} className="h-10 w-10 object-contain" />
+          <TeamLogo src={match.awayTeam.logo} alt={match.awayTeam.name} className="h-10 w-10 object-contain" />
         </div>
       </div>
+
       <div className="flex items-center justify-between text-xs text-slate-500">
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1">
@@ -76,8 +131,75 @@ const MatchCard = ({ match }) => {
             {match.city}
           </span>
         </div>
+<<<<<<< HEAD
         <button className="text-[#0055FF] text-xs uppercase tracking-[0.4em]">Chi tiết</button>
+=======
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="text-[#0055FF] text-xs uppercase tracking-[0.4em] flex items-center gap-1 hover:text-[#0040BF] transition-colors"
+        >
+          Details
+          {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+        </button>
+>>>>>>> 34600db (Fix match time update, timezone display, and live timer issues)
       </div>
+
+      {/* DETAILS EXPANDABLE SECTION */}
+      {isOpen && (
+        <div className="mt-6 pt-6 border-t border-slate-100 animate-in fade-in slide-in-from-top-2 duration-300">
+
+          {/* MVP */}
+          {(match.mvp) && (
+            <div className="mb-4 flex items-center gap-2 bg-yellow-50 p-3 rounded-lg border border-yellow-100">
+              <Trophy className="text-yellow-500" size={16} />
+              <div>
+                <span className="text-xs text-yellow-600 font-bold uppercase tracking-wider block">Man of the Match</span>
+                <span className="text-sm font-semibold text-slate-800">{match.mvp.playerName} ({match.mvp.teamName})</span>
+              </div>
+            </div>
+          )}
+
+          {/* EVENTS */}
+          {(match.events && match.events.length > 0) && (
+            <div className="mb-4">
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                <Activity size={12} /> Match Events
+              </h4>
+              <div className="space-y-2">
+                {match.events.map((event, idx) => (
+                  <div key={idx} className={`flex items-center text-sm ${match.homeTeam.name.includes(event.teamId) ? '' : '' /* Matching logic needs fix */}`}>
+                    <span className="font-mono text-slate-400 w-8">{event.minute}'</span>
+                    <span className={`flex-1 ${event.type === 'GOAL' ? 'font-bold text-slate-800' : 'text-slate-600'}`}>
+                      {event.player}
+                      {event.type === 'GOAL' && ' ⚽'}
+                      {event.type === 'card_yellow' && ' 🟨'}
+                      {event.type === 'card_red' && ' 🟥'}
+                    </span>
+                    {/* We need better team identification. For now showing list. */}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* STATS */}
+          {match.stats && (match.stats.home || match.stats.away) && (
+            <div className="grid grid-cols-3 gap-2 text-center text-sm mt-4">
+              <div className="text-slate-600 font-semibold">{match.stats.home?.shots || 0}</div>
+              <div className="text-xs text-slate-400 uppercase">Shots</div>
+              <div className="text-slate-600 font-semibold">{match.stats.away?.shots || 0}</div>
+
+              <div className="text-slate-600 font-semibold">{match.stats.home?.possession || 0}%</div>
+              <div className="text-xs text-slate-400 uppercase">Possession</div>
+              <div className="text-slate-600 font-semibold">{match.stats.away?.possession || 0}%</div>
+
+              <div className="text-slate-600 font-semibold">{match.stats.home?.fouls || 0}</div>
+              <div className="text-xs text-slate-400 uppercase">Fouls</div>
+              <div className="text-slate-600 font-semibold">{match.stats.away?.fouls || 0}</div>
+            </div>
+          )}
+        </div>
+      )}
     </article>
   );
 };

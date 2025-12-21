@@ -3,9 +3,15 @@ import { config as loadDotenv } from "dotenv";
 
 const NODE_ENV = process.env.NODE_ENV ?? "development";
 
-loadDotenv({
+console.log("Current CWD:", process.cwd());
+const result = loadDotenv({
   path: path.resolve(process.cwd(), ".env"),
 });
+if (result.error) {
+  console.error("Dotenv error:", result.error);
+} else {
+  console.log("Dotenv loaded:", result.parsed);
+}
 
 const requiredEnvVars = ["DB_HOST", "DB_USER", "DB_PASS", "DB_NAME", "JWT_SECRET", "FOOTBALL_DATA_API_TOKEN"];
 

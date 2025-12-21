@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, ChevronLeft, ChevronRight, Tv } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Tv, Download } from 'lucide-react';
 import MatchCard from '../components/MatchCard';
 import WeatherWidget from '../components/WeatherWidget';
 import MatchPreview from '../components/MatchPreview';
+<<<<<<< HEAD
+=======
+import matchService from '../../../layers/application/services/MatchesService';
+import { downloadICS } from '../../../utils/icsGenerator';
+>>>>>>> 34600db (Fix match time update, timezone display, and live timer issues)
 
 const FAKE_SCHEDULE_FROM_DB = [
   {
@@ -56,24 +61,99 @@ const filters = [
   { id: 'finished', name: 'Đã kết thúc' }
 ];
 
+import SeasonService from '../../../layers/application/services/SeasonService';
+
 const MatchesPage = () => {
   const [matches, setMatches] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState('2025-09-17');
+  const [error, setError] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(''); // Default empty to show all matches initially
   const [selectedFilter, setSelectedFilter] = useState('all');
 
   useEffect(() => {
+<<<<<<< HEAD
     setIsLoading(true);
     matchService
       .getMatches()
       .then(response => setMatches(response.data))
       .finally(() => setIsLoading(false));
+=======
+    const fetchMatches = async () => {
+      setIsLoading(true);
+      try {
+        // 1. Fetch matches from both sources (Removed SeasonService dependency as we want ALL matches)
+        const [systemData, externalData] = await Promise.all([
+          matchService.getAllMatches({ limit: 100 }),
+          matchService.getExternalMatches({ limit: 100 })
+        ]);
+
+        const formatMatch = (m, isExternal) => ({
+          id: isExternal ? `ext-${m.id}` : m.id,
+          date: m.utcDate ? String(m.utcDate).split('T')[0] : '',
+          time: m.utcDate ? new Date(m.utcDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '00:00',
+          status: (() => {
+            if (m.status === 'in_progress' || m.status === 'IN_PLAY') return 'live';
+            if (m.status === 'completed' || m.status === 'FINISHED') return 'finished';
+            return m.status === 'scheduled' || m.status === 'TIMED' ? 'upcoming' : (m.status || '').toLowerCase();
+          })(),
+          scoreHome: m.scoreHome ?? m.homeScore,
+          scoreAway: m.scoreAway ?? m.awayScore,
+          homeTeam: {
+            id: m.homeTeamId,
+            name: m.homeTeamName || 'Unknown Team',
+            logo: isExternal
+              ? `https://crests.football-data.org/${m.homeTeamId}.svg`
+              : (m.homeTeamLogo || 'https://img.uefa.com/imgml/TP/teams/logos/50x50/generic.png'),
+            shortName: m.homeTeamShortName || (m.homeTeamName ? m.homeTeamName.substring(0, 3).toUpperCase() : 'UNK')
+          },
+          awayTeam: {
+            id: m.awayTeamId,
+            name: m.awayTeamName || 'Unknown Team',
+            logo: isExternal
+              ? `https://crests.football-data.org/${m.awayTeamId}.svg`
+              : (m.awayTeamLogo || 'https://img.uefa.com/imgml/TP/teams/logos/50x50/generic.png'),
+            shortName: m.awayTeamShortName || (m.awayTeamName ? m.awayTeamName.substring(0, 3).toUpperCase() : 'UNK')
+          },
+          matchday: m.matchday || m.round || 0,
+          venue: m.venue || 'TBC',
+          city: 'Europe',
+          tvChannels: isExternal ? ['UEFA.tv'] : []
+        });
+
+        const systemMatches = (systemData.matches || []).map(m => formatMatch(m, false));
+        const externalMatches = (externalData.matches || []).map(m => formatMatch(m, true));
+
+        // Merge and sort
+        const allMatches = [...systemMatches, ...externalMatches].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        setMatches(allMatches);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching matches:', err);
+        setError(err.message || 'Failed to load matches');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMatches();
+>>>>>>> 34600db (Fix match time update, timezone display, and live timer issues)
   }, []);
 
   const filteredMatches = matches.filter(match => {
-    if (selectedFilter === 'all') return true;
+    // If user picks a specific filter (Today, Live, etc), use that
     if (selectedFilter === 'today') return match.date === new Date().toISOString().split('T')[0];
-    return match.status === selectedFilter;
+    if (selectedFilter === 'live') return match.status === 'live';
+    if (selectedFilter === 'upcoming') return match.status === 'upcoming';
+    if (selectedFilter === 'finished') return match.status === 'finished';
+
+    // If date is selected, filter by date
+    if (selectedDate && selectedFilter !== 'all') return match.date === selectedDate;
+
+    // If "All" is selected and date is picked
+    if (selectedFilter === 'all' && selectedDate) return match.date === selectedDate;
+
+    return true;
   });
 
   const groupedMatches = filteredMatches.reduce((groups, match) => {
@@ -103,15 +183,26 @@ const MatchesPage = () => {
               Lên kế hoạch theo dõi các trận đấu với bộ lọc nhanh, hiệu ứng trực quan và thẻ trận sẵn sàng cho dữ liệu trực tiếp.
             </p>
           </div>
-          <label className="flex items-center gap-2 text-sm font-semibold text-slate-500">
-            <Calendar size={18} />
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="uefa-input max-w-[170px] text-slate-700 border-slate-200 focus:ring-[#0055FF]"
-            />
-          </label>
+          <div className="flex gap-3">
+            <button
+              onClick={() => downloadICS(matches)}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors text-sm font-semibold shadow-sm"
+              title="Export to Calendar (.ics)"
+            >
+              <Download size={18} />
+              <span className="hidden sm:inline">Export Calendar</span>
+            </button>
+
+            <label className="flex items-center gap-2 text-sm font-semibold text-slate-500 bg-white px-3 py-2 border border-slate-200 rounded-lg shadow-sm">
+              <Calendar size={18} />
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="uefa-input max-w-[130px] border-none p-0 focus:ring-0 text-slate-700"
+              />
+            </label>
+          </div>
         </div>
       </section>
 
@@ -126,6 +217,13 @@ const MatchesPage = () => {
           </button>
         ))}
       </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Error! </strong>
+          <span className="block sm:inline">{error}</span>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="grid gap-4">

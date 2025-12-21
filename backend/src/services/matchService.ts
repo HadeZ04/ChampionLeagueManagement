@@ -2,6 +2,17 @@ import { query } from "../db/sqlServer";
 import { getCompetitionMatches, type MatchSummary } from "./footballDataService";
 import { calculateStandings } from "./standingsAdminService";
 
+class NotificationService {
+  static async notifyMatchScheduleChange(
+    match: any,
+    changes: { oldDate?: string; newDate?: string; oldStadium?: string; newStadium?: string; }
+  ): Promise<void> {
+    console.log(`[NotificationService] 🔔 ALERT: Match ${match.homeTeamName} vs ${match.awayTeamName} changed!`);
+    if (changes.newDate) console.log(`[NotificationService] 📅 Date changed from ${changes.oldDate} to ${changes.newDate}`);
+    if (changes.newStadium) console.log(`[NotificationService] 🏟️ Stadium moved from ${changes.oldStadium} to ${changes.newStadium}`);
+  }
+}
+
 export interface MatchRecord {
   matchId: number;
   seasonId: number;
@@ -9,8 +20,17 @@ export interface MatchRecord {
   matchdayNumber: number;
   homeTeamId: number;
   homeTeamName: string;
+<<<<<<< HEAD
   awayTeamId: number;
   awayTeamName: string;
+=======
+  homeTeamLogo: string | null;
+  homeTeamShortName: string | null;
+  awayTeamId: number;
+  awayTeamName: string;
+  awayTeamLogo: string | null;
+  awayTeamShortName: string | null;
+>>>>>>> 34600db (Fix match time update, timezone display, and live timer issues)
   stadiumId: number;
   stadiumName: string | null;
   scheduledKickoff: string;
@@ -20,6 +40,20 @@ export interface MatchRecord {
   attendance: number | null;
   matchCode: string | null;
   updatedAt: string | null;
+  // New Fields
+  mvp: { playerName: string; teamName: string } | null;
+  events: Array<{
+    id: number;
+    teamId: number;
+    player: string;
+    type: string;
+    minute: number;
+    description: string | null;
+  }>;
+  stats: {
+    home: { possession: number; shots: number; onTarget: number; corners: number; fouls: number } | null;
+    away: { possession: number; shots: number; onTarget: number; corners: number; fouls: number } | null;
+  };
 }
 
 export interface MatchFilters {
@@ -294,8 +328,17 @@ export const listMatches = async (filters: MatchFilters = {}): Promise<Paginated
         m.matchday_number AS matchdayNumber,
         hstp.team_id AS homeTeamId,
         ht.name AS homeTeamName,
+<<<<<<< HEAD
         astp.team_id AS awayTeamId,
         at.name AS awayTeamName,
+=======
+        ht.short_name AS homeTeamShortName,
+        ht.logo_url AS homeTeamLogo,
+        astp.team_id AS awayTeamId,
+        at.name AS awayTeamName,
+        at.short_name AS awayTeamShortName,
+        at.logo_url AS awayTeamLogo,
+>>>>>>> 34600db (Fix match time update, timezone display, and live timer issues)
         m.stadium_id AS stadiumId,
         s.name AS stadiumName,
         CONVERT(VARCHAR(33), m.scheduled_kickoff, 127) AS scheduledKickoff,
@@ -304,7 +347,33 @@ export const listMatches = async (filters: MatchFilters = {}): Promise<Paginated
         m.away_score AS awayScore,
         m.attendance,
         m.match_code AS matchCode,
-        CONVERT(VARCHAR(33), m.updated_at, 127) AS updatedAt
+        CONVERT(VARCHAR(33), m.updated_at, 127) AS updatedAt,
+        (SELECT TOP 1 JSON_QUERY((SELECT player_name AS playerName, team_name AS teamName FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)) FROM match_mvps WHERE match_id = m.match_id) AS mvpJson,
+        (SELECT (
+            SELECT 
+                match_event_id AS id,
+                season_team_id AS teamId,
+                player_name AS player,
+                event_type AS type,
+                event_minute AS minute,
+                description
+            FROM match_events 
+            WHERE match_id = m.match_id 
+            ORDER BY event_minute ASC 
+            FOR JSON PATH
+        )) AS eventsJson,
+        (SELECT (
+            SELECT 
+                season_team_id AS teamId,
+                possession_percent AS possession,
+                shots_total AS shots,
+                shots_on_target AS onTarget,
+                corners,
+                fouls_committed AS fouls
+            FROM match_team_statistics
+            WHERE match_id = m.match_id
+            FOR JSON PATH
+        )) AS statsJson
       FROM matches m
       INNER JOIN season_team_participants hstp ON m.home_season_team_id = hstp.season_team_id
       INNER JOIN teams ht ON hstp.team_id = ht.team_id
@@ -312,11 +381,40 @@ export const listMatches = async (filters: MatchFilters = {}): Promise<Paginated
       INNER JOIN teams at ON astp.team_id = at.team_id
       LEFT JOIN stadiums s ON m.stadium_id = s.stadium_id
       ${whereClause}
-      ORDER BY m.scheduled_kickoff DESC
+      ORDER BY m.scheduled_kickoff ASC
       OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY;
     `,
     params
   );
+
+  // Helper to parse JSON safely
+  const parseJSON = (str: any) => {
+    try {
+      return typeof str === 'string' ? JSON.parse(str) : str;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const matches: MatchRecord[] = dataResult.recordset.map((row: any) => {
+    const rawEvents = parseJSON(row.eventsJson) || [];
+    const rawStats = parseJSON(row.statsJson) || [];
+    const rawMvp = parseJSON(row.mvpJson);
+
+    // Map stats array to home/away object
+    const homeStats = rawStats.find((s: any) => s.teamId === row.homeTeamId) || null;
+    const awayStats = rawStats.find((s: any) => s.teamId === row.awayTeamId) || null;
+
+    return {
+      ...row,
+      mvp: rawMvp ? { playerName: rawMvp.playerName, teamName: rawMvp.teamName } : null,
+      events: rawEvents,
+      stats: {
+        home: homeStats,
+        away: awayStats
+      }
+    };
+  });
 
   const countResult = await query<{ total: number }>(
     `
@@ -333,7 +431,7 @@ export const listMatches = async (filters: MatchFilters = {}): Promise<Paginated
   const totalPages = limit > 0 ? Math.ceil(total / limit) : 1;
 
   return {
-    data: dataResult.recordset,
+    data: matches,
     total,
     page,
     limit,
@@ -351,8 +449,17 @@ export const getMatchById = async (matchId: number): Promise<MatchRecord | null>
         m.matchday_number AS matchdayNumber,
         hstp.team_id AS homeTeamId,
         ht.name AS homeTeamName,
+<<<<<<< HEAD
         astp.team_id AS awayTeamId,
         at.name AS awayTeamName,
+=======
+        ht.short_name AS homeTeamShortName,
+        ht.logo_url AS homeTeamLogo,
+        astp.team_id AS awayTeamId,
+        at.name AS awayTeamName,
+        at.short_name AS awayTeamShortName,
+        at.logo_url AS awayTeamLogo,
+>>>>>>> 34600db (Fix match time update, timezone display, and live timer issues)
         m.stadium_id AS stadiumId,
         s.name AS stadiumName,
         CONVERT(VARCHAR(33), m.scheduled_kickoff, 127) AS scheduledKickoff,
@@ -383,14 +490,70 @@ export const updateMatch = async (
     homeScore: number | null;
     awayScore: number | null;
     attendance: number | null;
+    scheduledKickoff: string;
+    stadiumId: number;
+    description: string; // Optional reason for change
   }>
 ): Promise<MatchRecord | null> => {
+  const currentMatch = await getMatchById(matchId);
+  if (!currentMatch) return null;
+
   const fields: string[] = [];
   const params: Record<string, unknown> = { matchId };
+
+  console.log('[updateMatch] DEBUG: MatchId:', matchId);
+  console.log('[updateMatch] DEBUG: Payload:', JSON.stringify(payload, null, 2));
+  console.log('[updateMatch] DEBUG: CurrentMatch:', JSON.stringify({
+    id: currentMatch.matchId,
+    kickoff: currentMatch.scheduledKickoff,
+    stadium: currentMatch.stadiumId
+  }, null, 2));
+
+  // Check for significant changes for auditing
+  const changes = {
+    date: payload.scheduledKickoff && payload.scheduledKickoff !== currentMatch.scheduledKickoff,
+    stadium: payload.stadiumId && payload.stadiumId !== currentMatch.stadiumId,
+    status: payload.status && payload.status !== currentMatch.status,
+    score: (payload.homeScore !== undefined && payload.homeScore !== currentMatch.homeScore) || (payload.awayScore !== undefined && payload.awayScore !== currentMatch.awayScore)
+  };
+
+  if (changes.date || changes.stadium) {
+    try {
+      // Log rescheduling
+      await query(
+        `INSERT INTO match_audit_logs (match_id, action_type, old_value, new_value, details) 
+        VALUES (@matchId, @actionType, @oldValue, @newValue, @details)`,
+        {
+          matchId,
+          actionType: changes.stadium ? 'RELOCATION' : 'RESCHEDULE',
+          oldValue: JSON.stringify({ kickoff: currentMatch.scheduledKickoff, stadiumId: currentMatch.stadiumId }),
+          newValue: JSON.stringify({ kickoff: payload.scheduledKickoff, stadiumId: payload.stadiumId }),
+          details: payload.description || 'Schedule update via API'
+        }
+      );
+      // Send Notification
+      NotificationService.notifyMatchScheduleChange(currentMatch, {
+        oldDate: currentMatch.scheduledKickoff,
+        newDate: payload.scheduledKickoff,
+        oldStadium: currentMatch.stadiumName || undefined,
+        newStadium: payload.stadiumId ? `Stadium ID ${payload.stadiumId}` : undefined
+      });
+    } catch (auditError) {
+      console.error('[updateMatch] Failed to log audit/notify (non-fatal):', auditError);
+    }
+  }
 
   if (payload.status !== undefined) {
     fields.push("status = @status");
     params.status = payload.status;
+  }
+  if (payload.scheduledKickoff !== undefined) {
+    fields.push("scheduled_kickoff = @scheduledKickoff");
+    params.scheduledKickoff = payload.scheduledKickoff;
+  }
+  if (payload.stadiumId !== undefined) {
+    fields.push("stadium_id = @stadiumId");
+    params.stadiumId = payload.stadiumId;
   }
   if (payload.homeScore !== undefined) {
     fields.push("home_score = @homeScore");
@@ -406,10 +569,14 @@ export const updateMatch = async (
   }
 
   if (fields.length === 0) {
+    console.log('[updateMatch] DEBUG: No fields to update');
     return getMatchById(matchId);
   }
 
   fields.push("updated_at = SYSUTCDATETIME()");
+
+  console.log('[updateMatch] DEBUG: Executing UPDATE with fields:', fields);
+  console.log('[updateMatch] DEBUG: SQL Params:', params);
 
   await query(
     `UPDATE matches SET ${fields.join(", ")} WHERE match_id = @matchId;`,
@@ -454,8 +621,17 @@ export const listLiveMatches = async (): Promise<MatchRecord[]> => {
         m.matchday_number AS matchdayNumber,
         hstp.team_id AS homeTeamId,
         ht.name AS homeTeamName,
+<<<<<<< HEAD
         astp.team_id AS awayTeamId,
         at.name AS awayTeamName,
+=======
+        ht.short_name AS homeTeamShortName,
+        ht.logo_url AS homeTeamLogo,
+        astp.team_id AS awayTeamId,
+        at.name AS awayTeamName,
+        at.short_name AS awayTeamShortName,
+        at.logo_url AS awayTeamLogo,
+>>>>>>> 34600db (Fix match time update, timezone display, and live timer issues)
         m.stadium_id AS stadiumId,
         s.name AS stadiumName,
         CONVERT(VARCHAR(33), m.scheduled_kickoff, 127) AS scheduledKickoff,

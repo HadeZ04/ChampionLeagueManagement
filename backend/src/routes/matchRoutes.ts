@@ -119,6 +119,13 @@ const updateSchema = z.object({
   homeScore: z.number().int().nonnegative().nullable().optional(),
   awayScore: z.number().int().nonnegative().nullable().optional(),
   attendance: z.number().int().nonnegative().nullable().optional(),
+  scheduledKickoff: z
+    .string()
+    .trim()
+    .optional()
+    .refine((value) => (value ? isValidDate(value) : true), { message: "scheduledKickoff must be a valid ISO date" }),
+  stadiumId: z.number().int().positive().optional(),
+  description: z.string().trim().optional(),
 });
 
 router.get("/", async (req, res, next) => {
@@ -198,7 +205,7 @@ router.post("/sync", async (req, res, next) => {
       payload.dateFrom,
       payload.dateTo
     );
-    
+
     if (result.success) {
       res.json({
         success: true,

@@ -19,13 +19,32 @@ import MatchesService from '../../../layers/application/services/MatchesService'
 const statusOptions = [
   { id: 'all', name: 'All Matches' },
   { id: 'SCHEDULED', name: 'Scheduled' },
-  { id: 'LIVE', name: 'Live' },
-  { id: 'IN_PLAY', name: 'In Play' },
-  { id: 'PAUSED', name: 'Paused' },
-  { id: 'FINISHED', name: 'Completed' },
+  { id: 'IN_PROGRESS', name: 'Live (In Progress)' },
+  { id: 'COMPLETED', name: 'Completed' },
   { id: 'POSTPONED', name: 'Postponed' },
   { id: 'CANCELLED', name: 'Cancelled' }
 ]
+
+const statusIcon = (status) => {
+  const normalized = status?.toUpperCase() || ''
+  switch (normalized) {
+    case 'SCHEDULED':
+    case 'TIMED':
+      return <Clock size={16} className="text-blue-500" />
+    case 'LIVE':
+    case 'IN_PLAY':
+    case 'IN_PROGRESS':
+      return <Play size={16} className="text-red-500" />
+    case 'FINISHED':
+    case 'COMPLETED':
+      return <CheckCircle size={16} className="text-green-500" />
+    case 'POSTPONED':
+    case 'CANCELLED':
+      return <AlertCircle size={16} className="text-yellow-500" />
+    default:
+      return <Clock size={16} className="text-gray-500" />
+  }
+}
 
 const statusBadge = (status) => {
   const normalized = status?.toUpperCase() || ''
@@ -35,8 +54,10 @@ const statusBadge = (status) => {
       return <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">Scheduled</span>
     case 'LIVE':
     case 'IN_PLAY':
+    case 'IN_PROGRESS':
       return <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium animate-pulse">Live</span>
     case 'FINISHED':
+    case 'COMPLETED':
       return <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">Completed</span>
     case 'POSTPONED':
       return <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">Postponed</span>
@@ -47,24 +68,6 @@ const statusBadge = (status) => {
   }
 }
 
-const statusIcon = (status) => {
-  const normalized = status?.toUpperCase() || ''
-  switch (normalized) {
-    case 'SCHEDULED':
-    case 'TIMED':
-      return <Clock size={16} className="text-blue-500" />
-    case 'LIVE':
-    case 'IN_PLAY':
-      return <Play size={16} className="text-red-500" />
-    case 'FINISHED':
-      return <CheckCircle size={16} className="text-green-500" />
-    case 'POSTPONED':
-    case 'CANCELLED':
-      return <AlertCircle size={16} className="text-yellow-500" />
-    default:
-      return <Clock size={16} className="text-gray-500" />
-  }
-}
 
 const formatDate = (isoString) => {
   const date = new Date(isoString)
@@ -100,7 +103,8 @@ const MatchesManagement = () => {
       try {
         setLoading(true)
         setError(null)
-        const response = await MatchesService.getExternalMatches({
+        // Use getAllMatches to fetch INTERNAL system matches (which includes the generated schedule)
+        const response = await MatchesService.getAllMatches({
           status: filters.status === 'all' ? '' : filters.status,
           dateFrom: filters.dateFrom,
           dateTo: filters.dateTo,
@@ -154,13 +158,13 @@ const MatchesManagement = () => {
         dateFrom: filters.dateFrom,
         dateTo: filters.dateTo
       })
-      
+
       // Show success message
       if (result?.data?.results?.matches) {
         const { totalMatches, syncedMatches, skippedMatches } = result.data.results.matches
         alert(`✅ Successfully synced ${totalMatches || syncedMatches} matches from Football-Data.org API!\n\n${skippedMatches ? `⚠️ Skipped ${skippedMatches} matches with incomplete data.` : ''}`)
       }
-      
+
       // Force reload matches
       const response = await MatchesService.getExternalMatches({
         status: filters.status === 'all' ? '' : filters.status,
@@ -196,14 +200,46 @@ const MatchesManagement = () => {
     }
   }
 
+  const handleClearAll = async () => {
+    if (!window.confirm('⚠️ DANGER: This will delete ALL matches in the database!\n\nUse this if you want to Reset the schedule to change team settings.\n\nAre you sure completely?')) {
+      return
+    }
+    try {
+      setLoading(true)
+      await MatchesService.deleteAllMatches()
+      setMatches([])
+      setPagination(prev => ({ ...prev, total: 0, totalPages: 1 }))
+      alert('All matches have been deleted successfully.')
+    } catch (err) {
+      console.error('Failed to delete all matches', err)
+      alert('Failed to clear database.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const openEditModal = (match) => {
+    // Convert ISO string to format accepted by datetime-local (YYYY-MM-DDThh:mm)
+    let formattedDate = ''
+    console.log('DEBUG: openEditModal match.scheduledKickoff:', match.scheduledKickoff);
+    if (match.scheduledKickoff) {
+      const date = new Date(match.scheduledKickoff)
+      // Adjust to local time string ISO format (ignoring timezone offset for simplicity in this context or handling it)
+      // Actually, datetime-local expects local time. 
+      // Safe generic way:
+      const pad = (n) => n.toString().padStart(2, '0')
+      formattedDate = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+    }
+
     setEditingMatch({
       id: match.id,
-      status: match.status,
-      venue: match.venue || '',
+      status: match.status?.toUpperCase(),
+      scheduledKickoff: formattedDate,
+      venue: match.stadiumName || match.venue || '', // Display stadium name logic
       referee: match.referee || '',
       scoreHome: match.scoreHome ?? '',
-      scoreAway: match.scoreAway ?? ''
+      scoreAway: match.scoreAway ?? '',
+      description: ''
     })
     setShowEditModal(true)
   }
@@ -212,19 +248,41 @@ const MatchesManagement = () => {
     event.preventDefault()
     if (!editingMatch) return
     try {
+      console.log('DEBUG: handleUpdateMatch called');
+      console.log('DEBUG: editingMatch state:', editingMatch);
+
+      if (!editingMatch.scheduledKickoff) {
+        alert('DEBUG ALERT: Scheduled Kickoff is EMPTY in state! Did you select a date?');
+      }
+
+      let scheduledKickoff = undefined;
+      if (editingMatch.scheduledKickoff && editingMatch.scheduledKickoff.trim() !== '') {
+        // Check if valid date
+        const parsed = new Date(editingMatch.scheduledKickoff);
+        if (!isNaN(parsed.getTime())) {
+          scheduledKickoff = parsed.toISOString();
+        } else {
+          console.warn('Invalid date string:', editingMatch.scheduledKickoff);
+        }
+      }
+
+      // Preparing update payload
       const payload = {
-        status: editingMatch.status,
+        status: editingMatch.status?.toLowerCase(), // Normalize status
         venue: editingMatch.venue || null,
         referee: editingMatch.referee || null,
         scoreHome: editingMatch.scoreHome === '' ? null : Number(editingMatch.scoreHome),
-        scoreAway: editingMatch.scoreAway === '' ? null : Number(editingMatch.scoreAway)
+        scoreAway: editingMatch.scoreAway === '' ? null : Number(editingMatch.scoreAway),
+        scheduledKickoff,
+        description: editingMatch.description
       }
+      console.log('DEBUG: constructed payload:', payload);
       const updated = await MatchesService.updateMatch(editingMatch.id, payload)
       setMatches(prev => prev.map(match => (match.id === updated.id ? { ...match, ...updated } : match)))
       setShowEditModal(false)
     } catch (err) {
       console.error('Failed to update match', err)
-      alert('Could not update match. Please retry.')
+      alert(`Could not update match. Error: ${err.message}`)
     }
   }
 
@@ -240,6 +298,13 @@ const MatchesManagement = () => {
           </div>
           <div className="flex space-x-3">
             <button
+              onClick={handleClearAll}
+              className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              <Trash2 size={16} />
+              <span>Clear DB</span>
+            </button>
+            <button
               onClick={handleSync}
               className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               disabled={syncing}
@@ -251,6 +316,13 @@ const MatchesManagement = () => {
               <Download size={16} />
               <span>Export Schedule</span>
             </button>
+            <a
+              href="/admin/schedule"
+              className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              <Calendar size={16} />
+              <span>Generate Schedule</span>
+            </a>
           </div>
         </div>
       </div>
@@ -409,6 +481,29 @@ const MatchesManagement = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Footer */}
+        <div className="px-6 py-4 flex items-center justify-between border-t border-gray-200 bg-gray-50">
+          <div className="text-sm text-gray-500">
+            Showing <span className="font-medium">{(pagination.page - 1) * pagination.limit + 1}</span> to <span className="font-medium">{Math.min(pagination.page * pagination.limit, pagination.total)}</span> of <span className="font-medium">{pagination.total}</span> results
+          </div>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
+              disabled={pagination.page === 1}
+              className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setPagination(prev => ({ ...prev, page: Math.min(pagination.totalPages, prev.page + 1) }))}
+              disabled={pagination.page === pagination.totalPages}
+              className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -475,6 +570,30 @@ const MatchesManagement = () => {
                       </option>
                     ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date & Time</label>
+                <input
+                  type="datetime-local"
+                  value={editingMatch.scheduledKickoff}
+                  onChange={(e) => {
+                    console.log('DEBUG: Date input changed to:', e.target.value);
+                    setEditingMatch(prev => ({ ...prev, scheduledKickoff: e.target.value }));
+                  }}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Change Reason (Audit Log)</label>
+                <input
+                  type="text"
+                  value={editingMatch.description}
+                  onChange={(e) => setEditingMatch(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="e.g. Rescheduled due to bad weather"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
