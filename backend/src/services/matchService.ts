@@ -2,6 +2,17 @@ import { query } from "../db/sqlServer";
 import { getCompetitionMatches, type MatchSummary } from "./footballDataService";
 import { calculateStandings } from "./standingsAdminService";
 
+class NotificationService {
+  static async notifyMatchScheduleChange(
+    match: any,
+    changes: { oldDate?: string; newDate?: string; oldStadium?: string; newStadium?: string; }
+  ): Promise<void> {
+    console.log(`[NotificationService] 🔔 ALERT: Match ${match.homeTeamName} vs ${match.awayTeamName} changed!`);
+    if (changes.newDate) console.log(`[NotificationService] 📅 Date changed from ${changes.oldDate} to ${changes.newDate}`);
+    if (changes.newStadium) console.log(`[NotificationService] 🏟️ Stadium moved from ${changes.oldStadium} to ${changes.newStadium}`);
+  }
+}
+
 export interface MatchRecord {
   matchId: number;
   seasonId: number;
@@ -9,9 +20,12 @@ export interface MatchRecord {
   matchdayNumber: number;
   homeTeamId: number;
   homeTeamName: string;
+  homeTeamLogo: string | null;
+  homeTeamShortName: string | null;
   awayTeamId: number;
   awayTeamName: string;
-  stadiumId: number;
+  awayTeamLogo: string | null;
+  awayTeamShortName: string | null; stadiumId: number;
   stadiumName: string | null;
   scheduledKickoff: string;
   status: string;
@@ -20,6 +34,20 @@ export interface MatchRecord {
   attendance: number | null;
   matchCode: string | null;
   updatedAt: string | null;
+  // New Fields
+  mvp: { playerName: string; teamName: string } | null;
+  events: Array<{
+    id: number;
+    teamId: number;
+    player: string;
+    type: string;
+    minute: number;
+    description: string | null;
+  }>;
+  stats: {
+    home: { possession: number; shots: number; onTarget: number; corners: number; fouls: number } | null;
+    away: { possession: number; shots: number; onTarget: number; corners: number; fouls: number } | null;
+  };
 }
 
 export interface MatchFilters {
@@ -60,7 +88,7 @@ const ensureDefaultSeason = async (): Promise<number> => {
   const existingSeason = await query<{ season_id: number }>(
     `SELECT TOP 1 season_id FROM seasons ORDER BY created_at DESC`
   );
-  
+
   if (existingSeason.recordset.length > 0) {
     return existingSeason.recordset[0].season_id;
   }
@@ -80,7 +108,7 @@ const ensureDefaultSeason = async (): Promise<number> => {
       END
     `
   );
-  
+
   const tournamentId = tournamentResult.recordset[0].tournament_id;
 
   // Create default ruleset
@@ -98,7 +126,7 @@ const ensureDefaultSeason = async (): Promise<number> => {
       END
     `
   );
-  
+
   const rulesetId = rulesetResult.recordset[0].ruleset_id;
 
   // Create default season
@@ -124,7 +152,7 @@ const ensureDefaultSeason = async (): Promise<number> => {
 // Helper: Ensure round exists for season
 const ensureRoundForSeason = async (seasonId: number, roundNumber?: number): Promise<number> => {
   const roundNum = roundNumber || 1;
-  
+
   const existingRound = await query<{ round_id: number }>(
     `SELECT round_id FROM season_rounds WHERE season_id = @seasonId AND round_number = @roundNum`,
     { seasonId, roundNum }
@@ -195,7 +223,7 @@ export const createMatch = async (input: CreateMatchInput): Promise<MatchRecord>
   const seasonId = input.seasonId || await ensureDefaultSeason();
   const roundId = await ensureRoundForSeason(seasonId, input.roundNumber);
   const stadiumId = input.stadiumId || await ensureDefaultStadium();
-  
+
   const homeSeasonTeamId = await ensureTeamInSeason(input.homeTeamId, seasonId);
   const awaySeasonTeamId = await ensureTeamInSeason(input.awayTeamId, seasonId);
 
@@ -234,7 +262,7 @@ export const createMatch = async (input: CreateMatchInput): Promise<MatchRecord>
 
   const matchId = matchResult.recordset[0].match_id;
   const created = await getMatchById(matchId);
-  
+
   if (!created) {
     throw new Error("Failed to retrieve newly created match");
   }
@@ -294,8 +322,12 @@ export const listMatches = async (filters: MatchFilters = {}): Promise<Paginated
         m.matchday_number AS matchdayNumber,
         hstp.team_id AS homeTeamId,
         ht.name AS homeTeamName,
+        ht.short_name AS homeTeamShortName,
+        ht.logo_url AS homeTeamLogo,
         astp.team_id AS awayTeamId,
         at.name AS awayTeamName,
+        at.short_name AS awayTeamShortName,
+        at.logo_url AS awayTeamLogo,
         m.stadium_id AS stadiumId,
         s.name AS stadiumName,
         CONVERT(VARCHAR(33), m.scheduled_kickoff, 127) AS scheduledKickoff,
@@ -304,7 +336,33 @@ export const listMatches = async (filters: MatchFilters = {}): Promise<Paginated
         m.away_score AS awayScore,
         m.attendance,
         m.match_code AS matchCode,
-        CONVERT(VARCHAR(33), m.updated_at, 127) AS updatedAt
+        CONVERT(VARCHAR(33), m.updated_at, 127) AS updatedAt,
+        (SELECT TOP 1 JSON_QUERY((SELECT player_name AS playerName, team_name AS teamName FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)) FROM match_mvps WHERE match_id = m.match_id) AS mvpJson,
+        (SELECT (
+            SELECT 
+                match_event_id AS id,
+                season_team_id AS teamId,
+                player_name AS player,
+                event_type AS type,
+                event_minute AS minute,
+                description
+            FROM match_events 
+            WHERE match_id = m.match_id 
+            ORDER BY event_minute ASC 
+            FOR JSON PATH
+        )) AS eventsJson,
+        (SELECT (
+            SELECT 
+                season_team_id AS teamId,
+                possession_percent AS possession,
+                shots_total AS shots,
+                shots_on_target AS onTarget,
+                corners,
+                fouls_committed AS fouls
+            FROM match_team_statistics
+            WHERE match_id = m.match_id
+            FOR JSON PATH
+        )) AS statsJson
       FROM matches m
       INNER JOIN season_team_participants hstp ON m.home_season_team_id = hstp.season_team_id
       INNER JOIN teams ht ON hstp.team_id = ht.team_id
@@ -312,11 +370,40 @@ export const listMatches = async (filters: MatchFilters = {}): Promise<Paginated
       INNER JOIN teams at ON astp.team_id = at.team_id
       LEFT JOIN stadiums s ON m.stadium_id = s.stadium_id
       ${whereClause}
-      ORDER BY m.scheduled_kickoff DESC
+      ORDER BY m.scheduled_kickoff ASC
       OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY;
     `,
     params
   );
+
+  // Helper to parse JSON safely
+  const parseJSON = (str: any) => {
+    try {
+      return typeof str === 'string' ? JSON.parse(str) : str;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const matches: MatchRecord[] = dataResult.recordset.map((row: any) => {
+    const rawEvents = parseJSON(row.eventsJson) || [];
+    const rawStats = parseJSON(row.statsJson) || [];
+    const rawMvp = parseJSON(row.mvpJson);
+
+    // Map stats array to home/away object
+    const homeStats = rawStats.find((s: any) => s.teamId === row.homeTeamId) || null;
+    const awayStats = rawStats.find((s: any) => s.teamId === row.awayTeamId) || null;
+
+    return {
+      ...row,
+      mvp: rawMvp ? { playerName: rawMvp.playerName, teamName: rawMvp.teamName } : null,
+      events: rawEvents,
+      stats: {
+        home: homeStats,
+        away: awayStats
+      }
+    };
+  });
 
   const countResult = await query<{ total: number }>(
     `
@@ -333,7 +420,7 @@ export const listMatches = async (filters: MatchFilters = {}): Promise<Paginated
   const totalPages = limit > 0 ? Math.ceil(total / limit) : 1;
 
   return {
-    data: dataResult.recordset,
+    data: matches,
     total,
     page,
     limit,
@@ -351,8 +438,12 @@ export const getMatchById = async (matchId: number): Promise<MatchRecord | null>
         m.matchday_number AS matchdayNumber,
         hstp.team_id AS homeTeamId,
         ht.name AS homeTeamName,
+        ht.short_name AS homeTeamShortName,
+        ht.logo_url AS homeTeamLogo,
         astp.team_id AS awayTeamId,
         at.name AS awayTeamName,
+        at.short_name AS awayTeamShortName,
+        at.logo_url AS awayTeamLogo,
         m.stadium_id AS stadiumId,
         s.name AS stadiumName,
         CONVERT(VARCHAR(33), m.scheduled_kickoff, 127) AS scheduledKickoff,
@@ -383,14 +474,70 @@ export const updateMatch = async (
     homeScore: number | null;
     awayScore: number | null;
     attendance: number | null;
+    scheduledKickoff: string;
+    stadiumId: number;
+    description: string; // Optional reason for change
   }>
 ): Promise<MatchRecord | null> => {
+  const currentMatch = await getMatchById(matchId);
+  if (!currentMatch) return null;
+
   const fields: string[] = [];
   const params: Record<string, unknown> = { matchId };
+
+  console.log('[updateMatch] DEBUG: MatchId:', matchId);
+  console.log('[updateMatch] DEBUG: Payload:', JSON.stringify(payload, null, 2));
+  console.log('[updateMatch] DEBUG: CurrentMatch:', JSON.stringify({
+    id: currentMatch.matchId,
+    kickoff: currentMatch.scheduledKickoff,
+    stadium: currentMatch.stadiumId
+  }, null, 2));
+
+  // Check for significant changes for auditing
+  const changes = {
+    date: payload.scheduledKickoff && payload.scheduledKickoff !== currentMatch.scheduledKickoff,
+    stadium: payload.stadiumId && payload.stadiumId !== currentMatch.stadiumId,
+    status: payload.status && payload.status !== currentMatch.status,
+    score: (payload.homeScore !== undefined && payload.homeScore !== currentMatch.homeScore) || (payload.awayScore !== undefined && payload.awayScore !== currentMatch.awayScore)
+  };
+
+  if (changes.date || changes.stadium) {
+    try {
+      // Log rescheduling
+      await query(
+        `INSERT INTO match_audit_logs (match_id, action_type, old_value, new_value, details) 
+        VALUES (@matchId, @actionType, @oldValue, @newValue, @details)`,
+        {
+          matchId,
+          actionType: changes.stadium ? 'RELOCATION' : 'RESCHEDULE',
+          oldValue: JSON.stringify({ kickoff: currentMatch.scheduledKickoff, stadiumId: currentMatch.stadiumId }),
+          newValue: JSON.stringify({ kickoff: payload.scheduledKickoff, stadiumId: payload.stadiumId }),
+          details: payload.description || 'Schedule update via API'
+        }
+      );
+      // Send Notification
+      NotificationService.notifyMatchScheduleChange(currentMatch, {
+        oldDate: currentMatch.scheduledKickoff,
+        newDate: payload.scheduledKickoff,
+        oldStadium: currentMatch.stadiumName || undefined,
+        newStadium: payload.stadiumId ? `Stadium ID ${payload.stadiumId}` : undefined
+      });
+    } catch (auditError) {
+      console.error('[updateMatch] Failed to log audit/notify (non-fatal):', auditError);
+    }
+  }
 
   if (payload.status !== undefined) {
     fields.push("status = @status");
     params.status = payload.status;
+  }
+  if (payload.scheduledKickoff !== undefined) {
+    fields.push("scheduled_kickoff = @scheduledKickoff");
+    params.scheduledKickoff = payload.scheduledKickoff;
+  }
+  if (payload.stadiumId !== undefined) {
+    fields.push("stadium_id = @stadiumId");
+    params.stadiumId = payload.stadiumId;
   }
   if (payload.homeScore !== undefined) {
     fields.push("home_score = @homeScore");
@@ -406,10 +553,14 @@ export const updateMatch = async (
   }
 
   if (fields.length === 0) {
+    console.log('[updateMatch] DEBUG: No fields to update');
     return getMatchById(matchId);
   }
 
   fields.push("updated_at = SYSUTCDATETIME()");
+
+  console.log('[updateMatch] DEBUG: Executing UPDATE with fields:', fields);
+  console.log('[updateMatch] DEBUG: SQL Params:', params);
 
   await query(
     `UPDATE matches SET ${fields.join(", ")} WHERE match_id = @matchId;`,
@@ -419,10 +570,10 @@ export const updateMatch = async (
   const updatedMatch = await getMatchById(matchId);
 
   // Auto-update standings if match is completed and has scores
-  if (updatedMatch && 
-      payload.status === 'completed' && 
-      payload.homeScore !== undefined && 
-      payload.awayScore !== undefined) {
+  if (updatedMatch &&
+    payload.status === 'completed' &&
+    payload.homeScore !== undefined &&
+    payload.awayScore !== undefined) {
     try {
       console.log(`[updateMatch] Auto-calculating standings for season ${updatedMatch.seasonId}`);
       await calculateStandings(updatedMatch.seasonId);
@@ -440,7 +591,7 @@ export const deleteMatch = async (matchId: number): Promise<boolean> => {
     "DELETE FROM matches WHERE match_id = @matchId;",
     { matchId }
   );
-  
+
   return (result.rowsAffected?.[0] ?? 0) > 0;
 };
 
@@ -454,8 +605,12 @@ export const listLiveMatches = async (): Promise<MatchRecord[]> => {
         m.matchday_number AS matchdayNumber,
         hstp.team_id AS homeTeamId,
         ht.name AS homeTeamName,
+        ht.short_name AS homeTeamShortName,
+        ht.logo_url AS homeTeamLogo,
         astp.team_id AS awayTeamId,
         at.name AS awayTeamName,
+        at.short_name AS awayTeamShortName,
+        at.logo_url AS awayTeamLogo,
         m.stadium_id AS stadiumId,
         s.name AS stadiumName,
         CONVERT(VARCHAR(33), m.scheduled_kickoff, 127) AS scheduledKickoff,
@@ -487,7 +642,7 @@ export const generateRandomMatches = async (options: {
 } = {}): Promise<{ created: number; matches: MatchRecord[] }> => {
   const seasonId = options.seasonId || await ensureDefaultSeason();
   const count = options.count || 10;
-  
+
   // Get teams registered in this season
   const teamsResult = await query<{ team_id: number; season_team_id: number; name: string }>(
     `
@@ -501,7 +656,7 @@ export const generateRandomMatches = async (options: {
   );
 
   const teams = teamsResult.recordset;
-  
+
   if (teams.length < 2) {
     throw new Error(`Need at least 2 teams in season. Found: ${teams.length}`);
   }
@@ -520,7 +675,7 @@ export const generateRandomMatches = async (options: {
   for (let i = 0; i < Math.min(count, Math.floor(teams.length / 2)); i++) {
     const homeTeam = teams[i * 2];
     const awayTeam = teams[i * 2 + 1];
-    
+
     if (!homeTeam || !awayTeam) break;
 
     const kickoff = new Date(startDate.getTime() + i * 2 * 60 * 60 * 1000); // 2 hours apart
@@ -578,7 +733,7 @@ const upsertFootballMatch = async (match: MatchSummary): Promise<void> => {
   }
 
   const referee = match.referees?.find((r) => r.type === "REFEREE")?.name ?? null;
-  
+
   await query(
     `
       MERGE FootballMatches AS target
@@ -849,7 +1004,7 @@ export const syncMatchesFromUpstream = async (options: {
       skippedCount++;
       continue;
     }
-    
+
     try {
       await upsertFootballMatch(match);
       syncedCount++;

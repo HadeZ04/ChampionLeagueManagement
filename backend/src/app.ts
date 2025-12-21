@@ -21,6 +21,7 @@ import importRoutes from "./routes/importRoutes";
 import internalTeamRoutes from "./routes/internalTeamRoutes";
 import internalPlayerRoutes from "./routes/internalPlayerRoutes";
 import adminStandingsRoutes from "./routes/adminStandingsRoutes";
+import matchDetailRoutes from "./routes/matchDetailRoutes";
 
 const app = express();
 
@@ -46,6 +47,7 @@ app.use("/api/players", internalPlayerRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/matches", matchRoutes);
+app.use("/api/matches", matchDetailRoutes);
 
 // Admin routes
 app.use("/api/admin/standings", adminStandingsRoutes);

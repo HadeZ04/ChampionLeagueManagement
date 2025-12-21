@@ -34,7 +34,7 @@ const AdminApp = ({ onLogout, currentUser }) => {
       {/* 2. Dùng AdminLayout làm route cha */}
       {/* Prop onLogout được truyền vào Layout để nó có thể truyền xuống Header */}
       <Route path="/" element={<AdminLayout onLogout={onLogout} currentUser={currentUser} />}>
-        
+
         {/* 3. Các trang con sẽ được render bên trong <Outlet/> của AdminLayout */}
         <Route index element={<DashboardPage />} /> {/* trang mặc định khi vào /admin */}
         <Route path="dashboard" element={<DashboardPage />} />
@@ -194,9 +194,17 @@ const AdminApp = ({ onLogout, currentUser }) => {
           }
         />
         <Route
+          path="schedule"
+          element={
+            <AccessGuard permission="manage_matches" currentUser={currentUser}>
+              <ScheduleManagement />
+            </AccessGuard>
+          }
+        />
+        <Route
           path="matches/:matchId/live"
           element={
-             <AccessGuard permission="manage_matches" currentUser={currentUser}>
+            <AccessGuard permission="manage_matches" currentUser={currentUser}>
               <LiveMatchUpdatePage />
             </AccessGuard>
           }
