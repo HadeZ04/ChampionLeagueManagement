@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import { toSeasonStatusLabel } from '../../../shared/utils/vi'
 
 const DEFAULT_FORM = {
   name: '',
@@ -110,33 +111,33 @@ const SeasonFormModal = ({
     const validationMessages = []
 
     if (!payload.name) {
-      validationMessages.push('Season name is required.')
+      validationMessages.push('Cần nhập tên mùa giải.')
     }
     if (!payload.code) {
-      validationMessages.push('Season code is required.')
+      validationMessages.push('Cần nhập mã mùa giải.')
     }
     if (!payload.startDate) {
-      validationMessages.push('Start date is required.')
+      validationMessages.push('Cần chọn ngày bắt đầu.')
     }
     if (payload.endDate && payload.startDate && payload.endDate < payload.startDate) {
-      validationMessages.push('End date cannot be before start date.')
+      validationMessages.push('Ngày kết thúc không được trước ngày bắt đầu.')
     }
     if (
       payload.registrationDeadline &&
       payload.startDate &&
       payload.registrationDeadline > `${payload.startDate}T23:59`
     ) {
-      validationMessages.push('Registration deadline must be before the season start date.')
+      validationMessages.push('Hạn đăng ký phải trước ngày bắt đầu mùa giải.')
     }
     if (
       payload.invitationOpenedAt &&
       payload.registrationDeadline &&
       payload.invitationOpenedAt > payload.registrationDeadline
     ) {
-      validationMessages.push('Invitation open time must be before registration deadline.')
+      validationMessages.push('Ngày mở thư mời phải trước hạn đăng ký.')
     }
     if (isLocked) {
-      validationMessages.push('Locked seasons cannot be edited.')
+      validationMessages.push('Mùa giải đã khóa không thể chỉnh sửa.')
     }
 
     if (validationMessages.length > 0) {
@@ -171,7 +172,7 @@ const SeasonFormModal = ({
 
         {isLocked && (
           <div className="mx-6 mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            Season is locked and cannot be edited. Unlock via administrative override to make changes.
+            Mùa giải đã khóa và không thể chỉnh sửa. Hãy mở khóa bằng quyền quản trị đặc biệt để thay đổi.
           </div>
         )}
 
@@ -194,7 +195,7 @@ const SeasonFormModal = ({
                 value={formData.name}
                 onChange={handleChange}
                 className="rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                placeholder="UEFA Champions League 2025/26"
+                placeholder="Cúp C1 châu Âu 2025/26"
                 required
                 disabled={isLocked || isSubmitting}
               />
@@ -294,7 +295,7 @@ const SeasonFormModal = ({
               >
                 {statusOptions.map((status) => (
                   <option key={status} value={status}>
-                    {status.replace(/_/g, ' ')}
+                    {toSeasonStatusLabel(status)}
                   </option>
                 ))}
               </select>

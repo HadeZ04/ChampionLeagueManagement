@@ -3,20 +3,20 @@ import { Facebook, Twitter, Instagram, Youtube, Linkedin, Mail, Phone, MapPin } 
 
 const footerSections = [
   {
-    title: 'Competitions',
-    links: ['Champions League', 'Europa League', 'Conference League', 'Super Cup', 'Youth League', 'Women\'s Champions League']
+    title: 'Giải đấu',
+    links: ['Cúp C1', 'Cúp C2', 'Cúp C3', 'Siêu cúp', 'Giải trẻ', 'Cúp C1 nữ']
   },
   {
-    title: 'National Teams',
-    links: ['European Championship', 'Nations League', 'World Cup Qualifiers', 'Women\'s EURO', 'Youth Championships']
+    title: 'Đội tuyển quốc gia',
+    links: ['Vô địch châu Âu', 'Giải các quốc gia', 'Vòng loại Cúp Thế giới', 'EURO nữ', 'Giải trẻ']
   },
   {
-    title: 'About UEFA',
-    links: ['Inside UEFA', 'UEFA Foundation', 'Sustainability', 'Integrity', 'Development', 'Technical']
+    title: 'Về UEFA',
+    links: ['Bên trong UEFA', 'Quỹ UEFA', 'Phát triển bền vững', 'Liêm chính', 'Phát triển', 'Kỹ thuật']
   },
   {
-    title: 'Services',
-    links: ['Store', 'Tickets', 'Fantasy Football', 'Gaming', 'Mobile Apps', 'Newsletter']
+    title: 'Dịch vụ',
+    links: ['Cửa hàng', 'Vé', 'Bóng đá ảo', 'Trò chơi', 'Ứng dụng di động', 'Bản tin']
   }
 ];
 
@@ -41,15 +41,15 @@ const PublicFooter = () => {
               </div>
               <div>
                 <p className="text-xs uppercase tracking-[0.35em] text-white/60">UEFA</p>
-                <p className="text-2xl font-display tracking-[0.2em] text-white">Football Universe</p>
+                <p className="text-2xl font-display tracking-[0.2em] text-white">Vũ trụ bóng đá</p>
               </div>
             </div>
             <p className="text-sm text-white/70 leading-relaxed">
-              Premium access to fixtures, live data, and immersive match experiences inspired by iconic Champions League nights.
+              Truy cập cao cấp tới lịch thi đấu, dữ liệu trực tiếp và trải nghiệm trận đấu sống động lấy cảm hứng từ những đêm Cúp C1 huyền thoại.
             </p>
             <div className="space-y-3 text-sm text-white/70">
               <div className="flex items-center gap-2">
-                <MapPin size={16} className="text-[#0055FF]" /> Route de Geneve 46, 1260 Nyon, Switzerland
+                <MapPin size={16} className="text-[#0055FF]" /> Route de Geneve 46, 1260 Nyon, Thụy Sĩ
               </div>
               <div className="flex items-center gap-2">
                 <Phone size={16} className="text-[#00E5FF]" /> +41 848 00 27 27
@@ -75,7 +75,7 @@ const PublicFooter = () => {
 
         <div className="grid md:grid-cols-2 gap-8 glass-card p-8">
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-white/60 mb-4">Follow UEFA</p>
+            <p className="text-xs uppercase tracking-[0.35em] text-white/60 mb-4">Theo dõi UEFA</p>
             <div className="flex flex-wrap gap-3">
               {socialLinks.map(social => (
                 <a key={social.label} href={social.href} aria-label={social.label} className="h-11 w-11 rounded-full border border-white/15 flex items-center justify-center hover:border-[#0055FF] hover:text-[#0055FF] transition-colors">
@@ -85,21 +85,21 @@ const PublicFooter = () => {
             </div>
           </div>
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-white/60 mb-4">Stay Updated</p>
+            <p className="text-xs uppercase tracking-[0.35em] text-white/60 mb-4">Nhận cập nhật</p>
             <div className="flex flex-col sm:flex-row gap-3">
-              <input type="email" placeholder="Email address" className="uefa-input flex-1 border-white/15 focus:ring-[#0055FF]" />
-              <button className="btn-glow whitespace-nowrap">Subscribe</button>
+              <input type="email" placeholder="Địa chỉ email" className="uefa-input flex-1 border-white/15 focus:ring-[#0055FF]" />
+              <button className="btn-glow whitespace-nowrap">Đăng ký</button>
             </div>
           </div>
         </div>
 
         <div className="border-t border-white/15 pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs uppercase tracking-[0.3em] text-white/60">
-          <p>(c) 2025 UEFA. All rights reserved.</p>
+          <p>(c) 2025 UEFA. Mọi quyền được bảo lưu.</p>
           <div className="flex flex-wrap gap-6">
-            <a href="#" className="hover:text-[#0055FF]">Privacy</a>
-            <a href="#" className="hover:text-[#0055FF]">Terms</a>
-            <a href="#" className="hover:text-[#0055FF]">Cookies</a>
-            <a href="#" className="hover:text-[#0055FF]">Accessibility</a>
+            <a href="#" className="hover:text-[#0055FF]">Quyền riêng tư</a>
+            <a href="#" className="hover:text-[#0055FF]">Điều khoản</a>
+            <a href="#" className="hover:text-[#0055FF]">Tệp ghi nhớ</a>
+            <a href="#" className="hover:text-[#0055FF]">Trợ năng</a>
           </div>
         </div>
       </div>

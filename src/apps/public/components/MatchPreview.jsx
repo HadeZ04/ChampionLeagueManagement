@@ -31,12 +31,12 @@ const MatchPreview = ({ homeTeam, awayTeam, venue, date, time }) => {
 
   const keyPlayers = {
     home: [
-      { name: 'Mohamed Salah', position: 'Forward', goals: 5, assists: 3 },
-      { name: 'Virgil van Dijk', position: 'Defender', goals: 1, assists: 0 }
+      { name: 'Mohamed Salah', position: 'Tiền đạo', goals: 5, assists: 3 },
+      { name: 'Virgil van Dijk', position: 'Hậu vệ', goals: 1, assists: 0 }
     ],
     away: [
-      { name: 'Jonathan David', position: 'Forward', goals: 3, assists: 1 },
-      { name: 'Angel Gomes', position: 'Midfielder', goals: 1, assists: 4 }
+      { name: 'Jonathan David', position: 'Tiền đạo', goals: 3, assists: 1 },
+      { name: 'Angel Gomes', position: 'Tiền vệ', goals: 1, assists: 4 }
     ]
   }
 
@@ -44,11 +44,11 @@ const MatchPreview = ({ homeTeam, awayTeam, venue, date, time }) => {
     const baseClasses = "w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center text-white"
     switch (result) {
       case 'W':
-        return <div className={`${baseClasses} bg-uefa-green`}>W</div>
+        return <div className={`${baseClasses} bg-uefa-green`}>T</div>
       case 'D':
-        return <div className={`${baseClasses} bg-uefa-yellow text-uefa-black`}>D</div>
+        return <div className={`${baseClasses} bg-uefa-yellow text-uefa-black`}>H</div>
       case 'L':
-        return <div className={`${baseClasses} bg-uefa-red`}>L</div>
+        return <div className={`${baseClasses} bg-uefa-red`}>B</div>
       default:
         return null
     }
@@ -57,9 +57,9 @@ const MatchPreview = ({ homeTeam, awayTeam, venue, date, time }) => {
   return (
     <div className="uefa-card p-8">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-uefa-dark mb-2">Match Preview</h2>
+        <h2 className="text-3xl font-bold text-uefa-dark mb-2">Nhận định trận đấu</h2>
         <div className="text-uefa-gray">
-          {new Date(date).toLocaleDateString('en-GB', { 
+          {new Date(date).toLocaleDateString('vi-VN', { 
             weekday: 'long', 
             day: 'numeric', 
             month: 'long', 
@@ -107,33 +107,33 @@ const MatchPreview = ({ homeTeam, awayTeam, venue, date, time }) => {
 
       {/* Head to Head */}
       <div className="mb-8">
-        <h3 className="text-lg font-bold text-uefa-dark mb-4">Head to Head</h3>
+        <h3 className="text-lg font-bold text-uefa-dark mb-4">Đối đầu</h3>
         <div className="grid grid-cols-3 gap-4 text-center">
           <div className="bg-uefa-green/10 p-4 rounded-lg">
             <div className="text-2xl font-bold text-uefa-green">{headToHead.homeWins}</div>
-            <div className="text-uefa-gray text-sm">{homeTeam.name} Wins</div>
+            <div className="text-uefa-gray text-sm">{homeTeam.name} thắng</div>
           </div>
           <div className="bg-uefa-yellow/10 p-4 rounded-lg">
             <div className="text-2xl font-bold text-uefa-yellow">{headToHead.draws}</div>
-            <div className="text-uefa-gray text-sm">Draws</div>
+            <div className="text-uefa-gray text-sm">Hòa</div>
           </div>
           <div className="bg-uefa-red/10 p-4 rounded-lg">
             <div className="text-2xl font-bold text-uefa-red">{headToHead.awayWins}</div>
-            <div className="text-uefa-gray text-sm">{awayTeam.name} Wins</div>
+            <div className="text-uefa-gray text-sm">{awayTeam.name} thắng</div>
           </div>
         </div>
         <div className="text-center mt-4 text-uefa-gray text-sm">
-          Last meeting: {headToHead.lastMeeting.result} at {headToHead.lastMeeting.venue} ({headToHead.lastMeeting.date})
+          Lần gặp gần nhất: {headToHead.lastMeeting.result} tại {headToHead.lastMeeting.venue} ({headToHead.lastMeeting.date})
         </div>
       </div>
 
       {/* Team Form */}
       <div className="grid md:grid-cols-2 gap-8 mb-8">
         <div>
-          <h4 className="font-bold text-uefa-dark mb-4">{homeTeam.name} Form</h4>
+          <h4 className="font-bold text-uefa-dark mb-4">Phong độ {homeTeam.name}</h4>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-uefa-gray">Last 5 matches:</span>
+              <span className="text-uefa-gray">5 trận gần nhất:</span>
               <div className="flex space-x-1">
                 {teamForm.home.last5.map((result, index) => (
                   <div key={index}>{getFormBadge(result)}</div>
@@ -141,25 +141,25 @@ const MatchPreview = ({ homeTeam, awayTeam, venue, date, time }) => {
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-uefa-gray">Goals scored:</span>
+              <span className="text-uefa-gray">Bàn thắng ghi được:</span>
               <span className="font-bold text-uefa-green">{teamForm.home.goalsScored}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-uefa-gray">Goals conceded:</span>
+              <span className="text-uefa-gray">Bàn thua:</span>
               <span className="font-bold text-uefa-red">{teamForm.home.goalsConceded}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-uefa-gray">Clean sheets:</span>
+              <span className="text-uefa-gray">Giữ sạch lưới:</span>
               <span className="font-bold text-uefa-blue">{teamForm.home.cleanSheets}</span>
             </div>
           </div>
         </div>
 
         <div>
-          <h4 className="font-bold text-uefa-dark mb-4">{awayTeam.name} Form</h4>
+          <h4 className="font-bold text-uefa-dark mb-4">Phong độ {awayTeam.name}</h4>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-uefa-gray">Last 5 matches:</span>
+              <span className="text-uefa-gray">5 trận gần nhất:</span>
               <div className="flex space-x-1">
                 {teamForm.away.last5.map((result, index) => (
                   <div key={index}>{getFormBadge(result)}</div>
@@ -167,15 +167,15 @@ const MatchPreview = ({ homeTeam, awayTeam, venue, date, time }) => {
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-uefa-gray">Goals scored:</span>
+              <span className="text-uefa-gray">Bàn thắng ghi được:</span>
               <span className="font-bold text-uefa-green">{teamForm.away.goalsScored}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-uefa-gray">Goals conceded:</span>
+              <span className="text-uefa-gray">Bàn thua:</span>
               <span className="font-bold text-uefa-red">{teamForm.away.goalsConceded}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-uefa-gray">Clean sheets:</span>
+              <span className="text-uefa-gray">Giữ sạch lưới:</span>
               <span className="font-bold text-uefa-blue">{teamForm.away.cleanSheets}</span>
             </div>
           </div>
@@ -185,7 +185,7 @@ const MatchPreview = ({ homeTeam, awayTeam, venue, date, time }) => {
       {/* Key Players */}
       <div className="grid md:grid-cols-2 gap-8">
         <div>
-          <h4 className="font-bold text-uefa-dark mb-4">{homeTeam.name} Key Players</h4>
+          <h4 className="font-bold text-uefa-dark mb-4">Cầu thủ nổi bật {homeTeam.name}</h4>
           <div className="space-y-3">
             {keyPlayers.home.map((player, index) => (
               <div key={index} className="flex items-center justify-between p-3 bg-uefa-light-gray rounded">
@@ -194,8 +194,8 @@ const MatchPreview = ({ homeTeam, awayTeam, venue, date, time }) => {
                   <div className="text-uefa-gray text-sm">{player.position}</div>
                 </div>
                 <div className="text-right text-sm">
-                  <div className="text-uefa-green font-bold">{player.goals}G</div>
-                  <div className="text-uefa-blue font-bold">{player.assists}A</div>
+                  <div className="text-uefa-green font-bold">{player.goals} bàn</div>
+                  <div className="text-uefa-blue font-bold">{player.assists} kiến tạo</div>
                 </div>
               </div>
             ))}
@@ -203,7 +203,7 @@ const MatchPreview = ({ homeTeam, awayTeam, venue, date, time }) => {
         </div>
 
         <div>
-          <h4 className="font-bold text-uefa-dark mb-4">{awayTeam.name} Key Players</h4>
+          <h4 className="font-bold text-uefa-dark mb-4">Cầu thủ nổi bật {awayTeam.name}</h4>
           <div className="space-y-3">
             {keyPlayers.away.map((player, index) => (
               <div key={index} className="flex items-center justify-between p-3 bg-uefa-light-gray rounded">
@@ -212,8 +212,8 @@ const MatchPreview = ({ homeTeam, awayTeam, venue, date, time }) => {
                   <div className="text-uefa-gray text-sm">{player.position}</div>
                 </div>
                 <div className="text-right text-sm">
-                  <div className="text-uefa-green font-bold">{player.goals}G</div>
-                  <div className="text-uefa-blue font-bold">{player.assists}A</div>
+                  <div className="text-uefa-green font-bold">{player.goals} bàn</div>
+                  <div className="text-uefa-blue font-bold">{player.assists} kiến tạo</div>
                 </div>
               </div>
             ))}

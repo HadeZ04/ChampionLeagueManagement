@@ -130,21 +130,21 @@ const TeamsPage = () => {
 
   return (
     <div className="uefa-container py-8">
-      <nav className="uefa-breadcrumb">
-        <Link to="/" className="uefa-breadcrumb-item">
-          Home
-        </Link>
-        <span className="uefa-breadcrumb-separator">/</span>
-        <span className="uefa-breadcrumb-item">Champions League</span>
-        <span className="uefa-breadcrumb-separator">/</span>
-        <span className="text-uefa-dark font-semibold">Teams & Squads</span>
-      </nav>
+        <nav className="uefa-breadcrumb">
+          <Link to="/" className="uefa-breadcrumb-item">
+          Trang chủ
+          </Link>
+          <span className="uefa-breadcrumb-separator">/</span>
+          <span className="uefa-breadcrumb-item">Cúp C1</span>
+          <span className="uefa-breadcrumb-separator">/</span>
+          <span className="text-uefa-dark font-semibold">Đội bóng & đội hình</span>
+        </nav>
 
       <header className="mb-8">
-        <p className="text-xs uppercase tracking-[0.4em] text-white/60">Official data • Football-Data.org</p>
-        <h1 className="uefa-section-title mt-2">UEFA Champions League Clubs</h1>
+        <p className="text-xs uppercase tracking-[0.4em] text-white/60">Dữ liệu chính thức • Football-Data.org</p>
+        <h1 className="uefa-section-title mt-2">Các câu lạc bộ Cúp C1 châu Âu</h1>
         <p className="uefa-section-subtitle">
-          Theo dõi 36 câu lạc bộ và toàn bộ danh sách cầu thủ chính thức của UEFA Champions League (code: CL).
+          Theo dõi 36 câu lạc bộ và danh sách cầu thủ chính thức của Cúp C1 châu Âu (mã: CL).
         </p>
         {selectedSeason && (
           <p className="text-white/60 text-sm mt-2">
@@ -158,7 +158,7 @@ const TeamsPage = () => {
           <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-uefa-gray" />
           <input
             type="text"
-            placeholder="Search by team name or TLA (e.g. FCB, MCI)"
+            placeholder="Tìm theo tên đội hoặc mã (VD: FCB, MCI)"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             className="uefa-input pl-12"
@@ -182,7 +182,7 @@ const TeamsPage = () => {
             onChange={(event) => setSelectedSeason(event.target.value)}
             disabled={isSeasonsLoading || seasonOptions.length === 0}
           >
-            {isSeasonsLoading && <option>Loading seasons...</option>}
+            {isSeasonsLoading && <option>Đang tải mùa giải...</option>}
             {!isSeasonsLoading &&
               seasonOptions.map((season) => (
                 <option key={season.id} value={season.year}>
@@ -238,37 +238,37 @@ const TeamsPage = () => {
                 </div>
               </div>
 
-              <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-white/80">
-                <div className="flex items-center gap-2">
-                  <Users size={16} className="text-uefa-gold" />
-                  <span>Coach:</span>
-                  <strong className="ml-auto text-white">{team.coach || 'Updating'}</strong>
+                <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-white/80">
+                  <div className="flex items-center gap-2">
+                    <Users size={16} className="text-uefa-gold" />
+                    <span>Huấn luyện viên:</span>
+                    <strong className="ml-auto text-white">{team.coach || 'Đang cập nhật'}</strong>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <MapPin size={16} className="text-uefa-blue" />
+                    <span>Sân nhà:</span>
+                    <strong className="ml-auto text-right text-white">{team.venue || 'Chưa xác định'}</strong>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar size={16} className="text-uefa-green" />
+                    <span>Năm thành lập:</span>
+                    <strong className="ml-auto text-white">{team.founded ?? '—'}</strong>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Shield size={16} className="text-uefa-gold" />
+                    <span>Màu áo:</span>
+                    <strong className="ml-auto text-right text-white">
+                      {team.clubColors || 'Chưa có màu chính thức'}
+                    </strong>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <MapPin size={16} className="text-uefa-blue" />
-                  <span>Venue:</span>
-                  <strong className="ml-auto text-right text-white">{team.venue || 'TBD'}</strong>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar size={16} className="text-uefa-green" />
-                  <span>Founded:</span>
-                  <strong className="ml-auto text-white">{team.founded ?? '—'}</strong>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Shield size={16} className="text-uefa-gold" />
-                  <span>Colors:</span>
-                  <strong className="ml-auto text-right text-white">
-                    {team.clubColors || 'Official palette pending'}
-                  </strong>
-                </div>
-              </div>
 
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
                   to={selectedSeason ? `/teams/${team.id}?season=${selectedSeason}` : `/teams/${team.id}`}
                   className="uefa-btn-primary px-4 py-2 text-xs uppercase tracking-[0.3em]"
                 >
-                  Team profile
+                  Hồ sơ đội
                 </Link>
                 {team.website && (
                   <a
@@ -277,7 +277,7 @@ const TeamsPage = () => {
                     rel="noreferrer"
                     className="uefa-btn-secondary px-4 py-2 text-xs uppercase tracking-[0.3em]"
                   >
-                    Official site
+                    Trang chính thức
                   </a>
                 )}
               </div>
@@ -289,21 +289,21 @@ const TeamsPage = () => {
       <section className="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-white/80">
         <div className="rounded-3xl border border-white/10 p-5 bg-white/5">
           <p className="text-3xl font-bold text-white">{summaryStats.totalTeams}</p>
-          <p className="text-xs uppercase tracking-[0.4em] mt-2">Teams</p>
+          <p className="text-xs uppercase tracking-[0.4em] mt-2">Đội</p>
         </div>
         <div className="rounded-3xl border border-white/10 p-5 bg-white/5">
           <p className="text-3xl font-bold text-white">{summaryStats.countryCount}</p>
-          <p className="text-xs uppercase tracking-[0.4em] mt-2">Countries</p>
+          <p className="text-xs uppercase tracking-[0.4em] mt-2">Quốc gia</p>
         </div>
         <div className="rounded-3xl border border-white/10 p-5 bg-white/5">
           <p className="text-3xl font-bold text-white">{summaryStats.coachCount}</p>
-          <p className="text-xs uppercase tracking-[0.4em] mt-2">Coaches Listed</p>
+          <p className="text-xs uppercase tracking-[0.4em] mt-2">Có HLV</p>
         </div>
         <div className="rounded-3xl border border-white/10 p-5 bg-white/5">
           <p className="text-3xl font-bold text-white">
             {summaryStats.averageFounded ? summaryStats.averageFounded : '—'}
           </p>
-          <p className="text-xs uppercase tracking-[0.4em] mt-2">Avg. Founded Year</p>
+          <p className="text-xs uppercase tracking-[0.4em] mt-2">Năm thành lập TB</p>
         </div>
       </section>
     </div>

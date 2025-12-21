@@ -1,9 +1,10 @@
 import React from 'react';
 import { Calendar, Clock, Tag, ArrowRight } from 'lucide-react';
+import { toNewsCategoryLabel } from '../../../shared/utils/vi';
 
 const NewsCard = ({ article, featured = false }) => {
   const formatDate = (dateString) =>
-    new Date(dateString).toLocaleDateString('en-GB', {
+    new Date(dateString).toLocaleDateString('vi-VN', {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
@@ -31,7 +32,7 @@ const NewsCard = ({ article, featured = false }) => {
                 {article.time}
               </span>
             </p>
-            <span className="text-xs uppercase tracking-[0.35em] text-white/70">{article.category}</span>
+            <span className="text-xs uppercase tracking-[0.35em] text-white/70">{toNewsCategoryLabel(article.category)}</span>
           </div>
         </div>
         <div className="p-6 space-y-4">
@@ -39,16 +40,16 @@ const NewsCard = ({ article, featured = false }) => {
             {article.title}
           </h3>
           <p className="text-slate-600">{article.summary}</p>
-          <div className="flex items-center justify-between">
-            <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-              {article.tags.map(tag => (
-                <span key={tag} className="px-3 py-1 rounded-2xl bg-slate-100 border border-slate-200 flex items-center gap-1">
-                  <Tag size={10} /> {tag}
-                </span>
-              ))}
-            </div>
-            <button className="flex items-center gap-2 text-[#0055FF] text-sm uppercase tracking-[0.3em]">
-              Read <ArrowRight size={14} />
+            <div className="flex items-center justify-between">
+              <div className="flex flex-wrap gap-2 text-xs text-slate-500">
+                {article.tags.map(tag => (
+                  <span key={tag} className="px-3 py-1 rounded-2xl bg-slate-100 border border-slate-200 flex items-center gap-1">
+                    <Tag size={10} /> {tag}
+                  </span>
+                ))}
+              </div>
+              <button className="flex items-center gap-2 text-[#0055FF] text-sm uppercase tracking-[0.3em]">
+              Đọc <ArrowRight size={14} />
             </button>
           </div>
         </div>
@@ -60,7 +61,7 @@ const NewsCard = ({ article, featured = false }) => {
     <article className="glass-card p-6 space-y-3 group">
       <div className="flex items-center gap-3 text-xs text-slate-500">
         <span className={`px-3 py-1 rounded-full ${categoryColors[article.category] || 'bg-slate-100 text-slate-500'}`}>
-          {article.category}
+          {toNewsCategoryLabel(article.category)}
         </span>
         <span className="flex items-center gap-1">
           <Calendar size={12} />
@@ -74,7 +75,7 @@ const NewsCard = ({ article, featured = false }) => {
       <h3 className="text-xl font-semibold text-slate-900 group-hover:text-[#0055FF] transition-colors">{article.title}</h3>
       <p className="text-slate-500 text-sm">{article.summary}</p>
       <button className="flex items-center gap-2 text-[#0055FF] text-xs uppercase tracking-[0.3em]">
-        Read More <ArrowRight size={12} />
+        Xem thêm <ArrowRight size={12} />
       </button>
     </article>
   );

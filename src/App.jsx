@@ -53,7 +53,7 @@ function App() {
     const loggedInUser = await login(credentials)
     if (!hasAdminPortalAccess(loggedInUser)) {
       await logout()
-      throw new Error('Your account does not have access to the admin area.')
+      throw new Error('Tài khoản của bạn không có quyền truy cập khu vực quản trị.')
     }
     return loggedInUser
   }

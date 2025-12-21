@@ -37,7 +37,7 @@ const StandingsTable = ({ standings = [], selectedGroup = 'all' }) => {
       return (
         <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-medium">
           <Award size={12} />
-          <span>Direct</span>
+          <span>Vào thẳng</span>
         </div>
       );
     }
@@ -45,7 +45,7 @@ const StandingsTable = ({ standings = [], selectedGroup = 'all' }) => {
       return (
         <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/10 text-amber-600 text-xs font-medium">
           <AlertCircle size={12} />
-          <span>Playoff</span>
+          <span>Tranh vé</span>
         </div>
       );
     }
@@ -58,12 +58,12 @@ const StandingsTable = ({ standings = [], selectedGroup = 'all' }) => {
       <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-600 px-6 py-5">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-white/70 font-semibold">League Phase</p>
-            <p className="text-xl font-bold text-white mt-1">Standings Overview</p>
+            <p className="text-xs uppercase tracking-[0.35em] text-white/70 font-semibold">Vòng phân hạng</p>
+            <p className="text-xl font-bold text-white mt-1">Tổng quan bảng xếp hạng</p>
           </div>
           <div className="text-right">
-            <p className="text-xs text-white/70">Last Updated</p>
-            <p className="text-sm font-semibold text-white">{new Date().toLocaleTimeString('en-GB')}</p>
+            <p className="text-xs text-white/70">Cập nhật lúc</p>
+            <p className="text-sm font-semibold text-white">{new Date().toLocaleTimeString('vi-VN')}</p>
           </div>
         </div>
       </div>
@@ -72,15 +72,15 @@ const StandingsTable = ({ standings = [], selectedGroup = 'all' }) => {
       <div className="bg-slate-50 px-6 py-3 border-b border-slate-200 flex flex-wrap gap-4 text-xs">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-          <span className="text-slate-600">Direct Qualification (1-8)</span>
+          <span className="text-slate-600">Vào thẳng (1-8)</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-          <span className="text-slate-600">Playoff Round (9-24)</span>
+          <span className="text-slate-600">Vòng tranh vé (9-24)</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-rose-500"></div>
-          <span className="text-slate-600">Eliminated (25-36)</span>
+          <span className="text-slate-600">Bị loại (25-36)</span>
         </div>
       </div>
 
@@ -91,16 +91,16 @@ const StandingsTable = ({ standings = [], selectedGroup = 'all' }) => {
             <tr className="bg-slate-50 border-b border-slate-200">
               {[
                 { key: '#', label: '#', width: 'w-20' },
-                { key: 'team', label: 'Team', width: 'min-w-[280px]' },
-                { key: 'p', label: 'P', width: 'w-14' },
-                { key: 'w', label: 'W', width: 'w-14' },
-                { key: 'd', label: 'D', width: 'w-14' },
-                { key: 'l', label: 'L', width: 'w-14' },
-                { key: 'gf', label: 'GF', width: 'w-14' },
-                { key: 'ga', label: 'GA', width: 'w-14' },
-                { key: 'gd', label: 'GD', width: 'w-16' },
-                { key: 'pts', label: 'Pts', width: 'w-16' },
-                { key: 'form', label: 'Form', width: 'w-44' }
+                { key: 'team', label: 'Đội', width: 'min-w-[280px]' },
+                { key: 'p', label: 'ST', width: 'w-14' },
+                { key: 'w', label: 'T', width: 'w-14' },
+                { key: 'd', label: 'H', width: 'w-14' },
+                { key: 'l', label: 'B', width: 'w-14' },
+                { key: 'gf', label: 'BT', width: 'w-14' },
+                { key: 'ga', label: 'BTh', width: 'w-14' },
+                { key: 'gd', label: 'HS', width: 'w-16' },
+                { key: 'pts', label: 'Đ', width: 'w-16' },
+                { key: 'form', label: 'Phong độ', width: 'w-44' }
               ].map(col => (
                 <th 
                   key={col.key} 
@@ -237,9 +237,9 @@ const StandingsTable = ({ standings = [], selectedGroup = 'all' }) => {
                           style={{
                             animation: `scaleIn 0.3s ease-out ${idx * 0.1}s both`
                           }}
-                          title={`Match ${idx + 1}: ${result === 'W' ? 'Win' : result === 'D' ? 'Draw' : 'Loss'}`}
+                          title={`Trận ${idx + 1}: ${result === 'W' ? 'Thắng' : result === 'D' ? 'Hòa' : 'Thua'}`}
                         >
-                          {result}
+                          {result === 'W' ? 'T' : result === 'D' ? 'H' : 'B'}
                         </div>
                       ))}
                     </div>
@@ -253,7 +253,7 @@ const StandingsTable = ({ standings = [], selectedGroup = 'all' }) => {
                     <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
                       <AlertCircle size={32} className="text-slate-400" />
                     </div>
-                    <p className="text-slate-500 font-medium">No standings available</p>
+                    <p className="text-slate-500 font-medium">Chưa có bảng xếp hạng</p>
                   </div>
                 </td>
               </tr>

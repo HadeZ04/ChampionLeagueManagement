@@ -4,6 +4,7 @@ import { Menu, X, ChevronDown, Search, Globe, ShoppingCart, Bell, LogOut } from 
 import uefaPrimaryMark from '@/assets/images/UEFA_Champions_League_logo.svg.png';
 import { useAuth } from '../../../layers/application/context/AuthContext';
 import { hasAdminPortalAccess } from '../../admin/utils/accessControl';
+import { toRoleLabel } from '../../../shared/utils/vi';
 
 const PublicHeader = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -15,7 +16,7 @@ const PublicHeader = () => {
   const userRoles = Array.isArray(user?.roles) && user.roles.length ? user.roles : ['viewer'];
   const displayName = user?.firstName || user?.lastName
     ? [user.firstName, user.lastName].filter(Boolean).join(' ').trim()
-    : user?.username ?? user?.email ?? 'User';
+    : user?.username ?? user?.email ?? 'Người dùng';
   const initials = displayName
     .split(' ')
     .map((part) => part[0])
@@ -38,23 +39,23 @@ const PublicHeader = () => {
   }, []);
 
   const navigationItems = [
-    { name: 'Standings', path: '/standings' },
-    { name: 'Matches', path: '/matches' },
-    { name: 'Teams', path: '/teams' },
-    { name: 'Stats', path: '/stats' },
-    { name: 'News', path: '/news' },
+    { name: 'Bảng xếp hạng', path: '/standings' },
+    { name: 'Trận đấu', path: '/matches' },
+    { name: 'Đội bóng', path: '/teams' },
+    { name: 'Thống kê', path: '/stats' },
+    { name: 'Tin tức', path: '/news' },
     { name: 'Video', path: '/video' },
-    { name: 'Gaming', path: '/gaming' },
+    { name: 'Trò chơi', path: '/gaming' },
   ];
 
   const competitions = [
-    { name: 'Champions League', path: '/champions-league', active: true },
-    { name: 'Europa League', path: '/europa-league' },
-    { name: 'Conference League', path: '/conference-league' },
-    { name: 'Super Cup', path: '/super-cup' },
-    { name: 'Youth League', path: '/youth-league' },
-    { name: "Women's Champions League", path: '/womens-champions-league' },
-    { name: 'Futsal Champions League', path: '/futsal-champions-league' },
+    { name: 'Cúp C1', path: '/champions-league', active: true },
+    { name: 'Cúp C2', path: '/europa-league' },
+    { name: 'Cúp C3', path: '/conference-league' },
+    { name: 'Siêu cúp', path: '/super-cup' },
+    { name: 'Giải trẻ', path: '/youth-league' },
+    { name: 'Cúp C1 nữ', path: '/womens-champions-league' },
+    { name: 'Cúp C1 futsal', path: '/futsal-champions-league' },
   ];
 
   return (
@@ -66,22 +67,22 @@ const PublicHeader = () => {
             <div className="flex items-center gap-6">
               <span className="text-white/70 font-medium hidden md:flex items-center gap-2">
                 <Globe size={13} />
-                Official UEFA Website
+                Trang chính thức của UEFA
               </span>
               <div className="hidden lg:flex items-center gap-4 text-white/60">
-                <a href="#" className="hover:text-white transition-colors">Store</a>
+                <a href="#" className="hover:text-white transition-colors">Cửa hàng</a>
                 <span className="text-white/30">•</span>
-                <a href="#" className="hover:text-white transition-colors">Tickets</a>
+                <a href="#" className="hover:text-white transition-colors">Vé</a>
                 <span className="text-white/30">•</span>
-                <a href="#" className="hover:text-white transition-colors">Fantasy</a>
+                <a href="#" className="hover:text-white transition-colors">Bóng đá ảo</a>
                 <span className="text-white/30">•</span>
-                <a href="#" className="hover:text-white transition-colors">Gaming</a>
+                <a href="#" className="hover:text-white transition-colors">Trò chơi</a>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <button className="flex items-center gap-1 text-white/70 hover:text-white transition-colors">
                 <Globe size={13} />
-                <span className="hidden sm:inline">English</span>
+                <span className="hidden sm:inline">Tiếng Việt</span>
                 <ChevronDown size={12} />
               </button>
               <span className="text-white/30 hidden md:inline">|</span>
@@ -93,21 +94,21 @@ const PublicHeader = () => {
                     </div>
                     <div className="leading-tight">
                       <p className="text-white text-xs font-semibold">{displayName}</p>
-                      <p className="text-[10px] uppercase text-blue-100 font-semibold">{userRoles[0]}</p>
+                      <p className="text-[10px] uppercase text-blue-100 font-semibold">{toRoleLabel(userRoles[0])}</p>
                     </div>
                   </div>
                   <Link
                     to={primaryDestination}
                     className="inline-flex items-center px-3 py-1 bg-[#00d4ff] text-[#0a1929] font-semibold rounded hover:bg-[#00b8e6] transition-all"
                   >
-                    {isAdmin ? 'Admin' : 'Portal'}
+                    {isAdmin ? 'Quản trị' : 'Cổng'}
                   </Link>
                   <button
                     onClick={handleLogout}
                     className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors"
                   >
                     <LogOut size={14} />
-                    Logout
+                    Đăng xuất
                   </button>
                 </div>
               ) : (
@@ -116,19 +117,19 @@ const PublicHeader = () => {
                     to="/login"
                     className="hidden md:inline-flex items-center text-white/70 hover:text-white transition-colors"
                   >
-                    Sign In
+                    Đăng nhập
                   </Link>
                   <Link
                     to="/register"
                     className="hidden md:inline-flex items-center px-3 py-1 bg-[#00d4ff] text-[#0a1929] font-semibold rounded hover:bg-[#00b8e6] transition-all"
                   >
-                    Create Account
+                    Tạo tài khoản
                   </Link>
                   <Link
                     to="/admin/login"
                     className="hidden md:inline-flex items-center text-white/70 hover:text-white transition-colors"
                   >
-                    Admin
+                    Quản trị
                   </Link>
                 </>
               )}
@@ -146,13 +147,13 @@ const PublicHeader = () => {
               <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden hover:border-[#00d4ff]/50 transition-all">
                 <img
                   src={uefaPrimaryMark}
-                  alt="UEFA Champions League"
+                  alt="Cúp C1 châu Âu"
                   className="h-10 w-10 object-contain"
                 />
               </div>
               <div className="hidden md:block">
                 <div className="text-white font-bold text-lg leading-tight">UEFA</div>
-                <div className="text-[#00d4ff] text-[10px] font-semibold uppercase tracking-wider">Champions League</div>
+                <div className="text-[#00d4ff] text-[10px] font-semibold uppercase tracking-wider">Cúp C1 châu Âu</div>
               </div>
             </Link>
 
@@ -166,7 +167,7 @@ const PublicHeader = () => {
                   onMouseLeave={() => setIsCompetitionDropdownOpen(false)}
                   className="flex items-center gap-1 px-4 py-2 text-white/80 hover:text-white font-medium transition-colors"
                 >
-                  <span>Competitions</span>
+                  <span>Giải đấu</span>
                   <ChevronDown size={16} className={`transition-transform ${isCompetitionDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
 
@@ -177,7 +178,7 @@ const PublicHeader = () => {
                     onMouseLeave={() => setIsCompetitionDropdownOpen(false)}
                   >
                     <div className="px-4 py-3 border-b border-white/10">
-                      <p className="text-xs font-semibold text-white/60 uppercase tracking-wider">UEFA Competitions</p>
+                      <p className="text-xs font-semibold text-white/60 uppercase tracking-wider">Các giải đấu UEFA</p>
                     </div>
                     {competitions.map((competition) => (
                       <Link
@@ -224,7 +225,7 @@ const PublicHeader = () => {
                       : 'text-white hover:text-white'
                   }`}
                 >
-                  {isAdmin ? 'Admin' : 'Portal'}
+                  {isAdmin ? 'Quản trị' : 'Cổng'}
                 </Link>
               )}
             </nav>
@@ -235,7 +236,7 @@ const PublicHeader = () => {
                 <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40" />
                 <input
                   type="text"
-                  placeholder="Search teams, players, match..."
+                  placeholder="Tìm kiếm đội, cầu thủ, trận đấu..."
                   className="pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-full text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-[#00d4ff]/50 focus:bg-white/10 w-64 transition-all"
                 />
               </div>
@@ -272,12 +273,12 @@ const PublicHeader = () => {
         <div className="max-w-[1400px] mx-auto px-4">
           <div className="flex items-center h-8 text-xs text-white font-medium overflow-hidden">
             <span className="bg-white text-red-600 px-2 py-0.5 rounded text-[10px] font-bold mr-3 flex-shrink-0">
-              LIVE
+              TRỰC TIẾP
             </span>
             <div className="flex items-center gap-6 animate-scroll whitespace-nowrap">
               <span>Manchester City 1-0 PSG • 82'</span>
               <span className="text-white/60">•</span>
-              <span>Barcelona 3-2 Inter Milan • FT</span>
+              <span>Barcelona 3-2 Inter Milan • Hết giờ</span>
               <span className="text-white/60">•</span>
               <span>Real Madrid 2-1 Bayern Munich • 78'</span>
               <span className="text-white/60">•</span>
@@ -285,7 +286,7 @@ const PublicHeader = () => {
               <span className="text-white/60">•</span>
               <span>Manchester City 1-0 PSG • 82'</span>
               <span className="text-white/60">•</span>
-              <span>Barcelona 3-2 Inter Milan • FT</span>
+              <span>Barcelona 3-2 Inter Milan • Hết giờ</span>
             </div>
           </div>
         </div>
@@ -299,7 +300,7 @@ const PublicHeader = () => {
               {/* Competitions */}
               <div>
                 <div className="text-white/60 text-xs font-semibold uppercase tracking-wide mb-3">
-                  Competitions
+                  Giải đấu
                 </div>
                 {competitions.map((competition) => (
                   <Link
@@ -320,7 +321,7 @@ const PublicHeader = () => {
               {/* Navigation */}
               <div>
                 <div className="text-white/60 text-xs font-semibold uppercase tracking-wide mb-3">
-                  Navigation
+                  Danh mục
                 </div>
                 {navigationItems.map((item) => (
                   <Link
@@ -346,7 +347,7 @@ const PublicHeader = () => {
                     }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    {isAdmin ? 'Admin' : 'Portal'}
+                    {isAdmin ? 'Quản trị' : 'Cổng'}
                   </Link>
                 )}
               </div>
@@ -354,7 +355,7 @@ const PublicHeader = () => {
               {/* Account */}
               <div>
                 <div className="text-white/60 text-xs font-semibold uppercase tracking-wide mb-3">
-                  Account
+                  Tài khoản
                 </div>
                 {isAuthenticated ? (
                   <div className="space-y-3">
@@ -367,7 +368,7 @@ const PublicHeader = () => {
                         <div className="mt-1 flex flex-wrap gap-1 text-[10px] uppercase text-blue-100">
                           {userRoles.map((role) => (
                             <span key={role} className="rounded-full bg-white/10 px-2 py-0.5 font-semibold">
-                              {role}
+                              {toRoleLabel(role)}
                             </span>
                           ))}
                         </div>
@@ -378,14 +379,14 @@ const PublicHeader = () => {
                       className="block px-4 py-2.5 rounded-lg text-sm text-[#0a1929] font-semibold bg-[#00d4ff] hover:bg-[#00b8e6] transition-colors text-center"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      Go to {isAdmin ? 'Admin' : 'Portal'}
+                      Vào {isAdmin ? 'Quản trị' : 'Cổng'}
                     </Link>
                     <Link
                       to="/profile"
                       className="block px-4 py-2.5 rounded-lg text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors text-center"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      Profile
+                      Hồ sơ
                     </Link>
                     <button
                       onClick={() => {
@@ -394,7 +395,7 @@ const PublicHeader = () => {
                       }}
                       className="block w-full px-4 py-2.5 rounded-lg text-sm text-white/90 border border-white/10 hover:bg-white/5 transition-colors text-center"
                     >
-                      Logout
+                      Đăng xuất
                     </button>
                   </div>
                 ) : (
@@ -404,21 +405,21 @@ const PublicHeader = () => {
                       className="block px-4 py-2.5 rounded-lg text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      Sign In
+                      Đăng nhập
                     </Link>
                     <Link
                       to="/register"
                       className="block px-4 py-2.5 rounded-lg text-sm text-[#0a1929] font-semibold bg-[#00d4ff] hover:bg-[#00b8e6] transition-colors"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      Create Account
+                      Tạo tài khoản
                     </Link>
                     <Link
                       to="/admin/login"
                       className="block px-4 py-2.5 rounded-lg text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      Admin Login
+                      Đăng nhập quản trị
                     </Link>
                   </div>
                 )}

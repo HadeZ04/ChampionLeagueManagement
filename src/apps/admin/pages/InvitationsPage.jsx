@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { Mail, Plus, RefreshCw, Search, Filter, Send, XCircle, CheckCircle, Clock, Loader2 } from 'lucide-react'
+import { RefreshCw, Search, Filter, Send, XCircle, CheckCircle, Clock, Loader2 } from 'lucide-react'
 import toast, { Toaster } from 'react-hot-toast'
 
 const defaultInvitations = [
@@ -72,43 +72,53 @@ const InvitationsPage = () => {
 
   const revokeInvite = (id) => {
     if (!window.confirm('Revoke this invitation?')) return
-    setInvitations((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, status: 'revoked' } : item))
-    )
+    setInvitations((prev) => prev.map((item) => (item.id === id ? { ...item, status: 'revoked' } : item)))
     toast.success('Invitation revoked.')
   }
 
   const renderStatus = (status) => {
-    if (status === 'accepted') return <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-700"><CheckCircle size={14} />Đã chấp nhận</span>
-    if (status === 'pending') return <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700"><Clock size={14} />Đang chờ</span>
-    if (status === 'expired') return <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700">Hết hạn</span>
-    if (status === 'revoked') return <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-700">Thu hồi</span>
+    if (status === 'accepted') {
+      return (
+        <span className="admin-badge admin-badge-green">
+          <CheckCircle size={14} />
+          Accepted
+        </span>
+      )
+    }
+    if (status === 'pending') {
+      return (
+        <span className="admin-badge admin-badge-amber">
+          <Clock size={14} />
+          Pending
+        </span>
+      )
+    }
+    if (status === 'expired') return <span className="admin-badge admin-badge-blue">Expired</span>
+    if (status === 'revoked') return <span className="admin-badge admin-badge-red">Revoked</span>
     return status
   }
 
   return (
-    <div className="space-y-6">
+    <div className="admin-page space-y-6">
       <Toaster position="top-right" />
+
       <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase text-blue-600">Access control</p>
-          <h1 className="text-3xl font-bold text-gray-900">Invitations</h1>
-          <p className="text-sm text-gray-600">Send one-time invitations and track their status.</p>
+          <p className="text-sm font-bold uppercase tracking-[0.2em] text-cyan-300">Access control</p>
+          <h1 className="text-3xl font-black tracking-wider text-white">Invitations</h1>
+          <p className="text-sm text-blue-200/40">Send one-time invitations and track their status.</p>
         </div>
-        <button
-          type="button"
-          onClick={() => setPage(1)}
-          className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
-        >
+        <button type="button" onClick={() => setPage(1)} className="admin-btn-secondary">
           <RefreshCw size={16} />
           Refresh
         </button>
       </header>
 
-      <section className="rounded-lg border border-gray-200 bg-white p-6">
-        <h2 className="text-lg font-semibold text-gray-900">Create invitation</h2>
+      <section className="admin-surface p-6 space-y-4">
+        <h2 className="text-lg font-semibold text-white">Create invitation</h2>
+
         {formErrors.length > 0 && (
-          <div className="mt-3 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="rounded border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
             <ul className="list-disc space-y-1 pl-4">
               {formErrors.map((err) => (
                 <li key={err}>{err}</li>
@@ -116,62 +126,61 @@ const InvitationsPage = () => {
             </ul>
           </div>
         )}
-        <form onSubmit={handleSubmit} className="mt-4 grid gap-4 md:grid-cols-3 md:items-end">
-          <label className="space-y-1 text-sm text-gray-700">
+
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <label className="space-y-1 text-sm text-blue-200/60">
             Email
             <input
-              type="email"
               value={form.email}
               onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
+              className="admin-input"
+              placeholder="email@example.com"
             />
           </label>
-          <label className="space-y-1 text-sm text-gray-700">
+          <label className="space-y-1 text-sm text-blue-200/60">
             Role
             <select
               value={form.role}
               onChange={(event) => setForm((prev) => ({ ...prev, role: event.target.value }))}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="admin-select"
             >
-              <option value="competition_manager">Competition Manager</option>
+              <option value="competition_manager">Competition manager</option>
               <option value="referee">Referee</option>
-              <option value="official">Official</option>
               <option value="auditor">Auditor</option>
             </select>
           </label>
-          <button
-            type="submit"
-            disabled={isSending}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
-          >
-            {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus size={16} />}
-            Send invitation
-          </button>
+          <div className="flex items-end">
+            <button type="submit" disabled={isSending} className="admin-btn-primary w-full justify-center">
+              <span>
+                {isSending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                {isSending ? 'Sending...' : 'Send invitation'}
+              </span>
+            </button>
+          </div>
         </form>
       </section>
 
-      <section className="rounded-lg border border-gray-200 bg-white p-6">
+      <section className="admin-surface p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-1 items-center gap-3">
             <div className="relative flex-1">
-              <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-blue-200/40" />
               <input
                 type="text"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                className="w-full rounded-md border border-gray-300 pl-10 pr-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="admin-input pl-10 pr-3 py-2 text-sm"
                 placeholder="Search by email..."
               />
             </div>
-            <div className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-600">
+            <div className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-blue-200/50">
               <Filter size={14} />
               Filters
             </div>
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value)}
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="admin-select w-auto px-3 py-2 text-sm"
             >
               <option value="all">All status</option>
               <option value="pending">Pending</option>
@@ -180,37 +189,35 @@ const InvitationsPage = () => {
               <option value="revoked">Revoked</option>
             </select>
           </div>
-          <p className="text-sm text-gray-500">
-            Showing {paged.length} of {filtered.length} invitations
-          </p>
+          <p className="text-sm text-blue-200/40">Showing {paged.length} of {filtered.length} invitations</p>
         </div>
 
         <div className="mt-4 overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-50">
+          <table className="admin-table min-w-full">
+            <thead>
               <tr>
-                <th className="px-4 py-2 text-left font-semibold text-gray-600">Email</th>
-                <th className="px-4 py-2 text-left font-semibold text-gray-600">Role</th>
-                <th className="px-4 py-2 text-left font-semibold text-gray-600">Sent</th>
-                <th className="px-4 py-2 text-left font-semibold text-gray-600">Expires</th>
-                <th className="px-4 py-2 text-left font-semibold text-gray-600">Status</th>
-                <th className="px-4 py-2 text-right font-semibold text-gray-600">Actions</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Sent</th>
+                <th>Expires</th>
+                <th>Status</th>
+                <th className="text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody>
               {paged.map((inv) => (
-                <tr key={inv.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">{inv.email}</td>
-                  <td className="px-4 py-3 capitalize">{inv.role.replace(/_/g, ' ')}</td>
-                  <td className="px-4 py-3">{inv.sentAt || '—'}</td>
-                  <td className="px-4 py-3">{inv.expiresAt || '—'}</td>
-                  <td className="px-4 py-3">{renderStatus(inv.status)}</td>
-                  <td className="px-4 py-3 text-right">
+                <tr key={inv.id}>
+                  <td className="text-slate-100">{inv.email}</td>
+                  <td className="capitalize text-blue-200/70">{inv.role.replace(/_/g, ' ')}</td>
+                  <td className="text-blue-200/70">{inv.sentAt || '—'}</td>
+                  <td className="text-blue-200/70">{inv.expiresAt || '—'}</td>
+                  <td>{renderStatus(inv.status)}</td>
+                  <td className="text-right">
                     <div className="inline-flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => resendInvite(inv.id)}
-                        className="rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-60"
+                        className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs font-bold text-blue-100/80 hover:bg-white/10 disabled:opacity-60"
                         disabled={inv.status === 'accepted'}
                         title="Resend invitation"
                       >
@@ -219,7 +226,7 @@ const InvitationsPage = () => {
                       <button
                         type="button"
                         onClick={() => revokeInvite(inv.id)}
-                        className="rounded-md border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
+                        className="rounded-md border border-rose-500/20 bg-rose-500/10 px-2 py-1 text-xs font-bold text-rose-200 hover:bg-rose-500/15"
                         title="Revoke invitation"
                       >
                         <XCircle size={14} />
@@ -230,7 +237,7 @@ const InvitationsPage = () => {
               ))}
               {paged.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-500">
+                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-blue-200/40">
                     No invitations match the current filters.
                   </td>
                 </tr>
@@ -239,13 +246,13 @@ const InvitationsPage = () => {
           </table>
         </div>
 
-        <div className="mt-4 flex items-center justify-between text-sm text-gray-600">
+        <div className="mt-4 flex items-center justify-between text-sm text-blue-200/50">
           <div className="inline-flex items-center gap-2">
             <button
               type="button"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="rounded-md border border-gray-300 px-3 py-1 hover:bg-gray-50 disabled:opacity-60"
+              className="admin-btn-secondary px-3 py-1"
             >
               Prev
             </button>
@@ -256,7 +263,7 @@ const InvitationsPage = () => {
               type="button"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="rounded-md border border-gray-300 px-3 py-1 hover:bg-gray-50 disabled:opacity-60"
+              className="admin-btn-secondary px-3 py-1"
             >
               Next
             </button>

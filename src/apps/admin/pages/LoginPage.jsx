@@ -35,7 +35,7 @@ const LoginPage = ({ onLogin, isAuthenticated }) => {
     try {
       await onLogin(formData)
     } catch (err) {
-      setError(err?.message || 'Authentication failed. Please check your credentials.')
+      setError(err?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.')
     } finally {
       setIsLoading(false)
     }
@@ -98,11 +98,11 @@ const LoginPage = ({ onLogin, isAuthenticated }) => {
                     <Shield className="w-10 h-10 text-blue-400" strokeWidth={1.5} />
                   </div>
                   <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-blue-200 tracking-wider uppercase drop-shadow-sm">
-                    UEFA Admin
+                    Cổng quản trị
                   </h1>
                   <div className="flex items-center justify-center gap-2 mt-2">
                     <div className="h-[1px] w-8 bg-blue-500/50"></div>
-                    <p className="text-blue-400/60 text-[10px] font-bold tracking-[0.2em] uppercase">Secure Access Portal</p>
+                    <p className="text-blue-400/60 text-[10px] font-bold tracking-[0.2em] uppercase">Cổng truy cập an toàn</p>
                     <div className="h-[1px] w-8 bg-blue-500/50"></div>
                   </div>
                 </div>
@@ -120,7 +120,7 @@ const LoginPage = ({ onLogin, isAuthenticated }) => {
 
                   {/* Username Field */}
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-blue-300 uppercase tracking-wider ml-1">Identity ID</label>
+                    <label className="text-[11px] font-bold text-blue-300 uppercase tracking-wider ml-1">Tài khoản</label>
                     <div className="relative group/input">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
                         <User size={18} className="text-blue-500/60 group-focus-within/input:text-cyan-400 transition-colors duration-300" />
@@ -131,7 +131,7 @@ const LoginPage = ({ onLogin, isAuthenticated }) => {
                         value={formData.username}
                         onChange={handleChange}
                         className="block w-full pl-11 pr-4 py-4 bg-[#020617]/50 border border-blue-900/30 rounded-lg text-white placeholder-blue-700/30 focus:outline-none focus:bg-[#020617]/80 focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all font-mono tracking-wide"
-                        placeholder="ADMIN-ID"
+                        placeholder="Tên đăng nhập"
                         required
                       />
                       {/* Decorative corner accent */}
@@ -141,7 +141,7 @@ const LoginPage = ({ onLogin, isAuthenticated }) => {
 
                   {/* Password Field */}
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-blue-300 uppercase tracking-wider ml-1">Security Key</label>
+                    <label className="text-[11px] font-bold text-blue-300 uppercase tracking-wider ml-1">Mật khẩu</label>
                     <div className="relative group/input">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
                         <Lock size={18} className="text-blue-500/60 group-focus-within/input:text-cyan-400 transition-colors duration-300" />
@@ -174,10 +174,10 @@ const LoginPage = ({ onLogin, isAuthenticated }) => {
                           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" /></svg>
                         </div>
                       </div>
-                      <span className="ml-2.5 text-xs text-blue-400/70 group-hover:text-blue-300 font-medium transition-colors">Remember Session</span>
+                      <span className="ml-2.5 text-xs text-blue-400/70 group-hover:text-blue-300 font-medium transition-colors">Ghi nhớ đăng nhập</span>
                     </label>
                     <a href="#" className="text-xs text-cyan-500/80 hover:text-cyan-400 font-bold uppercase tracking-wide transition-colors border-b border-transparent hover:border-cyan-400/50">
-                      Recovery?
+                      Quên mật khẩu?
                     </a>
                   </div>
 
@@ -192,11 +192,11 @@ const LoginPage = ({ onLogin, isAuthenticated }) => {
                       {isLoading ? (
                         <>
                           <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3"></div>
-                          <span className="text-white font-bold tracking-widest uppercase text-sm">Verifying...</span>
+                          <span className="text-white font-bold tracking-widest uppercase text-sm">Đang xác thực...</span>
                         </>
                       ) : (
                         <>
-                          <span className="text-white font-bold tracking-widest uppercase text-sm group-hover:scale-105 transition-transform">Initiate Login</span>
+                          <span className="text-white font-bold tracking-widest uppercase text-sm group-hover:scale-105 transition-transform">Đăng nhập</span>
                           <ArrowRight size={18} className="ml-2 text-cyan-400 group-hover:translate-x-1 transition-transform duration-300" />
                         </>
                       )}
@@ -212,14 +212,13 @@ const LoginPage = ({ onLogin, isAuthenticated }) => {
                   <div className="flex items-center justify-between text-[10px] text-blue-500/40 font-mono">
                      <div className="flex items-center gap-1.5">
                        <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_5px_rgba(16,185,129,0.5)]"></div>
-                       <span>SYSTEM OPERATIONAL</span>
+                       <span>HỆ THỐNG ĐANG HOẠT ĐỘNG</span>
                      </div>
                      <div className="tracking-widest opacity-70">V.2.5.0-RC</div>
                   </div>
-                  {/* Demo Credentials */}
                   <div className="mt-4 text-center">
-                    <p className="text-[10px] text-blue-400/30 mb-1">DEMO CREDENTIALS</p>
-                    <code className="px-2 py-1 bg-white/5 rounded text-[11px] text-blue-200 font-mono">admin / uefa2025</code>
+                    <p className="text-[10px] text-blue-400/30 mb-1">CẦN HỖ TRỢ?</p>
+                    <p className="text-[11px] text-blue-200/70 font-medium">Liên hệ quản trị viên để được cấp quyền truy cập.</p>
                   </div>
                 </div>
 

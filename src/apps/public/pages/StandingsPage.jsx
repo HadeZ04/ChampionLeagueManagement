@@ -6,15 +6,15 @@ import UpcomingMatches from '../components/UpcomingMatches';
 import TeamsService from '../../../layers/application/services/TeamsService';
 
 const phases = [
-  { id: 'league', name: 'League Phase', icon: Users },
-  { id: 'knockout', name: 'Knockout Phase', icon: Target }
+  { id: 'league', name: 'Vòng phân hạng', icon: Users },
+  { id: 'knockout', name: 'Vòng loại trực tiếp', icon: Target }
 ];
 
 const groups = [
-  { id: 'all', name: 'All Teams', count: 36 },
-  { id: 'qualified', name: 'Qualified', count: 8 },
-  { id: 'playoff', name: 'Playoff', count: 16 },
-  { id: 'eliminated', name: 'Eliminated', count: 12 }
+  { id: 'all', name: 'Tất cả', count: 36 },
+  { id: 'qualified', name: 'Vào thẳng', count: 8 },
+  { id: 'playoff', name: 'Tranh vé', count: 16 },
+  { id: 'eliminated', name: 'Bị loại', count: 12 }
 ];
 
 const StandingsPage = () => {
@@ -37,7 +37,7 @@ const StandingsPage = () => {
           setSelectedSeason(String(data[0].year));
         }
       } catch (err) {
-        console.error('Failed to fetch seasons', err);
+        console.error('Không thể tải danh sách mùa giải', err);
         setError('Không thể tải danh sách mùa giải.');
       } finally {
         setIsLoadingSeasons(false);
@@ -57,7 +57,7 @@ const StandingsPage = () => {
         setStandings(data);
         setError(null);
       } catch (err) {
-        console.error('Failed to fetch standings', err);
+        console.error('Không thể tải bảng xếp hạng', err);
         setError('Không thể tải bảng xếp hạng.');
       } finally {
         setIsLoadingStandings(false);
@@ -99,26 +99,26 @@ const StandingsPage = () => {
             <div className="flex-1 space-y-4">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm border border-white/30">
                 <Trophy size={16} className="text-yellow-300" />
-                <span className="text-xs uppercase tracking-wider text-white font-bold">UEFA Champions League</span>
+                <span className="text-xs uppercase tracking-wider text-white font-bold">Cúp C1 châu Âu</span>
               </div>
               
               <h1 className="text-4xl lg:text-5xl font-black text-white leading-tight">
-                League Phase Standings
+                Bảng xếp hạng vòng phân hạng
               </h1>
               
               <p className="text-lg text-blue-100 max-w-2xl leading-relaxed">
-                Track qualification spots, playoff zones, and live form powered by Champions League data from Football-Data.org.
+                Theo dõi suất đi tiếp, nhóm tranh vé và phong độ gần đây dựa trên dữ liệu giải đấu.
               </p>
               
               {selectedSeason && standings?.updated && (
                 <div className="flex flex-wrap gap-4 text-sm text-blue-100">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-                    <span>Season {selectedSeason}/{Number(selectedSeason) + 1}</span>
+                    <span>Mùa {selectedSeason}/{Number(selectedSeason) + 1}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <TrendingUp size={16} />
-                    <span>Updated {new Date(standings.updated).toLocaleString()}</span>
+                    <span>Cập nhật {new Date(standings.updated).toLocaleString('vi-VN')}</span>
                   </div>
                 </div>
               )}
@@ -131,7 +131,7 @@ const StandingsPage = () => {
                 onChange={(event) => setSelectedSeason(event.target.value)}
                 disabled={isLoadingSeasons || seasons.length === 0}
               >
-                {isLoadingSeasons && <option>Loading...</option>}
+                {isLoadingSeasons && <option>Đang tải...</option>}
                 {!isLoadingSeasons &&
                   seasons.map((season) => (
                     <option key={season.id} value={season.year} className="text-slate-900">
@@ -142,12 +142,12 @@ const StandingsPage = () => {
               
               <button className="px-6 py-3 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 text-white font-semibold hover:bg-white/30 transition-all duration-300 flex items-center gap-2 group">
                 <Download size={18} className="group-hover:animate-bounce" />
-                <span>Export</span>
+                <span>Xuất</span>
               </button>
               
               <button className="px-6 py-3 rounded-xl bg-white text-blue-600 font-semibold hover:bg-blue-50 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl hover:scale-105">
                 <Share2 size={18} />
-                <span>Share</span>
+                <span>Chia sẻ</span>
               </button>
             </div>
           </div>
@@ -217,7 +217,7 @@ const StandingsPage = () => {
               <Trophy size={24} className="text-rose-300" />
             </div>
             <div>
-              <h3 className="font-bold text-white">Error Loading Data</h3>
+              <h3 className="font-bold text-white">Lỗi tải dữ liệu</h3>
               <p className="text-white/80">{error}</p>
             </div>
           </div>
@@ -228,13 +228,13 @@ const StandingsPage = () => {
           {/* Standings Table */}
           <div className="space-y-6">
             {isLoadingStandings ? (
-              <div className="rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 p-16 flex flex-col items-center justify-center gap-4 shadow-2xl">
-                <div className="w-16 h-16 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-white/80 font-medium">Loading standings...</p>
-              </div>
-            ) : (
-              <StandingsTable standings={formattedStandings} selectedGroup={selectedGroup} />
-            )}
+                <div className="rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 p-16 flex flex-col items-center justify-center gap-4 shadow-2xl">
+                  <div className="w-16 h-16 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-white/80 font-medium">Đang tải bảng xếp hạng...</p>
+                </div>
+              ) : (
+                <StandingsTable standings={formattedStandings} selectedGroup={selectedGroup} />
+              )}
 
             {/* Qualification Info Card */}
             <div className="rounded-3xl bg-white/5 backdrop-blur-xl p-6 border border-white/10 shadow-2xl hover:shadow-blue-500/20 hover:border-white/20 transition-all duration-300">
@@ -243,19 +243,19 @@ const StandingsPage = () => {
                   <Trophy size={28} className="text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-bold text-white mb-2">Qualification Rules</h3>
+                  <h3 className="text-lg font-bold text-white mb-2">Thể lệ đi tiếp</h3>
                   <div className="space-y-2 text-sm text-white/80">
                     <p className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/50"></span>
-                      <span><strong className="text-white">Top 8 teams</strong> qualify directly to Round of 16</span>
+                      <span><strong className="text-white">Top 8 đội</strong> vào thẳng vòng 1/8</span>
                     </p>
                     <p className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-amber-400 shadow-lg shadow-amber-400/50"></span>
-                      <span><strong className="text-white">Teams 9-24</strong> enter playoff round</span>
+                      <span><strong className="text-white">Các đội hạng 9-24</strong> vào vòng tranh vé</span>
                     </p>
                     <p className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-rose-400 shadow-lg shadow-rose-400/50"></span>
-                      <span><strong className="text-white">Bottom 12 teams</strong> are eliminated</span>
+                      <span><strong className="text-white">12 đội cuối</strong> bị loại</span>
                     </p>
                   </div>
                 </div>

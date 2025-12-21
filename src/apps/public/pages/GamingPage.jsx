@@ -19,20 +19,20 @@ const GamingPage = () => {
   return (
     <div className="container mx-auto p-4 md:p-8">
         <h1 className="text-4xl font-bold text-uefa-blue mb-8 border-l-4 border-uefa-yellow pl-4">
-            UEFA Gaming Hub
+            Trung tâm trò chơi UEFA
         </h1>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
             <GameCard 
-                title="Fantasy Football"
+                title="Bóng đá ảo"
                 description="Xây dựng đội hình trong mơ của bạn và cạnh tranh với bạn bè trên toàn thế giới."
-                buttonText="Chơi Fantasy"
-                imageUrl="https://via.placeholder.com/600x800/003366/FFFFFF?text=Fantasy"
+                buttonText="Chơi ngay"
+                imageUrl="https://via.placeholder.com/600x800/003366/FFFFFF?text=Bong+da+ao"
             />
             <GameCard 
-                title="Match Predictor"
+                title="Dự đoán trận đấu"
                 description="Dự đoán tỉ số các trận đấu để giành những phần thưởng hấp dẫn."
                 buttonText="Dự đoán ngay"
-                imageUrl="https://via.placeholder.com/600x800/E83F6F/FFFFFF?text=Predictor"
+                imageUrl="https://via.placeholder.com/600x800/E83F6F/FFFFFF?text=Du+doan"
             />
         </div>
     </div>

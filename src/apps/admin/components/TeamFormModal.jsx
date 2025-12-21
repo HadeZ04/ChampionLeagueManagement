@@ -25,25 +25,25 @@ const TeamFormModal = ({ isOpen, onClose, onSave, team }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-lg w-full">
-        <div className="p-6 border-b">
-          <h2 className="text-2xl font-bold text-gray-900">{isEditing ? `Edit: ${team.name}` : 'Add New Team'}</h2>
+      <div className="admin-surface rounded-lg shadow-xl max-w-lg w-full">
+        <div className="p-6 border-b border-white/10">
+          <h2 className="text-2xl font-bold text-white">{isEditing ? `Sửa: ${team.name}` : 'Thêm đội mới'}</h2>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <input name="name" value={formData.name || ''} onChange={handleChange} placeholder="Team Name" className="w-full p-2 border rounded-lg" required/>
+          <input name="name" value={formData.name || ''} onChange={handleChange} placeholder="Tên đội" className="admin-input" required/>
           <div className="grid grid-cols-2 gap-4">
-            <input name="country" value={formData.country || ''} onChange={handleChange} placeholder="Country" className="p-2 border rounded-lg" required/>
-            <input name="city" value={formData.city || ''} onChange={handleChange} placeholder="City" className="p-2 border rounded-lg" required/>
+            <input name="country" value={formData.country || ''} onChange={handleChange} placeholder="Quốc gia" className="admin-input" required/>
+            <input name="city" value={formData.city || ''} onChange={handleChange} placeholder="Thành phố" className="admin-input" required/>
           </div>
-          <input name="stadium" value={formData.stadium || ''} onChange={handleChange} placeholder="Stadium" className="w-full p-2 border rounded-lg"/>
+          <input name="stadium" value={formData.stadium || ''} onChange={handleChange} placeholder="Sân vận động" className="admin-input"/>
           <div className="grid grid-cols-2 gap-4">
-            <input name="capacity" type="number" value={formData.capacity || ''} onChange={handleChange} placeholder="Capacity" className="p-2 border rounded-lg"/>
-            <input name="founded" type="number" value={formData.founded || ''} onChange={handleChange} placeholder="Year Founded" className="p-2 border rounded-lg"/>
+            <input name="capacity" type="number" value={formData.capacity || ''} onChange={handleChange} placeholder="Sức chứa" className="admin-input"/>
+            <input name="founded" type="number" value={formData.founded || ''} onChange={handleChange} placeholder="Năm thành lập" className="admin-input"/>
           </div>
-          <input name="coach" value={formData.coach || ''} onChange={handleChange} placeholder="Coach Name" className="w-full p-2 border rounded-lg"/>
+          <input name="coach" value={formData.coach || ''} onChange={handleChange} placeholder="Huấn luyện viên" className="admin-input"/>
           <div className="flex space-x-3 pt-4">
-            <button type="button" onClick={onClose} className="flex-1 bg-gray-300 hover:bg-gray-400 py-2 rounded-lg">Cancel</button>
-            <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg">Save Team</button>
+            <button type="button" onClick={onClose} className="flex-1 admin-btn-secondary justify-center">Hủy</button>
+            <button type="submit" className="flex-1 admin-btn-primary justify-center"><span>Lưu đội</span></button>
           </div>
         </form>
       </div>

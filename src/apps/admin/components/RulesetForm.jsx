@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
 
 const goalTypeLibrary = [
-  { id: 'open_play', label: 'Open play' },
-  { id: 'penalty', label: 'Penalty' },
-  { id: 'free_kick', label: 'Free kick' },
-  { id: 'own_goal', label: 'Own goal' },
-  { id: 'header', label: 'Header' },
-  { id: 'shootout', label: 'Penalty shoot-out' }
+  { id: 'open_play', label: 'Bóng sống' },
+  { id: 'penalty', label: 'Phạt đền' },
+  { id: 'free_kick', label: 'Đá phạt' },
+  { id: 'own_goal', label: 'Phản lưới' },
+  { id: 'header', label: 'Đánh đầu' },
+  { id: 'shootout', label: 'Luân lưu' }
 ];
 
 const tiebreakerLibrary = [
-  { id: 'points', label: 'Total points' },
-  { id: 'goal_difference', label: 'Goal difference' },
-  { id: 'goals_for', label: 'Goals scored' },
-  { id: 'head_to_head', label: 'Head-to-head record' },
-  { id: 'away_goals', label: 'Away goals' },
-  { id: 'fair_play', label: 'Fair play score' },
-  { id: 'drawing_of_lots', label: 'Drawing of lots' }
+  { id: 'points', label: 'Tổng điểm' },
+  { id: 'goal_difference', label: 'Hiệu số' },
+  { id: 'goals_for', label: 'Bàn thắng' },
+  { id: 'head_to_head', label: 'Đối đầu' },
+  { id: 'away_goals', label: 'Bàn sân khách' },
+  { id: 'fair_play', label: 'Điểm chơi đẹp' },
+  { id: 'drawing_of_lots', label: 'Bốc thăm' }
 ];
 
 const toInt = (value, fallback) => {
@@ -91,39 +91,39 @@ const RulesetForm = ({ initialData = {}, onSave, onCancel, isSubmitting = false 
     const validationErrors = [];
 
     if (!name.trim()) {
-      validationErrors.push('Ruleset name is required.');
+      validationErrors.push('Cần nhập tên bộ luật.');
     }
     if (!versionTag.trim()) {
-      validationErrors.push('Version tag is required.');
+      validationErrors.push('Cần nhập nhãn phiên bản.');
     }
     if (squadConfig.minAge < 12) {
-      validationErrors.push('Minimum age must be at least 12.');
+      validationErrors.push('Tuổi tối thiểu phải từ 12 trở lên.');
     }
     if (squadConfig.maxAge <= squadConfig.minAge) {
-      validationErrors.push('Maximum age must be greater than minimum age.');
+      validationErrors.push('Tuổi tối đa phải lớn hơn tuổi tối thiểu.');
     }
     if (squadConfig.maxPlayers < 11) {
-      validationErrors.push('Maximum squad size must be at least 11.');
+      validationErrors.push('Số lượng cầu thủ tối đa phải từ 11 trở lên.');
     }
     if (squadConfig.maxForeignPlayers > squadConfig.maxPlayers) {
-      validationErrors.push('Foreign player limit cannot exceed squad size.');
+      validationErrors.push('Giới hạn cầu thủ ngoại không được vượt quá tổng số cầu thủ.');
     }
     if (goalTypes.length === 0) {
-      validationErrors.push('Select at least one goal type.');
+      validationErrors.push('Chọn ít nhất một loại bàn thắng.');
     }
     if (maxGoalTime < 30 || maxGoalTime > 150) {
-      validationErrors.push('Goal validation time must be between 30 and 150 minutes.');
+      validationErrors.push('Thời gian xác thực bàn thắng phải từ 30 đến 150 phút.');
     }
     if (tiebreakers.length === 0) {
-      validationErrors.push('Select at least one tiebreaker metric.');
+      validationErrors.push('Chọn ít nhất một tiêu chí phụ.');
     }
 
     const winPoints = Number(pointsConfig.win);
     const drawPoints = Number(pointsConfig.draw);
     const lossPoints = Number(pointsConfig.loss);
     if (!(winPoints > drawPoints && drawPoints > lossPoints)) {
-      validationErrors.push('Points must satisfy: Win > Draw > Loss.');
-      setPointsError('Win points must be greater than draw, and draw greater than loss.');
+      validationErrors.push('Điểm phải thỏa: Thắng > Hòa > Thua.');
+      setPointsError('Điểm thắng phải lớn hơn điểm hòa, và điểm hòa phải lớn hơn điểm thua.');
     } else {
       setPointsError('');
     }
@@ -170,7 +170,7 @@ const RulesetForm = ({ initialData = {}, onSave, onCancel, isSubmitting = false 
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-1">
         <label htmlFor="ruleset-name" className="block text-sm font-medium text-gray-700">
-          Ruleset name
+          Tên bộ luật
         </label>
         <input
           id="ruleset-name"
@@ -178,13 +178,13 @@ const RulesetForm = ({ initialData = {}, onSave, onCancel, isSubmitting = false 
           value={name}
           onChange={(event) => setName(event.target.value)}
           className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="e.g. Champions League 2026 Regulations"
+          placeholder="vd: Quy định Cúp C1 2026"
         />
       </div>
 
       <div className="space-y-1">
         <label htmlFor="ruleset-version" className="block text-sm font-medium text-gray-700">
-          Version tag
+          Nhãn phiên bản
         </label>
         <input
           id="ruleset-version"
@@ -192,16 +192,16 @@ const RulesetForm = ({ initialData = {}, onSave, onCancel, isSubmitting = false 
           value={versionTag}
           onChange={(event) => setVersionTag(event.target.value)}
           className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="e.g. 2026.v2-draft"
+          placeholder="vd: 2026.v2-bản-nháp"
         />
         <p className="text-xs text-gray-500">
-          Use semantic naming to track governance approvals, for example 2026.v2 or preseason.beta.
+          Dùng tên phiên bản có ý nghĩa để theo dõi phê duyệt/quy trình, ví dụ: 2026.v2 hoặc truocmua.beta.
         </p>
       </div>
 
       <div className="space-y-1">
         <label htmlFor="ruleset-description" className="block text-sm font-medium text-gray-700">
-          Description (optional)
+          Mô tả (tùy chọn)
         </label>
         <textarea
           id="ruleset-description"
@@ -209,15 +209,15 @@ const RulesetForm = ({ initialData = {}, onSave, onCancel, isSubmitting = false 
           onChange={(event) => setDescription(event.target.value)}
           className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
           rows={3}
-          placeholder="Add notes about changes compared to previous seasons."
+          placeholder="Thêm ghi chú về thay đổi so với mùa giải trước."
         />
       </div>
 
       <section className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-        <h3 className="text-lg font-semibold text-gray-900">Player eligibility (QD1)</h3>
+        <h3 className="text-lg font-semibold text-gray-900">Điều kiện cầu thủ (QD1)</h3>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Minimum age</label>
+            <label className="block text-sm font-medium text-gray-700">Tuổi tối thiểu</label>
             <input
               type="number"
               min={12}
@@ -230,7 +230,7 @@ const RulesetForm = ({ initialData = {}, onSave, onCancel, isSubmitting = false 
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Maximum age</label>
+            <label className="block text-sm font-medium text-gray-700">Tuổi tối đa</label>
             <input
               type="number"
               min={16}
@@ -243,7 +243,7 @@ const RulesetForm = ({ initialData = {}, onSave, onCancel, isSubmitting = false 
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Maximum squad size</label>
+            <label className="block text-sm font-medium text-gray-700">Số lượng cầu thủ tối đa</label>
             <input
               type="number"
               min={11}
@@ -256,7 +256,7 @@ const RulesetForm = ({ initialData = {}, onSave, onCancel, isSubmitting = false 
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Foreign player limit</label>
+            <label className="block text-sm font-medium text-gray-700">Giới hạn cầu thủ ngoại</label>
             <input
               type="number"
               min={0}
@@ -275,10 +275,10 @@ const RulesetForm = ({ initialData = {}, onSave, onCancel, isSubmitting = false 
       </section>
 
       <section className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-        <h3 className="text-lg font-semibold text-gray-900">Goal validation (QD3)</h3>
+        <h3 className="text-lg font-semibold text-gray-900">Xác thực bàn thắng (QD3)</h3>
         <div className="mt-4 space-y-3">
           <fieldset className="space-y-2">
-            <legend className="text-sm font-medium text-gray-700">Accepted goal types</legend>
+            <legend className="text-sm font-medium text-gray-700">Loại bàn thắng được tính</legend>
             <div className="grid gap-2 md:grid-cols-2">
               {goalTypeLibrary.map((option) => (
                 <label key={option.id} className="flex items-center space-x-2 text-sm text-gray-700">
@@ -295,7 +295,7 @@ const RulesetForm = ({ initialData = {}, onSave, onCancel, isSubmitting = false 
           </fieldset>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Maximum validation time (minutes)</label>
+            <label className="block text-sm font-medium text-gray-700">Thời gian xác thực tối đa (phút)</label>
             <input
               type="number"
               min={30}
@@ -305,7 +305,7 @@ const RulesetForm = ({ initialData = {}, onSave, onCancel, isSubmitting = false 
               className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <p className="mt-1 text-xs text-gray-500">
-              Use 120 to allow extra time and penalty shoot-out reviews.
+              Dùng 120 để tính cả hiệp phụ và tình huống luân lưu.
             </p>
           </div>
         </div>
@@ -313,10 +313,10 @@ const RulesetForm = ({ initialData = {}, onSave, onCancel, isSubmitting = false 
 
       <section className="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Ranking metrics (QD5)</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Tiêu chí xếp hạng (QD5)</h3>
           <div className="mt-4 grid gap-4 md:grid-cols-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Points for a win</label>
+              <label className="block text-sm font-medium text-gray-700">Điểm cho thắng</label>
               <input
                 type="number"
                 min={0}
@@ -329,7 +329,7 @@ const RulesetForm = ({ initialData = {}, onSave, onCancel, isSubmitting = false 
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Points for a draw</label>
+              <label className="block text-sm font-medium text-gray-700">Điểm cho hòa</label>
               <input
                 type="number"
                 min={0}
@@ -342,7 +342,7 @@ const RulesetForm = ({ initialData = {}, onSave, onCancel, isSubmitting = false 
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Points for a loss</label>
+              <label className="block text-sm font-medium text-gray-700">Điểm cho thua</label>
               <input
                 type="number"
                 min={-5}
@@ -361,9 +361,9 @@ const RulesetForm = ({ initialData = {}, onSave, onCancel, isSubmitting = false 
         </div>
 
         <div>
-          <h4 className="text-sm font-medium text-gray-700">Tiebreaker priority</h4>
+          <h4 className="text-sm font-medium text-gray-700">Thứ tự tiêu chí phụ</h4>
           <p className="mt-1 text-xs text-gray-500">
-            Enable the metrics you want to consider and move them to define the priority order.
+            Bật các tiêu chí cần xét và sắp xếp để xác định thứ tự ưu tiên.
           </p>
           <div className="mt-3 space-y-2">
             {tiebreakerLibrary.map(option => {
@@ -393,14 +393,14 @@ const RulesetForm = ({ initialData = {}, onSave, onCancel, isSubmitting = false 
                         onClick={() => handleMoveTiebreaker(index, -1)}
                         className="rounded border border-gray-200 px-2 py-1 hover:border-blue-400 hover:text-blue-600"
                       >
-                        Up
+                        Lên
                       </button>
                       <button
                         type="button"
                         onClick={() => handleMoveTiebreaker(index, 1)}
                         className="rounded border border-gray-200 px-2 py-1 hover:border-blue-400 hover:text-blue-600"
                       >
-                        Down
+                        Xuống
                       </button>
                     </div>
                   )}
@@ -427,14 +427,14 @@ const RulesetForm = ({ initialData = {}, onSave, onCancel, isSubmitting = false 
           onClick={onCancel}
           className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
         >
-          Cancel
+          Hủy
         </button>
         <button
           type="submit"
           disabled={isSubmitting}
           className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isSubmitting ? 'Saving...' : 'Save ruleset'}
+          {isSubmitting ? 'Đang lưu...' : 'Lưu bộ luật'}
         </button>
       </div>
     </form>

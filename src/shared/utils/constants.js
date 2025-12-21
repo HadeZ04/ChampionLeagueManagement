@@ -33,10 +33,10 @@ export const TEAM_STATUS = {
 
 // Player Position Constants
 export const PLAYER_POSITIONS = {
-  GOALKEEPER: 'Goalkeeper',
-  DEFENDER: 'Defender',
-  MIDFIELDER: 'Midfielder',
-  FORWARD: 'Forward'
+  GOALKEEPER: 'Thủ môn',
+  DEFENDER: 'Hậu vệ',
+  MIDFIELDER: 'Tiền vệ',
+  FORWARD: 'Tiền đạo'
 }
 
 // Tournament Phase Constants
@@ -198,30 +198,30 @@ export const UI = {
 
 // Error Messages
 export const ERROR_MESSAGES = {
-  NETWORK_ERROR: 'Network error. Please check your connection and try again.',
-  UNAUTHORIZED: 'You are not authorized to perform this action.',
-  FORBIDDEN: 'Access denied. You do not have permission to access this resource.',
-  NOT_FOUND: 'The requested resource was not found.',
-  VALIDATION_ERROR: 'Please check your input and try again.',
-  SERVER_ERROR: 'An internal server error occurred. Please try again later.',
-  TIMEOUT_ERROR: 'Request timed out. Please try again.',
-  UNKNOWN_ERROR: 'An unknown error occurred. Please try again.'
+  NETWORK_ERROR: 'Lỗi mạng. Vui lòng kiểm tra kết nối và thử lại.',
+  UNAUTHORIZED: 'Bạn không được phép thực hiện thao tác này.',
+  FORBIDDEN: 'Truy cập bị từ chối. Bạn không có quyền truy cập tài nguyên này.',
+  NOT_FOUND: 'Không tìm thấy tài nguyên được yêu cầu.',
+  VALIDATION_ERROR: 'Vui lòng kiểm tra dữ liệu nhập và thử lại.',
+  SERVER_ERROR: 'Lỗi máy chủ. Vui lòng thử lại sau.',
+  TIMEOUT_ERROR: 'Yêu cầu bị quá thời gian. Vui lòng thử lại.',
+  UNKNOWN_ERROR: 'Đã xảy ra lỗi không xác định. Vui lòng thử lại.'
 }
 
 // Success Messages
 export const SUCCESS_MESSAGES = {
-  TEAM_CREATED: 'Team created successfully',
-  TEAM_UPDATED: 'Team updated successfully',
-  TEAM_DELETED: 'Team deleted successfully',
-  MATCH_CREATED: 'Match scheduled successfully',
-  MATCH_UPDATED: 'Match updated successfully',
-  MATCH_DELETED: 'Match deleted successfully',
-  PLAYER_CREATED: 'Player added successfully',
-  PLAYER_UPDATED: 'Player updated successfully',
-  PLAYER_DELETED: 'Player removed successfully',
-  NEWS_PUBLISHED: 'Article published successfully',
-  LOGIN_SUCCESS: 'Login successful',
-  LOGOUT_SUCCESS: 'Logout successful'
+  TEAM_CREATED: 'Tạo đội thành công',
+  TEAM_UPDATED: 'Cập nhật đội thành công',
+  TEAM_DELETED: 'Xóa đội thành công',
+  MATCH_CREATED: 'Tạo lịch trận đấu thành công',
+  MATCH_UPDATED: 'Cập nhật trận đấu thành công',
+  MATCH_DELETED: 'Xóa trận đấu thành công',
+  PLAYER_CREATED: 'Thêm cầu thủ thành công',
+  PLAYER_UPDATED: 'Cập nhật cầu thủ thành công',
+  PLAYER_DELETED: 'Xóa cầu thủ thành công',
+  NEWS_PUBLISHED: 'Đăng bài thành công',
+  LOGIN_SUCCESS: 'Đăng nhập thành công',
+  LOGOUT_SUCCESS: 'Đăng xuất thành công'
 }
 
 export default {

@@ -5,7 +5,7 @@ import React from 'react';
 const newsArticles = [
   {
     id: 1,
-    title: 'Real Madrid lần thứ 15 vô địch Champions League',
+    title: 'Real Madrid lần thứ 15 vô địch Cúp C1',
     excerpt: 'Los Blancos đã đánh bại Borussia Dortmund trong trận chung kết kịch tính tại Wembley...',
     imageUrl: 'https://via.placeholder.com/400x250/00529F/FFFFFF?text=Real+Madrid',
     date: '02/06/2024',
@@ -21,9 +21,9 @@ const newsArticles = [
   },
   {
     id: 3,
-    title: 'Lễ bốc thăm vòng bảng Champions League 2025/26: Những bảng tử thần nào sẽ xuất hiện?',
+    title: 'Lễ bốc thăm vòng bảng Cúp C1 2025/26: Những bảng tử thần nào sẽ xuất hiện?',
     excerpt: 'Cùng chờ đón những cặp đấu duyên nợ và những bất ngờ tại lễ bốc thăm sắp tới...',
-    imageUrl: 'https://via.placeholder.com/400x250/000000/FFFFFF?text=UCL+Draw',
+    imageUrl: 'https://via.placeholder.com/400x250/000000/FFFFFF?text=Boc+tham',
     date: '14/09/2025',
     category: 'Tin tức',
   },

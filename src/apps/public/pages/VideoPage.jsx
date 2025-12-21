@@ -5,20 +5,20 @@ import React from 'react';
 const videos = [
   {
     id: 1,
-    title: 'HIGHLIGHTS: Real Madrid vs Dortmund | Chung kết 2024',
-    thumbnailUrl: 'https://via.placeholder.com/400x250/FFC72C/000000?text=Highlight+1',
+    title: 'TÓM TẮT: Real Madrid vs Dortmund | Chung kết 2024',
+    thumbnailUrl: 'https://via.placeholder.com/400x250/FFC72C/000000?text=Tom+tat+1',
     duration: '10:32',
   },
   {
     id: 2,
     title: 'Tất cả 8 bàn thắng của Harry Kane tại C1 2023/24',
-    thumbnailUrl: 'https://via.placeholder.com/400x250/DC143C/FFFFFF?text=Highlight+2',
+    thumbnailUrl: 'https://via.placeholder.com/400x250/DC143C/FFFFFF?text=Tom+tat+2',
     duration: '05:18',
   },
   {
     id: 3,
     title: 'Top 10 pha cứu thua không tưởng mùa giải 2023/24',
-    thumbnailUrl: 'https://via.placeholder.com/400x250/32CD32/FFFFFF?text=Highlight+3',
+    thumbnailUrl: 'https://via.placeholder.com/400x250/32CD32/FFFFFF?text=Tom+tat+3',
     duration: '07:45',
   },
 ];
