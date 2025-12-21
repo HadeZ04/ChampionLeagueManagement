@@ -20,18 +20,12 @@ export interface MatchRecord {
   matchdayNumber: number;
   homeTeamId: number;
   homeTeamName: string;
-<<<<<<< HEAD
-  awayTeamId: number;
-  awayTeamName: string;
-=======
   homeTeamLogo: string | null;
   homeTeamShortName: string | null;
   awayTeamId: number;
   awayTeamName: string;
   awayTeamLogo: string | null;
-  awayTeamShortName: string | null;
->>>>>>> 34600db (Fix match time update, timezone display, and live timer issues)
-  stadiumId: number;
+  awayTeamShortName: string | null; stadiumId: number;
   stadiumName: string | null;
   scheduledKickoff: string;
   status: string;
@@ -94,7 +88,7 @@ const ensureDefaultSeason = async (): Promise<number> => {
   const existingSeason = await query<{ season_id: number }>(
     `SELECT TOP 1 season_id FROM seasons ORDER BY created_at DESC`
   );
-  
+
   if (existingSeason.recordset.length > 0) {
     return existingSeason.recordset[0].season_id;
   }
@@ -114,7 +108,7 @@ const ensureDefaultSeason = async (): Promise<number> => {
       END
     `
   );
-  
+
   const tournamentId = tournamentResult.recordset[0].tournament_id;
 
   // Create default ruleset
@@ -132,7 +126,7 @@ const ensureDefaultSeason = async (): Promise<number> => {
       END
     `
   );
-  
+
   const rulesetId = rulesetResult.recordset[0].ruleset_id;
 
   // Create default season
@@ -158,7 +152,7 @@ const ensureDefaultSeason = async (): Promise<number> => {
 // Helper: Ensure round exists for season
 const ensureRoundForSeason = async (seasonId: number, roundNumber?: number): Promise<number> => {
   const roundNum = roundNumber || 1;
-  
+
   const existingRound = await query<{ round_id: number }>(
     `SELECT round_id FROM season_rounds WHERE season_id = @seasonId AND round_number = @roundNum`,
     { seasonId, roundNum }
@@ -229,7 +223,7 @@ export const createMatch = async (input: CreateMatchInput): Promise<MatchRecord>
   const seasonId = input.seasonId || await ensureDefaultSeason();
   const roundId = await ensureRoundForSeason(seasonId, input.roundNumber);
   const stadiumId = input.stadiumId || await ensureDefaultStadium();
-  
+
   const homeSeasonTeamId = await ensureTeamInSeason(input.homeTeamId, seasonId);
   const awaySeasonTeamId = await ensureTeamInSeason(input.awayTeamId, seasonId);
 
@@ -268,7 +262,7 @@ export const createMatch = async (input: CreateMatchInput): Promise<MatchRecord>
 
   const matchId = matchResult.recordset[0].match_id;
   const created = await getMatchById(matchId);
-  
+
   if (!created) {
     throw new Error("Failed to retrieve newly created match");
   }
@@ -586,10 +580,10 @@ export const updateMatch = async (
   const updatedMatch = await getMatchById(matchId);
 
   // Auto-update standings if match is completed and has scores
-  if (updatedMatch && 
-      payload.status === 'completed' && 
-      payload.homeScore !== undefined && 
-      payload.awayScore !== undefined) {
+  if (updatedMatch &&
+    payload.status === 'completed' &&
+    payload.homeScore !== undefined &&
+    payload.awayScore !== undefined) {
     try {
       console.log(`[updateMatch] Auto-calculating standings for season ${updatedMatch.seasonId}`);
       await calculateStandings(updatedMatch.seasonId);
@@ -607,7 +601,7 @@ export const deleteMatch = async (matchId: number): Promise<boolean> => {
     "DELETE FROM matches WHERE match_id = @matchId;",
     { matchId }
   );
-  
+
   return (result.rowsAffected?.[0] ?? 0) > 0;
 };
 
@@ -663,7 +657,7 @@ export const generateRandomMatches = async (options: {
 } = {}): Promise<{ created: number; matches: MatchRecord[] }> => {
   const seasonId = options.seasonId || await ensureDefaultSeason();
   const count = options.count || 10;
-  
+
   // Get teams registered in this season
   const teamsResult = await query<{ team_id: number; season_team_id: number; name: string }>(
     `
@@ -677,7 +671,7 @@ export const generateRandomMatches = async (options: {
   );
 
   const teams = teamsResult.recordset;
-  
+
   if (teams.length < 2) {
     throw new Error(`Need at least 2 teams in season. Found: ${teams.length}`);
   }
@@ -696,7 +690,7 @@ export const generateRandomMatches = async (options: {
   for (let i = 0; i < Math.min(count, Math.floor(teams.length / 2)); i++) {
     const homeTeam = teams[i * 2];
     const awayTeam = teams[i * 2 + 1];
-    
+
     if (!homeTeam || !awayTeam) break;
 
     const kickoff = new Date(startDate.getTime() + i * 2 * 60 * 60 * 1000); // 2 hours apart
@@ -754,7 +748,7 @@ const upsertFootballMatch = async (match: MatchSummary): Promise<void> => {
   }
 
   const referee = match.referees?.find((r) => r.type === "REFEREE")?.name ?? null;
-  
+
   await query(
     `
       MERGE FootballMatches AS target
@@ -1025,7 +1019,7 @@ export const syncMatchesFromUpstream = async (options: {
       skippedCount++;
       continue;
     }
-    
+
     try {
       await upsertFootballMatch(match);
       syncedCount++;
