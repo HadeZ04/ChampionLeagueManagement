@@ -322,17 +322,12 @@ export const listMatches = async (filters: MatchFilters = {}): Promise<Paginated
         m.matchday_number AS matchdayNumber,
         hstp.team_id AS homeTeamId,
         ht.name AS homeTeamName,
-<<<<<<< HEAD
-        astp.team_id AS awayTeamId,
-        at.name AS awayTeamName,
-=======
         ht.short_name AS homeTeamShortName,
         ht.logo_url AS homeTeamLogo,
         astp.team_id AS awayTeamId,
         at.name AS awayTeamName,
         at.short_name AS awayTeamShortName,
         at.logo_url AS awayTeamLogo,
->>>>>>> 34600db (Fix match time update, timezone display, and live timer issues)
         m.stadium_id AS stadiumId,
         s.name AS stadiumName,
         CONVERT(VARCHAR(33), m.scheduled_kickoff, 127) AS scheduledKickoff,
@@ -443,17 +438,12 @@ export const getMatchById = async (matchId: number): Promise<MatchRecord | null>
         m.matchday_number AS matchdayNumber,
         hstp.team_id AS homeTeamId,
         ht.name AS homeTeamName,
-<<<<<<< HEAD
-        astp.team_id AS awayTeamId,
-        at.name AS awayTeamName,
-=======
         ht.short_name AS homeTeamShortName,
         ht.logo_url AS homeTeamLogo,
         astp.team_id AS awayTeamId,
         at.name AS awayTeamName,
         at.short_name AS awayTeamShortName,
         at.logo_url AS awayTeamLogo,
->>>>>>> 34600db (Fix match time update, timezone display, and live timer issues)
         m.stadium_id AS stadiumId,
         s.name AS stadiumName,
         CONVERT(VARCHAR(33), m.scheduled_kickoff, 127) AS scheduledKickoff,
@@ -615,17 +605,12 @@ export const listLiveMatches = async (): Promise<MatchRecord[]> => {
         m.matchday_number AS matchdayNumber,
         hstp.team_id AS homeTeamId,
         ht.name AS homeTeamName,
-<<<<<<< HEAD
-        astp.team_id AS awayTeamId,
-        at.name AS awayTeamName,
-=======
         ht.short_name AS homeTeamShortName,
         ht.logo_url AS homeTeamLogo,
         astp.team_id AS awayTeamId,
         at.name AS awayTeamName,
         at.short_name AS awayTeamShortName,
         at.logo_url AS awayTeamLogo,
->>>>>>> 34600db (Fix match time update, timezone display, and live timer issues)
         m.stadium_id AS stadiumId,
         s.name AS stadiumName,
         CONVERT(VARCHAR(33), m.scheduled_kickoff, 127) AS scheduledKickoff,
