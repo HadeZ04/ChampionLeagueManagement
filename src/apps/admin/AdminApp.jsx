@@ -22,13 +22,10 @@ import SeasonManagement from './pages/SeasonManagement'
 import MatchDayManagement from './pages/MatchDayManagement';
 import LiveMatchUpdatePage from './pages/LiveMatchUpdatePage';
 import AccessGuard from './components/AccessGuard';
-<<<<<<< HEAD
 import InvitationsPage from './pages/InvitationsPage';
 import ApprovalsPage from './pages/ApprovalsPage';
 import OfficialsManagement from './pages/OfficialsManagement';
 import CMSManagement from './pages/CMSManagement';
-=======
->>>>>>> 34600db (Fix match time update, timezone display, and live timer issues)
 import ScheduleManagement from './pages/ScheduleManagement';
 
 const AdminApp = ({ onLogout, currentUser }) => {
@@ -181,7 +178,6 @@ const AdminApp = ({ onLogout, currentUser }) => {
           }
         />
         <Route
-<<<<<<< HEAD
           path="matches-live"
           element={
             <AccessGuard permission="manage_matches" currentUser={currentUser}>
@@ -194,12 +190,14 @@ const AdminApp = ({ onLogout, currentUser }) => {
           element={
             <AccessGuard permission="manage_matches" currentUser={currentUser}>
               <OfficialsManagement />
-=======
+            </AccessGuard>
+          }
+        />
+        <Route
           path="schedule"
           element={
             <AccessGuard permission="manage_matches" currentUser={currentUser}>
               <ScheduleManagement />
->>>>>>> 34600db (Fix match time update, timezone display, and live timer issues)
             </AccessGuard>
           }
         />

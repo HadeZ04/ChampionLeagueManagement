@@ -63,19 +63,11 @@ const MatchPreview = ({ homeTeam = {}, awayTeam = {}, venue, date, time }) => {
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-uefa-dark mb-2">Nhận định trận đấu</h2>
         <div className="text-uefa-gray">
-<<<<<<< HEAD
-          {new Date(date).toLocaleDateString('vi-VN', { 
-            weekday: 'long', 
-            day: 'numeric', 
-            month: 'long', 
-            year: 'numeric' 
-=======
           {new Date(date).toLocaleDateString('en-GB', {
             weekday: 'long',
             day: 'numeric',
             month: 'long',
             year: 'numeric'
->>>>>>> 34600db (Fix match time update, timezone display, and live timer issues)
           })} • {time}
         </div>
         <div className="text-uefa-gray text-sm mt-1">{venue}</div>
@@ -123,11 +115,7 @@ const MatchPreview = ({ homeTeam = {}, awayTeam = {}, venue, date, time }) => {
         <div className="grid grid-cols-3 gap-4 text-center">
           <div className="bg-uefa-green/10 p-4 rounded-lg">
             <div className="text-2xl font-bold text-uefa-green">{headToHead.homeWins}</div>
-<<<<<<< HEAD
-            <div className="text-uefa-gray text-sm">{homeTeam.name} thắng</div>
-=======
             <div className="text-uefa-gray text-sm">{safeHomeTeam.name} Wins</div>
->>>>>>> 34600db (Fix match time update, timezone display, and live timer issues)
           </div>
           <div className="bg-uefa-yellow/10 p-4 rounded-lg">
             <div className="text-2xl font-bold text-uefa-yellow">{headToHead.draws}</div>
@@ -135,11 +123,7 @@ const MatchPreview = ({ homeTeam = {}, awayTeam = {}, venue, date, time }) => {
           </div>
           <div className="bg-uefa-red/10 p-4 rounded-lg">
             <div className="text-2xl font-bold text-uefa-red">{headToHead.awayWins}</div>
-<<<<<<< HEAD
-            <div className="text-uefa-gray text-sm">{awayTeam.name} thắng</div>
-=======
             <div className="text-uefa-gray text-sm">{safeAwayTeam.name} Wins</div>
->>>>>>> 34600db (Fix match time update, timezone display, and live timer issues)
           </div>
         </div>
         <div className="text-center mt-4 text-uefa-gray text-sm">
@@ -150,11 +134,7 @@ const MatchPreview = ({ homeTeam = {}, awayTeam = {}, venue, date, time }) => {
       {/* Team Form */}
       <div className="grid md:grid-cols-2 gap-8 mb-8">
         <div>
-<<<<<<< HEAD
-          <h4 className="font-bold text-uefa-dark mb-4">Phong độ {homeTeam.name}</h4>
-=======
           <h4 className="font-bold text-uefa-dark mb-4">{safeHomeTeam.name} Form</h4>
->>>>>>> 34600db (Fix match time update, timezone display, and live timer issues)
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-uefa-gray">5 trận gần nhất:</span>

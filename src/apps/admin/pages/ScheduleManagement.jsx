@@ -1,16 +1,7 @@
-<<<<<<< HEAD
-import React, { useState } from 'react';
-import { generateRoundRobinSchedule } from '../../../layers/application/logic/scheduleGenerator';
-import { CalendarCheck, ListRestart, Save } from 'lucide-react';
-
-// Giả lập danh sách đội đã được phê duyệt cho một mùa giải
-const APPROVED_TEAMS = ['Liverpool', 'Barcelona', 'Arsenal', 'Newcastle', 'Juventus', 'Real Madrid', 'Inter Milan'];
-=======
 import React, { useState, useEffect } from 'react';
 import MatchesService from '../../../layers/application/services/MatchesService';
 import TeamsService from '../../../layers/application/services/TeamsService';
 import { CalendarCheck, ListRestart, Save, CheckCircle, AlertCircle } from 'lucide-react';
->>>>>>> 34600db (Fix match time update, timezone display, and live timer issues)
 
 const ScheduleManagement = () => {
   const [teams, setTeams] = useState([]);

@@ -106,10 +106,7 @@ const MatchCard = ({ match }) => {
               </div>
             </>
           )}
-<<<<<<< HEAD
           <p className="text-xs text-slate-400 uppercase tracking-[0.3em]">{match.status === 'live' ? 'Trực tiếp' : 'Giờ bóng lăn'}</p>
-=======
->>>>>>> 34600db (Fix match time update, timezone display, and live timer issues)
         </div>
         <div className="flex items-center gap-3 flex-1 justify-end">
           <div className="text-right">
@@ -131,9 +128,6 @@ const MatchCard = ({ match }) => {
             {match.city}
           </span>
         </div>
-<<<<<<< HEAD
-        <button className="text-[#0055FF] text-xs uppercase tracking-[0.4em]">Chi tiết</button>
-=======
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="text-[#0055FF] text-xs uppercase tracking-[0.4em] flex items-center gap-1 hover:text-[#0040BF] transition-colors"
@@ -141,7 +135,6 @@ const MatchCard = ({ match }) => {
           Details
           {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </button>
->>>>>>> 34600db (Fix match time update, timezone display, and live timer issues)
       </div>
 
       {/* DETAILS EXPANDABLE SECTION */}

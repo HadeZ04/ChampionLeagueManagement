@@ -3,11 +3,8 @@ import { Calendar, ChevronLeft, ChevronRight, Tv, Download } from 'lucide-react'
 import MatchCard from '../components/MatchCard';
 import WeatherWidget from '../components/WeatherWidget';
 import MatchPreview from '../components/MatchPreview';
-<<<<<<< HEAD
-=======
 import matchService from '../../../layers/application/services/MatchesService';
 import { downloadICS } from '../../../utils/icsGenerator';
->>>>>>> 34600db (Fix match time update, timezone display, and live timer issues)
 
 const FAKE_SCHEDULE_FROM_DB = [
   {
@@ -48,10 +45,6 @@ const FAKE_SCHEDULE_FROM_DB = [
   }
 ];
 
-const matchService = {
-  getMatches: async () =>
-    new Promise(resolve => setTimeout(() => resolve({ data: FAKE_SCHEDULE_FROM_DB }), 500))
-};
 
 const filters = [
   { id: 'all', name: 'Tất cả' },
@@ -71,13 +64,6 @@ const MatchesPage = () => {
   const [selectedFilter, setSelectedFilter] = useState('all');
 
   useEffect(() => {
-<<<<<<< HEAD
-    setIsLoading(true);
-    matchService
-      .getMatches()
-      .then(response => setMatches(response.data))
-      .finally(() => setIsLoading(false));
-=======
     const fetchMatches = async () => {
       setIsLoading(true);
       try {
@@ -137,7 +123,6 @@ const MatchesPage = () => {
     };
 
     fetchMatches();
->>>>>>> 34600db (Fix match time update, timezone display, and live timer issues)
   }, []);
 
   const filteredMatches = matches.filter(match => {
