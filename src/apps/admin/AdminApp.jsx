@@ -22,11 +22,9 @@ import SeasonManagement from './pages/SeasonManagement'
 import MatchDayManagement from './pages/MatchDayManagement';
 import LiveMatchUpdatePage from './pages/LiveMatchUpdatePage';
 import AccessGuard from './components/AccessGuard';
-import InvitationsPage from './pages/InvitationsPage';
-import ApprovalsPage from './pages/ApprovalsPage';
-import OfficialsManagement from './pages/OfficialsManagement';
-import CMSManagement from './pages/CMSManagement';
-import ScheduleManagement from './pages/ScheduleManagement';
+import SeasonPlayersManagement from './pages/SeasonPlayersManagement';
+import SeasonPlayerApprovalPage from './pages/SeasonPlayerApprovalPage'
+
 
 const AdminApp = ({ onLogout, currentUser }) => {
   return (
@@ -55,14 +53,6 @@ const AdminApp = ({ onLogout, currentUser }) => {
           }
         />
         <Route
-          path="fixtures"
-          element={
-            <AccessGuard permission="manage_matches" currentUser={currentUser}>
-              <ScheduleManagement />
-            </AccessGuard>
-          }
-        />
-        <Route
           path="players"
           element={
             <AccessGuard permission="manage_teams" currentUser={currentUser}>
@@ -77,14 +67,6 @@ const AdminApp = ({ onLogout, currentUser }) => {
           element={
             <AccessGuard permission="manage_content" currentUser={currentUser}>
               <NewsManagement />
-            </AccessGuard>
-          }
-        />
-        <Route
-          path="cms"
-          element={
-            <AccessGuard permission="manage_content" currentUser={currentUser}>
-              <CMSManagement />
             </AccessGuard>
           }
         />
@@ -128,22 +110,6 @@ const AdminApp = ({ onLogout, currentUser }) => {
             </AccessGuard>
           }
         />
-        <Route
-          path="invitations"
-          element={
-            <AccessGuard permission="manage_users" currentUser={currentUser}>
-              <InvitationsPage />
-            </AccessGuard>
-          }
-        />
-        <Route
-          path="approvals"
-          element={
-            <AccessGuard permission="approve_registrations" currentUser={currentUser}>
-              <ApprovalsPage />
-            </AccessGuard>
-          }
-        />
         <Route path="reports" element={<ReportsPage />} />
         <Route
           path="audit-log"
@@ -170,34 +136,28 @@ const AdminApp = ({ onLogout, currentUser }) => {
           }
         />
         <Route
+          path="season-players"
+          element={
+            <AccessGuard permission="manage_teams" currentUser={currentUser}>
+              <SeasonPlayersManagement />
+            </AccessGuard>
+          }
+        />
+        <Route
+          path="season-player-approvals"
+          element={
+            <AccessGuard permission="manage_teams" currentUser={currentUser}>
+              <SeasonPlayerApprovalPage />
+            </AccessGuard>
+          }
+        />
+
+
+        <Route
           path="matches-today"
           element={
             <AccessGuard permission="manage_matches" currentUser={currentUser}>
               <MatchDayManagement />
-            </AccessGuard>
-          }
-        />
-        <Route
-          path="matches-live"
-          element={
-            <AccessGuard permission="manage_matches" currentUser={currentUser}>
-              <MatchDayManagement />
-            </AccessGuard>
-          }
-        />
-        <Route
-          path="officials"
-          element={
-            <AccessGuard permission="manage_matches" currentUser={currentUser}>
-              <OfficialsManagement />
-            </AccessGuard>
-          }
-        />
-        <Route
-          path="schedule"
-          element={
-            <AccessGuard permission="manage_matches" currentUser={currentUser}>
-              <ScheduleManagement />
             </AccessGuard>
           }
         />
