@@ -1,11 +1,16 @@
 import { Router } from "express";
 import { query } from "../db/sqlServer";
+import { createPlayerHandler } from "../controllers/internalPlayerController";
+import { requireAuth } from "../middleware/authMiddleware";
 
 const router = Router();
 
 /**
- * GET /internal/players - Get players from internal database
+ * POST /internal/players - Create a new player
  */
+router.post("/", requireAuth, createPlayerHandler);
+
+
 router.get("/", async (req, res, next) => {
   try {
     const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
@@ -247,4 +252,3 @@ router.delete("/:id", async (req, res, next) => {
 });
 
 export default router;
-
