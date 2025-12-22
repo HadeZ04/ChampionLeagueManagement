@@ -248,13 +248,6 @@ const MatchesManagement = () => {
     event.preventDefault()
     if (!editingMatch) return
     try {
-      console.log('DEBUG: handleUpdateMatch called');
-      console.log('DEBUG: editingMatch state:', editingMatch);
-
-      if (!editingMatch.scheduledKickoff) {
-        alert('DEBUG ALERT: Scheduled Kickoff is EMPTY in state! Did you select a date?');
-      }
-
       let scheduledKickoff = undefined;
       if (editingMatch.scheduledKickoff && editingMatch.scheduledKickoff.trim() !== '') {
         // Check if valid date
@@ -276,7 +269,6 @@ const MatchesManagement = () => {
         scheduledKickoff,
         description: editingMatch.description
       }
-      console.log('DEBUG: constructed payload:', payload);
       const updated = await MatchesService.updateMatch(editingMatch.id, payload)
       setMatches(prev => prev.map(match => (match.id === updated.id ? { ...match, ...updated } : match)))
       setShowEditModal(false)

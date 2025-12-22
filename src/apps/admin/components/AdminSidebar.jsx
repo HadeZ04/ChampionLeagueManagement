@@ -48,7 +48,7 @@ const MENU_SECTIONS = [
 
       { name: 'Leaderboard', path: '/admin/leaderboard', icon: Trophy, permission: 'manage_matches' },
       { name: 'Player Stats', path: '/admin/player-stats', icon: Target, permission: 'manage_matches' },
-      { name: 'Standings', path: '/admin/standings', icon: Trophy }
+      { name: 'Standings', path: '/admin/standings', icon: Trophy, permission: 'manage_matches' }
     ]
   },
   {
@@ -112,7 +112,7 @@ const AdminSidebar = ({ currentUser }) => {
                 <li key={item.name}>
                   <Link
                     to={item.path}
-                    className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${location.pathname === item.path
+                    className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${(location.pathname === item.path || location.pathname.startsWith(`${item.path}/`))
                       ? 'bg-blue-600 text-white'
                       : 'text-gray-300 hover:text-white hover:bg-gray-800'
                       }`}

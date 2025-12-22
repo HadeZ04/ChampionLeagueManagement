@@ -69,7 +69,14 @@ const baseSeasonSelect = `
   INNER JOIN rulesets r ON s.ruleset_id = r.ruleset_id
 `;
 
-const normalizeSeasonLabel = (row: SeasonRow): string => {
+type SeasonLabelSource = {
+  season_id: number;
+  name?: string | null;
+  code?: string | null;
+  start_date?: string | null;
+};
+
+const normalizeSeasonLabel = (row: SeasonLabelSource): string => {
   if (row.name && row.name.trim()) {
     return row.name.trim();
   }
@@ -128,7 +135,7 @@ const mapSeasonRow = (row: SeasonRow): SeasonSummary => ({
 });
 
 export interface SeasonMetadata {
-  statuses: SeasonStatus[];
+  statuses: readonly SeasonStatus[];
   tournaments: Array<{ id: number; name: string }>;
   rulesets: Array<{ id: number; name: string }>;
 }

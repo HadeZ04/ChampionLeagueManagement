@@ -260,6 +260,7 @@ export async function getProfile(userId: number) {
   }
 
   const roles = await getUserRoles(user.user_id);
+  const permissions = await getUserPermissions(user.user_id);
   return {
     id: user.user_id,
     username: user.username,
@@ -271,5 +272,6 @@ export async function getProfile(userId: number) {
     mustResetPassword: user.must_reset_password,
     mfaEnabled: user.mfa_enabled,
     roles,
+    permissions,
   };
 }

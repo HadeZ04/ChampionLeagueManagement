@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
+import { requireAnyPermission, requireAuth } from "../middleware/authMiddleware";
 import {
   calculateStandings,
   getStandingsForSeason,
@@ -10,12 +11,13 @@ import {
 } from "../services/standingsAdminService";
 
 const router = Router();
+const requireStandingsManagement = [requireAuth, requireAnyPermission("manage_matches", "manage_teams")] as const;
 
 /**
  * GET /admin/standings/season/:seasonId
  * Get standings for a specific season
  */
-router.get("/season/:seasonId", async (req, res, next) => {
+router.get("/season/:seasonId", ...requireStandingsManagement, async (req, res, next) => {
   try {
     const seasonId = parseInt(req.params.seasonId, 10);
     if (isNaN(seasonId)) {
@@ -36,7 +38,7 @@ router.get("/season/:seasonId", async (req, res, next) => {
  * GET /admin/standings/team/:seasonTeamId
  * Get standings for a specific team
  */
-router.get("/team/:seasonTeamId", async (req, res, next) => {
+router.get("/team/:seasonTeamId", ...requireStandingsManagement, async (req, res, next) => {
   try {
     const seasonTeamId = parseInt(req.params.seasonTeamId, 10);
     if (isNaN(seasonTeamId)) {
@@ -58,7 +60,7 @@ router.get("/team/:seasonTeamId", async (req, res, next) => {
  * POST /admin/standings/season/:seasonId/initialize
  * Initialize standings for all teams in a season (create empty records)
  */
-router.post("/season/:seasonId/initialize", async (req, res, next) => {
+router.post("/season/:seasonId/initialize", ...requireStandingsManagement, async (req, res, next) => {
   try {
     const seasonId = parseInt(req.params.seasonId, 10);
     if (isNaN(seasonId)) {
@@ -80,7 +82,7 @@ router.post("/season/:seasonId/initialize", async (req, res, next) => {
  * POST /admin/standings/season/:seasonId/calculate
  * Calculate/recalculate standings from match results
  */
-router.post("/season/:seasonId/calculate", async (req, res, next) => {
+router.post("/season/:seasonId/calculate", ...requireStandingsManagement, async (req, res, next) => {
   try {
     const seasonId = parseInt(req.params.seasonId, 10);
     if (isNaN(seasonId)) {
@@ -113,7 +115,7 @@ const updateStandingsSchema = z.object({
  * PATCH /admin/standings/team/:seasonTeamId
  * Manually update standings for a team (admin correction)
  */
-router.patch("/team/:seasonTeamId", async (req, res, next) => {
+router.patch("/team/:seasonTeamId", ...requireStandingsManagement, async (req, res, next) => {
   try {
     const seasonTeamId = parseInt(req.params.seasonTeamId, 10);
     if (isNaN(seasonTeamId)) {
@@ -139,7 +141,7 @@ router.patch("/team/:seasonTeamId", async (req, res, next) => {
  * DELETE /admin/standings/team/:seasonTeamId
  * Reset standings for a team (set all to 0)
  */
-router.delete("/team/:seasonTeamId", async (req, res, next) => {
+router.delete("/team/:seasonTeamId", ...requireStandingsManagement, async (req, res, next) => {
   try {
     const seasonTeamId = parseInt(req.params.seasonTeamId, 10);
     if (isNaN(seasonTeamId)) {

@@ -341,26 +341,28 @@ export const listMatches = async (filters: MatchFilters = {}): Promise<Paginated
         (SELECT (
             SELECT 
                 match_event_id AS id,
-                season_team_id AS teamId,
+                stp.team_id AS teamId,
                 player_name AS player,
                 event_type AS type,
                 event_minute AS minute,
                 description
-            FROM match_events 
-            WHERE match_id = m.match_id 
-            ORDER BY event_minute ASC 
+            FROM match_events me
+            INNER JOIN season_team_participants stp ON me.season_team_id = stp.season_team_id
+            WHERE me.match_id = m.match_id 
+            ORDER BY me.event_minute ASC 
             FOR JSON PATH
         )) AS eventsJson,
         (SELECT (
             SELECT 
-                season_team_id AS teamId,
-                possession_percent AS possession,
-                shots_total AS shots,
-                shots_on_target AS onTarget,
-                corners,
-                fouls_committed AS fouls
-            FROM match_team_statistics
-            WHERE match_id = m.match_id
+                stp.team_id AS teamId,
+                mts.possession_percent AS possession,
+                mts.shots_total AS shots,
+                mts.shots_on_target AS onTarget,
+                mts.corners,
+                mts.fouls_committed AS fouls
+            FROM match_team_statistics mts
+            INNER JOIN season_team_participants stp ON mts.season_team_id = stp.season_team_id
+            WHERE mts.match_id = m.match_id
             FOR JSON PATH
         )) AS statsJson
       FROM matches m
@@ -452,7 +454,35 @@ export const getMatchById = async (matchId: number): Promise<MatchRecord | null>
         m.away_score AS awayScore,
         m.attendance,
         m.match_code AS matchCode,
-        CONVERT(VARCHAR(33), m.updated_at, 127) AS updatedAt
+        CONVERT(VARCHAR(33), m.updated_at, 127) AS updatedAt,
+        (SELECT TOP 1 JSON_QUERY((SELECT player_name AS playerName, team_name AS teamName FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)) FROM match_mvps WHERE match_id = m.match_id) AS mvpJson,
+        (SELECT (
+            SELECT 
+                me.match_event_id AS id,
+                stp.team_id AS teamId,
+                me.player_name AS player,
+                me.event_type AS type,
+                me.event_minute AS minute,
+                me.description
+            FROM match_events me
+            INNER JOIN season_team_participants stp ON me.season_team_id = stp.season_team_id
+            WHERE me.match_id = m.match_id 
+            ORDER BY me.event_minute ASC 
+            FOR JSON PATH
+        )) AS eventsJson,
+        (SELECT (
+            SELECT 
+                stp.team_id AS teamId,
+                mts.possession_percent AS possession,
+                mts.shots_total AS shots,
+                mts.shots_on_target AS onTarget,
+                mts.corners,
+                mts.fouls_committed AS fouls
+            FROM match_team_statistics mts
+            INNER JOIN season_team_participants stp ON mts.season_team_id = stp.season_team_id
+            WHERE mts.match_id = m.match_id
+            FOR JSON PATH
+        )) AS statsJson
       FROM matches m
       INNER JOIN season_team_participants hstp ON m.home_season_team_id = hstp.season_team_id
       INNER JOIN teams ht ON hstp.team_id = ht.team_id
@@ -464,7 +494,35 @@ export const getMatchById = async (matchId: number): Promise<MatchRecord | null>
     { matchId }
   );
 
-  return result.recordset[0] || null;
+  const row = (result.recordset[0] as any) || null;
+  if (!row) {
+    return null;
+  }
+
+  const parseJSON = (value: any) => {
+    try {
+      return typeof value === "string" ? JSON.parse(value) : value;
+    } catch {
+      return null;
+    }
+  };
+
+  const rawEvents = parseJSON(row.eventsJson) || [];
+  const rawStats = parseJSON(row.statsJson) || [];
+  const rawMvp = parseJSON(row.mvpJson);
+
+  const homeStats = rawStats.find((s: any) => s.teamId === row.homeTeamId) || null;
+  const awayStats = rawStats.find((s: any) => s.teamId === row.awayTeamId) || null;
+
+  return {
+    ...row,
+    mvp: rawMvp ? { playerName: rawMvp.playerName, teamName: rawMvp.teamName } : null,
+    events: rawEvents,
+    stats: {
+      home: homeStats,
+      away: awayStats,
+    },
+  } as MatchRecord;
 };
 
 export const updateMatch = async (

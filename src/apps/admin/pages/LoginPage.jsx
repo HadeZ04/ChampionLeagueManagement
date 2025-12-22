@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 import { Eye, EyeOff, Lock, User, ArrowRight, Shield, Zap, Activity } from 'lucide-react'
 
 // --- CẤU HÌNH ẢNH NỀN ---
@@ -7,6 +7,8 @@ const REMOTE_BACKGROUND = "https://images.unsplash.com/photo-1434648957308-5e6a8
 import localBackground from '@/assets/images/background.jpg'
 
 const LoginPage = ({ onLogin, isAuthenticated }) => {
+  const location = useLocation()
+  const redirectTo = location.state?.from || '/admin/dashboard'
   // ==========================================
   // LOGIC GIỮ NGUYÊN 100%
   // ==========================================
@@ -24,7 +26,7 @@ const LoginPage = ({ onLogin, isAuthenticated }) => {
   }, [])
 
   if (isAuthenticated) {
-    return <Navigate to="/admin/dashboard" replace />
+    return <Navigate to={redirectTo} replace />
   }
 
   const handleSubmit = async (e) => {

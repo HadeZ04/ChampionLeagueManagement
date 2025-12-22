@@ -1,13 +1,16 @@
 import React from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 
 // 1. Chỉ cần import Layout và các trang
 import AdminLayout from './components/AdminLayout'
 import DashboardPage from './pages/DashboardPage'
 import TeamsManagement from './pages/TeamsManagement'
+import TeamDetailsPage from './pages/TeamDetailsPage'
 import MatchesManagement from './pages/MatchesManagement'
 import PlayersManagement from './pages/PlayersManagement'
 import NewsManagement from './pages/NewsManagement'
+import CMSManagement from './pages/CMSManagement'
+import MediaLibrary from './pages/MediaLibrary'
 import UsersManagement from './pages/UsersManagement'
 import RulesetManagement from './pages/RulesetManagement'
 import LeaderboardManagement from './pages/LeaderboardManagement'
@@ -45,6 +48,14 @@ const AdminApp = ({ onLogout, currentUser }) => {
           }
         />
         <Route
+          path="teams/:teamId"
+          element={
+            <AccessGuard permission="manage_teams" currentUser={currentUser}>
+              <TeamDetailsPage />
+            </AccessGuard>
+          }
+        />
+        <Route
           path="matches"
           element={
             <AccessGuard permission="manage_matches" currentUser={currentUser}>
@@ -60,13 +71,36 @@ const AdminApp = ({ onLogout, currentUser }) => {
             </AccessGuard>
           }
         />
-        <Route path="standings" element={<StandingsManagement />} />
+        <Route
+          path="standings"
+          element={
+            <AccessGuard permission="manage_matches" currentUser={currentUser}>
+              <StandingsManagement />
+            </AccessGuard>
+          }
+        />
         <Route path="standings/view" element={<StandingsPage />} />
         <Route
           path="news"
           element={
             <AccessGuard permission="manage_content" currentUser={currentUser}>
               <NewsManagement />
+            </AccessGuard>
+          }
+        />
+        <Route
+          path="media"
+          element={
+            <AccessGuard permission="manage_content" currentUser={currentUser}>
+              <MediaLibrary />
+            </AccessGuard>
+          }
+        />
+        <Route
+          path="content"
+          element={
+            <AccessGuard permission="manage_content" currentUser={currentUser}>
+              <CMSManagement />
             </AccessGuard>
           }
         />
@@ -169,6 +203,9 @@ const AdminApp = ({ onLogout, currentUser }) => {
             </AccessGuard>
           }
         />
+
+        {/* Fallback: avoid dead routes under /admin */}
+        <Route path="*" element={<Navigate to="dashboard" replace />} />
       </Route>
 
       {/* Bạn có thể thêm các route không cần layout ở đây, ví dụ: */}

@@ -2,15 +2,28 @@ import path from "path";
 import { config as loadDotenv } from "dotenv";
 
 const NODE_ENV = process.env.NODE_ENV ?? "development";
+const isTestEnv = NODE_ENV === "test";
 
-console.log("Current CWD:", process.cwd());
+if (!isTestEnv) {
+  // eslint-disable-next-line no-console
+  console.log("Current CWD:", process.cwd());
+}
 const result = loadDotenv({
   path: path.resolve(process.cwd(), ".env"),
 });
 if (result.error) {
+  // eslint-disable-next-line no-console
   console.error("Dotenv error:", result.error);
 } else {
-  console.log("Dotenv loaded:", result.parsed);
+  const shouldMask = (key: string) => /pass|secret|token|key/i.test(key);
+  const masked = Object.fromEntries(
+    Object.entries(result.parsed ?? {}).map(([key, value]) => [key, shouldMask(key) ? "***" : value])
+  );
+
+  if (!isTestEnv) {
+    // eslint-disable-next-line no-console
+    console.log("Dotenv loaded:", masked);
+  }
 }
 
 const requiredEnvVars = ["DB_HOST", "DB_USER", "DB_PASS", "DB_NAME", "JWT_SECRET", "FOOTBALL_DATA_API_TOKEN"];

@@ -97,7 +97,9 @@ const SeasonPlayersManagement = () => {
             const params = {};
             if (filters.team_id) params.team_id = filters.team_id;
             if (filters.position_code) params.position_code = filters.position_code;
-            if (filters.player_type) params.player_type = filters.player_type;
+            if (filters.player_type === 'foreign' || filters.player_type === 'domestic') {
+                params.nationality_type = filters.player_type;
+            }
 
             const data = await ApiService.get(`/seasons/${filters.season_id}/players`, params);
             setResult(data);

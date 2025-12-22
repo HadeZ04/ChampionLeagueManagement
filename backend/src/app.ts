@@ -2,6 +2,7 @@ import express from "express";
 import "express-async-errors";
 import cors from "cors";
 import morgan from "morgan";
+import path from "path";
 
 import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
@@ -23,12 +24,20 @@ import internalPlayerRoutes from "./routes/internalPlayerRoutes";
 import adminStandingsRoutes from "./routes/adminStandingsRoutes";
 import seasonRegistrationRoutes from "./routes/seasonRegistrationRoutes";
 import seasonPlayerRoutes from "./routes/seasonPlayerRoutes";
+import newsRoutes from "./routes/newsRoutes";
+import mediaRoutes from "./routes/mediaRoutes";
+import settingsRoutes from "./routes/settingsRoutes";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(morgan("dev"));
+if ((process.env.NODE_ENV ?? "development") !== "test") {
+  app.use(morgan("dev"));
+}
+
+// Serve uploaded files (PDFs, media) when referenced by the frontend.
+app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
@@ -50,6 +59,9 @@ app.use("/api/players", internalPlayerRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/matches", matchRoutes);
+app.use("/api/news", newsRoutes);
+app.use("/api/media", mediaRoutes);
+app.use("/api/settings", settingsRoutes);
 
 // Admin routes
 app.use("/api/admin/standings", adminStandingsRoutes);

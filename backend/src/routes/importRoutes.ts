@@ -1,13 +1,15 @@
 import { Router } from "express";
 import { importCLDataToInternal, clearImportedData } from "../services/importToInternalService";
+import { requireAnyPermission, requireAuth } from "../middleware/authMiddleware";
 
 const router = Router();
+const requireImportPermission = [requireAuth, requireAnyPermission("manage_matches", "manage_teams")] as const;
 
 /**
  * POST /import/champions-league
  * Import Champions League data from Football* tables to internal database
  */
-router.post("/champions-league", async (req, res, next) => {
+router.post("/champions-league", ...requireImportPermission, async (req, res, next) => {
   try {
     const {
       seasonName = "Champions League 2024/2025",
@@ -43,7 +45,7 @@ router.post("/champions-league", async (req, res, next) => {
  * DELETE /import/clear
  * Clear imported data (for testing)
  */
-router.delete("/clear", async (req, res, next) => {
+router.delete("/clear", ...requireImportPermission, async (req, res, next) => {
   try {
     const result = await clearImportedData();
     res.json(result);

@@ -1,8 +1,25 @@
 import { Router } from "express";
+import { z } from "zod";
 import { query } from "../db/sqlServer";
-import { getInternalSeasons } from "../services/seasonService";
+import { requireAuth, requirePermission } from "../middleware/authMiddleware";
+import { logEvent } from "../services/auditService";
+import { getInternalSeasons, getInternalStandings } from "../services/seasonService";
+import { AuthenticatedRequest } from "../types";
 
 const router = Router();
+const requireTeamManagement = [requireAuth, requirePermission("manage_teams")] as const;
+
+const teamCreateSchema = z.object({
+  name: z.string().trim().min(1).max(255),
+  short_name: z.string().trim().max(50).optional().nullable(),
+  code: z.string().trim().max(32).optional().nullable(),
+  city: z.string().trim().max(150).optional().nullable(),
+  country: z.string().trim().max(100).optional().nullable(),
+  founded_year: z.coerce.number().int().min(1900).max(2100).optional().nullable(),
+  status: z.enum(["active", "inactive", "suspended"]).optional().nullable(),
+});
+
+const teamUpdateSchema = teamCreateSchema.partial();
 
 /**
  * GET /internal/teams - Get teams from internal database (not Football* tables)
@@ -84,6 +101,104 @@ router.get("/seasons", async (_req, res, next) => {
   try {
     const seasons = await getInternalSeasons();
     res.json({ data: seasons });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /teams/standings - Get internal standings table
+ * Query: seasonId? | season? (year string)
+ */
+router.get("/standings", async (req, res, next) => {
+  try {
+    const seasonId = typeof req.query.seasonId === "string" ? Number(req.query.seasonId) : undefined;
+    const season = typeof req.query.season === "string" && req.query.season.trim() ? req.query.season.trim() : undefined;
+
+    const standings = await getInternalStandings({ seasonId, season });
+    res.json({ data: standings });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /internal/teams - Create team
+ */
+router.post("/", ...requireTeamManagement, async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const payload = teamCreateSchema.parse(req.body ?? {});
+
+    try {
+      const createdResult = await query<{
+        team_id: number;
+        name: string;
+        short_name: string | null;
+        code: string | null;
+        city: string | null;
+        country: string | null;
+        founded_year: number | null;
+        status: string;
+      }>(
+        `
+          INSERT INTO teams (name, short_name, code, city, country, founded_year, status, created_by)
+          OUTPUT
+            inserted.team_id,
+            inserted.name,
+            inserted.short_name,
+            inserted.code,
+            inserted.city,
+            inserted.country,
+            inserted.founded_year,
+            inserted.status
+          VALUES (
+            @name,
+            @short_name,
+            @code,
+            @city,
+            @country,
+            @founded_year,
+            COALESCE(@status, 'active'),
+            @created_by
+          );
+        `,
+        {
+          name: payload.name,
+          short_name: payload.short_name ?? null,
+          code: payload.code ?? null,
+          city: payload.city ?? null,
+          country: payload.country ?? null,
+          founded_year: payload.founded_year ?? null,
+          status: payload.status ?? null,
+          created_by: req.user?.sub ?? null,
+        },
+      );
+
+      const created = createdResult.recordset[0];
+      if (!created) {
+        return res.status(500).json({ error: "Failed to create team" });
+      }
+
+      await logEvent({
+        eventType: "TEAM_CREATED",
+        severity: "info",
+        actorId: req.user?.sub,
+        actorUsername: req.user?.username,
+        actorRole: Array.isArray(req.user?.roles) ? req.user.roles[0] : undefined,
+        entityType: "TEAM",
+        entityId: String(created.team_id),
+        payload: { after: created },
+      });
+
+      res.status(201).json({ data: created });
+      return;
+    } catch (error: any) {
+      if (error?.number === 2627 || error?.number === 2601) {
+        res.status(409).json({ error: "Team already exists" });
+        return;
+      }
+      throw error;
+    }
   } catch (error) {
     next(error);
   }
@@ -201,37 +316,91 @@ router.get("/:id/players", async (req, res, next) => {
 /**
  * PUT /internal/teams/:id - Update team
  */
-router.put("/:id", async (req, res, next) => {
+router.put("/:id", ...requireTeamManagement, async (req: AuthenticatedRequest, res, next) => {
   try {
     const teamId = parseInt(req.params.id, 10);
     if (isNaN(teamId)) {
       return res.status(400).json({ error: "Invalid team ID" });
     }
 
-    const { name, short_name, code, city, country, founded_year } = req.body;
+    const payload = teamUpdateSchema.parse(req.body ?? {});
+    const keys = Object.keys(payload);
+    if (keys.length === 0) {
+      return res.status(400).json({ error: "No fields to update" });
+    }
 
-    await query(
+    const existingResult = await query<{
+      team_id: number;
+      name: string;
+      short_name: string | null;
+      code: string | null;
+      city: string | null;
+      country: string | null;
+      founded_year: number | null;
+      status: string;
+    }>(
       `
-        UPDATE teams
-        SET 
-          name = COALESCE(@name, name),
-          short_name = @short_name,
-          code = @code,
-          city = @city,
-          country = @country,
-          founded_year = @founded_year
+        SELECT team_id, name, short_name, code, city, country, founded_year, status
+        FROM teams
         WHERE team_id = @teamId;
       `,
-      {
-        teamId,
-        name: name || null,
-        short_name: short_name || null,
-        code: code || null,
-        city: city || null,
-        country: country || null,
-        founded_year: founded_year || null,
-      },
+      { teamId },
     );
+
+    const existing = existingResult.recordset[0];
+    if (!existing) {
+      return res.status(404).json({ error: "Team not found" });
+    }
+
+    const hasName = Object.prototype.hasOwnProperty.call(payload, "name");
+    const hasShortName = Object.prototype.hasOwnProperty.call(payload, "short_name");
+    const hasCode = Object.prototype.hasOwnProperty.call(payload, "code");
+    const hasCity = Object.prototype.hasOwnProperty.call(payload, "city");
+    const hasCountry = Object.prototype.hasOwnProperty.call(payload, "country");
+    const hasFoundedYear = Object.prototype.hasOwnProperty.call(payload, "founded_year");
+    const hasStatus = Object.prototype.hasOwnProperty.call(payload, "status");
+
+    try {
+      await query(
+        `
+          UPDATE teams
+          SET
+            name = CASE WHEN @has_name = 1 THEN @name ELSE name END,
+            short_name = CASE WHEN @has_short_name = 1 THEN @short_name ELSE short_name END,
+            code = CASE WHEN @has_code = 1 THEN @code ELSE code END,
+            city = CASE WHEN @has_city = 1 THEN @city ELSE city END,
+            country = CASE WHEN @has_country = 1 THEN @country ELSE country END,
+            founded_year = CASE WHEN @has_founded_year = 1 THEN @founded_year ELSE founded_year END,
+            status = CASE WHEN @has_status = 1 THEN COALESCE(@status, status) ELSE status END,
+            updated_at = SYSUTCDATETIME(),
+            updated_by = @updated_by
+          WHERE team_id = @teamId;
+        `,
+        {
+          teamId,
+          updated_by: req.user?.sub ?? null,
+          has_name: hasName ? 1 : 0,
+          name: hasName ? (payload as any).name : null,
+          has_short_name: hasShortName ? 1 : 0,
+          short_name: hasShortName ? (payload as any).short_name ?? null : null,
+          has_code: hasCode ? 1 : 0,
+          code: hasCode ? (payload as any).code ?? null : null,
+          has_city: hasCity ? 1 : 0,
+          city: hasCity ? (payload as any).city ?? null : null,
+          has_country: hasCountry ? 1 : 0,
+          country: hasCountry ? (payload as any).country ?? null : null,
+          has_founded_year: hasFoundedYear ? 1 : 0,
+          founded_year: hasFoundedYear ? (payload as any).founded_year ?? null : null,
+          has_status: hasStatus ? 1 : 0,
+          status: hasStatus ? (payload as any).status ?? null : null,
+        },
+      );
+    } catch (error: any) {
+      if (error?.number === 2627 || error?.number === 2601) {
+        return res.status(409).json({ error: "Team name or code already exists" });
+      }
+      throw error;
+    }
 
     // Return updated team
     const result = await query<{
@@ -242,9 +411,10 @@ router.put("/:id", async (req, res, next) => {
       city: string | null;
       country: string | null;
       founded_year: number | null;
+      status: string;
     }>(
       `
-        SELECT team_id, name, short_name, code, city, country, founded_year
+        SELECT team_id, name, short_name, code, city, country, founded_year, status
         FROM teams
         WHERE team_id = @teamId;
       `,
@@ -256,6 +426,17 @@ router.put("/:id", async (req, res, next) => {
       return res.status(404).json({ error: "Team not found" });
     }
 
+    await logEvent({
+      eventType: "TEAM_UPDATED",
+      severity: "info",
+      actorId: req.user?.sub,
+      actorUsername: req.user?.username,
+      actorRole: Array.isArray(req.user?.roles) ? req.user.roles[0] : undefined,
+      entityType: "TEAM",
+      entityId: String(teamId),
+      payload: { before: existing, after: team },
+    });
+
     res.json({ data: team });
   } catch (error) {
     next(error);
@@ -265,20 +446,61 @@ router.put("/:id", async (req, res, next) => {
 /**
  * DELETE /internal/teams/:id - Delete team
  */
-router.delete("/:id", async (req, res, next) => {
+router.delete("/:id", ...requireTeamManagement, async (req: AuthenticatedRequest, res, next) => {
   try {
     const teamId = parseInt(req.params.id, 10);
     if (isNaN(teamId)) {
       return res.status(400).json({ error: "Invalid team ID" });
     }
 
-    await query(
+    const existingResult = await query<{
+      team_id: number;
+      name: string;
+      short_name: string | null;
+      code: string | null;
+      city: string | null;
+      country: string | null;
+      founded_year: number | null;
+      status: string;
+    }>(
       `
-        DELETE FROM teams
+        SELECT team_id, name, short_name, code, city, country, founded_year, status
+        FROM teams
         WHERE team_id = @teamId;
       `,
       { teamId },
     );
+
+    const existing = existingResult.recordset[0];
+    if (!existing) {
+      return res.status(404).json({ error: "Team not found" });
+    }
+
+    try {
+      await query(
+        `
+          DELETE FROM teams
+          WHERE team_id = @teamId;
+        `,
+        { teamId },
+      );
+    } catch (error: any) {
+      if (error?.number === 547) {
+        return res.status(409).json({ error: "Team is referenced and cannot be deleted" });
+      }
+      throw error;
+    }
+
+    await logEvent({
+      eventType: "TEAM_DELETED",
+      severity: "warning",
+      actorId: req.user?.sub,
+      actorUsername: req.user?.username,
+      actorRole: Array.isArray(req.user?.roles) ? req.user.roles[0] : undefined,
+      entityType: "TEAM",
+      entityId: String(teamId),
+      payload: { before: existing },
+    });
 
     res.status(204).send();
   } catch (error) {

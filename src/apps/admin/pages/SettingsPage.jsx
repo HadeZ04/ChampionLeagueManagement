@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { 
   Settings, 
   Save, 
@@ -11,38 +11,44 @@ import {
   Key,
   Server
 } from 'lucide-react'
+import toast, { Toaster } from 'react-hot-toast'
+import ApiService from '../../../layers/application/services/ApiService'
+
+const DEFAULT_SETTINGS = {
+  general: {
+    siteName: 'UEFA Champions League',
+    siteDescription: 'Official UEFA Champions League Website',
+    timezone: 'Europe/London',
+    language: 'en',
+    maintenanceMode: false
+  },
+  security: {
+    sessionTimeout: 24,
+    passwordMinLength: 8,
+    requireTwoFactor: false,
+    allowedLoginAttempts: 5,
+    lockoutDuration: 30
+  },
+  notifications: {
+    emailNotifications: true,
+    pushNotifications: true,
+    smsNotifications: false,
+    adminAlerts: true
+  },
+  api: {
+    rateLimit: 100,
+    rateLimitWindow: 15,
+    enableCors: true,
+    corsOrigins: 'http://localhost:3000',
+    apiVersion: 'v1'
+  }
+}
 
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState('general')
-  const [settings, setSettings] = useState({
-    general: {
-      siteName: 'UEFA Champions League',
-      siteDescription: 'Official UEFA Champions League Website',
-      timezone: 'Europe/London',
-      language: 'en',
-      maintenanceMode: false
-    },
-    security: {
-      sessionTimeout: 24,
-      passwordMinLength: 8,
-      requireTwoFactor: false,
-      allowedLoginAttempts: 5,
-      lockoutDuration: 30
-    },
-    notifications: {
-      emailNotifications: true,
-      pushNotifications: true,
-      smsNotifications: false,
-      adminAlerts: true
-    },
-    api: {
-      rateLimit: 100,
-      rateLimitWindow: 15,
-      enableCors: true,
-      corsOrigins: 'http://localhost:3000',
-      apiVersion: 'v1'
-    }
-  })
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS)
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   const tabs = [
     { id: 'general', name: 'General', icon: Settings },
@@ -51,43 +57,55 @@ const SettingsPage = () => {
     { id: 'api', name: 'API Settings', icon: Server }
   ]
 
-  const handleSave = () => {
-    console.log('Saving settings:', settings)
-    alert('Settings saved successfully!')
+  const loadSettings = useCallback(async () => {
+    setLoading(true)
+    try {
+      const response = await ApiService.get('/settings')
+      setSettings(response?.data ?? DEFAULT_SETTINGS)
+    } catch (error) {
+      console.error(error)
+      toast.error('Unable to load settings.')
+      setSettings(DEFAULT_SETTINGS)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadSettings()
+  }, [loadSettings])
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const response = await ApiService.put('/settings', settings)
+      setSettings(response?.data ?? settings)
+      toast.success('Settings saved successfully!')
+    } catch (error) {
+      console.error(error)
+      toast.error(error?.message ?? 'Unable to save settings.')
+    } finally {
+      setSaving(false)
+    }
   }
 
-  const handleReset = () => {
-    if (confirm('Are you sure you want to reset all settings to default?')) {
-      // Reset to default values
-      setSettings({
-        general: {
-          siteName: 'UEFA Champions League',
-          siteDescription: 'Official UEFA Champions League Website',
-          timezone: 'Europe/London',
-          language: 'en',
-          maintenanceMode: false
-        },
-        security: {
-          sessionTimeout: 24,
-          passwordMinLength: 8,
-          requireTwoFactor: false,
-          allowedLoginAttempts: 5,
-          lockoutDuration: 30
-        },
-        notifications: {
-          emailNotifications: true,
-          pushNotifications: true,
-          smsNotifications: false,
-          adminAlerts: true
-        },
-        api: {
-          rateLimit: 100,
-          rateLimitWindow: 15,
-          enableCors: true,
-          corsOrigins: 'http://localhost:3000',
-          apiVersion: 'v1'
-        }
-      })
+  const handleReset = async () => {
+    const confirmed = confirm('Are you sure you want to reset all settings to default?')
+    if (!confirmed) {
+      return
+    }
+
+    const nextSettings = DEFAULT_SETTINGS
+    setSettings(nextSettings)
+    setSaving(true)
+    try {
+      await ApiService.put('/settings', nextSettings)
+      toast.success('Settings reset to defaults.')
+    } catch (error) {
+      console.error(error)
+      toast.error(error?.message ?? 'Unable to reset settings.')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -103,6 +121,7 @@ const SettingsPage = () => {
 
   return (
     <div>
+      <Toaster position="top-right" />
       {/* Page Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
@@ -113,17 +132,19 @@ const SettingsPage = () => {
           <div className="flex space-x-3">
             <button 
               onClick={handleReset}
-              className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
+              disabled={loading || saving}
+              className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-60"
             >
               <RotateCcw size={16} />
-              <span>Reset</span>
+              <span>{saving ? 'Working…' : 'Reset'}</span>
             </button>
             <button 
               onClick={handleSave}
-              className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+              disabled={loading || saving}
+              className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-60"
             >
               <Save size={16} />
-              <span>Save Changes</span>
+              <span>{saving ? 'Saving…' : 'Save Changes'}</span>
             </button>
           </div>
         </div>

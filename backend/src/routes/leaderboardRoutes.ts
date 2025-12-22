@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { requireAuth, requirePermission } from "../middleware/authMiddleware";
 import {
   addLeaderboardEntry,
   deleteLeaderboardEntry,
@@ -7,6 +8,7 @@ import {
 } from "../services/leaderboardService";
 
 const router = Router();
+const requireLeaderboardManagement = [requireAuth, requirePermission("manage_matches")] as const;
 
 const parseSeason = (value: unknown): string | undefined => {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
@@ -27,7 +29,7 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.post("/", async (req, res, next) => {
+router.post("/", ...requireLeaderboardManagement, async (req, res, next) => {
   try {
     const entry = await addLeaderboardEntry(req.body);
     res.status(201).json({ data: entry });
@@ -36,7 +38,7 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-router.put("/:id", async (req, res, next) => {
+router.put("/:id", ...requireLeaderboardManagement, async (req, res, next) => {
   try {
     const updated = await updateLeaderboardEntry(req.params.id, req.body);
     if (!updated) {
@@ -48,7 +50,7 @@ router.put("/:id", async (req, res, next) => {
   }
 });
 
-router.delete("/:id", async (req, res, next) => {
+router.delete("/:id", ...requireLeaderboardManagement, async (req, res, next) => {
   try {
     const removed = await deleteLeaderboardEntry(req.params.id);
     if (!removed) {

@@ -1,14 +1,14 @@
 import { Router } from "express";
 import { query } from "../db/sqlServer";
 import { createPlayerHandler } from "../controllers/internalPlayerController";
-import { requireAuth } from "../middleware/authMiddleware";
+import { requireAuth, requirePermission } from "../middleware/authMiddleware";
 
 const router = Router();
 
 /**
  * POST /internal/players - Create a new player
  */
-router.post("/", requireAuth, createPlayerHandler);
+router.post("/", requireAuth, requirePermission("manage_teams"), createPlayerHandler);
 
 
 router.get("/", async (req, res, next) => {
@@ -174,7 +174,7 @@ router.get("/:id", async (req, res, next) => {
 /**
  * PUT /internal/players/:id - Update player
  */
-router.put("/:id", async (req, res, next) => {
+router.put("/:id", requireAuth, requirePermission("manage_teams"), async (req, res, next) => {
   try {
     const playerId = parseInt(req.params.id, 10);
     if (isNaN(playerId)) {
@@ -230,7 +230,7 @@ router.put("/:id", async (req, res, next) => {
 /**
  * DELETE /internal/players/:id - Delete player
  */
-router.delete("/:id", async (req, res, next) => {
+router.delete("/:id", requireAuth, requirePermission("manage_teams"), async (req, res, next) => {
   try {
     const playerId = parseInt(req.params.id, 10);
     if (isNaN(playerId)) {

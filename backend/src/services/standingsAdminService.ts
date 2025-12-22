@@ -17,7 +17,6 @@ export interface StandingsRecord {
 }
 
 export interface UpdateStandingsInput {
-  seasonTeamId: number;
   wins?: number;
   draws?: number;
   losses?: number;

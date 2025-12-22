@@ -13,19 +13,31 @@ const config: sql.config = {
   },
 };
 
-const pool = new sql.ConnectionPool(config);
-const poolConnect = pool.connect().catch((error) => {
-  // eslint-disable-next-line no-console
-  console.error("Database connection failed:", error);
-  throw error;
-});
+let pool: sql.ConnectionPool | null = null;
+let poolConnect: Promise<sql.ConnectionPool> | null = null;
+
+async function getPool(): Promise<sql.ConnectionPool> {
+  if (!pool) {
+    pool = new sql.ConnectionPool(config);
+    poolConnect = pool.connect().catch((error) => {
+      // eslint-disable-next-line no-console
+      console.error("Database connection failed:", error);
+      pool = null;
+      poolConnect = null;
+      throw error;
+    });
+  }
+
+  await poolConnect;
+  return pool;
+}
 
 export async function query<T = any>(
   text: string,
   params: Record<string, unknown> = {}
 ): Promise<sql.IResult<T>> {
-  await poolConnect;
-  const request = pool.request();
+  const connectedPool = await getPool();
+  const request = connectedPool.request();
   Object.entries(params).forEach(([key, value]) => {
     request.input(key, value as sql.ISqlType);
   });
@@ -33,8 +45,8 @@ export async function query<T = any>(
 }
 
 export async function transaction<T>(callback: (tx: sql.Transaction) => Promise<T>): Promise<T> {
-  await poolConnect;
-  const tx = new sql.Transaction(pool);
+  const connectedPool = await getPool();
+  const tx = new sql.Transaction(connectedPool);
   await tx.begin();
   try {
     const result = await callback(tx);

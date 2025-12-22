@@ -1,5 +1,8 @@
 import { Router } from "express";
 import { z } from "zod";
+import { requireAuth, requirePermission } from "../middleware/authMiddleware";
+import { query } from "../db/sqlServer";
+import { logEvent } from "../services/auditService";
 import {
   createMatch,
   deleteMatch,
@@ -13,6 +16,7 @@ import {
 import { syncMatchesOnly } from "../services/syncService";
 
 const router = Router();
+const requireMatchManagement = [requireAuth, requirePermission("manage_matches")] as const;
 
 const isValidDate = (value: string): boolean => !Number.isNaN(Date.parse(value));
 
@@ -173,7 +177,197 @@ router.get("/external", async (req, res, next) => {
   }
 });
 
-router.post("/", async (req, res, next) => {
+const createEventSchema = z.object({
+  teamId: z.number().int().positive(),
+  type: z.string().trim().min(1).max(32),
+  minute: z.number().int().min(0).max(130),
+  description: z.string().trim().max(255).optional().nullable(),
+  playerId: z.number().int().positive().optional().nullable(),
+  playerName: z.string().trim().max(100).optional().nullable(),
+});
+
+router.get("/:id/events", async (req, res, next) => {
+  try {
+    const matchId = Number(req.params.id);
+    if (!Number.isInteger(matchId) || matchId <= 0) {
+      return res.status(400).json({ message: "Invalid match id" });
+    }
+
+    const eventsResult = await query(
+      `SELECT
+          me.match_event_id AS id,
+          stp.team_id AS teamId,
+          me.player_name AS player,
+          me.event_type AS type,
+          me.event_minute AS minute,
+          me.description
+        FROM match_events me
+        INNER JOIN season_team_participants stp ON me.season_team_id = stp.season_team_id
+        WHERE me.match_id = @matchId
+        ORDER BY me.event_minute ASC, me.created_at ASC;`,
+      { matchId },
+    );
+
+    res.json({ data: eventsResult.recordset });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/:id/events", ...requireMatchManagement, async (req: any, res, next) => {
+  try {
+    const matchId = Number(req.params.id);
+    if (!Number.isInteger(matchId) || matchId <= 0) {
+      return res.status(400).json({ message: "Invalid match id" });
+    }
+
+    const payload = createEventSchema.parse(req.body ?? {});
+    const eventType = payload.type.toUpperCase();
+
+    const matchInfo = await query<{
+      seasonId: number;
+      homeTeamId: number;
+      awayTeamId: number;
+      homeSeasonTeamId: number;
+      awaySeasonTeamId: number;
+      status: string;
+    }>(
+      `SELECT
+          m.season_id AS seasonId,
+          hstp.team_id AS homeTeamId,
+          astp.team_id AS awayTeamId,
+          m.home_season_team_id AS homeSeasonTeamId,
+          m.away_season_team_id AS awaySeasonTeamId,
+          m.status
+        FROM matches m
+        INNER JOIN season_team_participants hstp ON m.home_season_team_id = hstp.season_team_id
+        INNER JOIN season_team_participants astp ON m.away_season_team_id = astp.season_team_id
+        WHERE m.match_id = @matchId;`,
+      { matchId },
+    );
+
+    const match = matchInfo.recordset[0];
+    if (!match) {
+      return res.status(404).json({ message: "Match not found" });
+    }
+
+    let seasonTeamId: number | null = null;
+    let isHome = false;
+    if (payload.teamId === match.homeTeamId) {
+      seasonTeamId = match.homeSeasonTeamId;
+      isHome = true;
+    } else if (payload.teamId === match.awayTeamId) {
+      seasonTeamId = match.awaySeasonTeamId;
+      isHome = false;
+    } else {
+      return res.status(400).json({ message: "teamId does not belong to this match" });
+    }
+
+    let playerName: string | null = payload.playerName ? payload.playerName.trim() : null;
+    if (!playerName && payload.playerId) {
+      const player = await query<{ full_name: string }>(
+        `SELECT TOP 1 full_name FROM players WHERE player_id = @playerId;`,
+        { playerId: payload.playerId },
+      );
+      playerName = player.recordset[0]?.full_name ?? null;
+    }
+
+    const insertResult = await query<{ match_event_id: number }>(
+      `INSERT INTO match_events (
+          match_id,
+          season_id,
+          season_team_id,
+          player_name,
+          event_type,
+          event_minute,
+          description
+        )
+        OUTPUT INSERTED.match_event_id
+        VALUES (
+          @matchId,
+          @seasonId,
+          @seasonTeamId,
+          @playerName,
+          @eventType,
+          @minute,
+          @description
+        );`,
+      {
+        matchId,
+        seasonId: match.seasonId,
+        seasonTeamId,
+        playerName,
+        eventType,
+        minute: payload.minute,
+        description: payload.description ?? null,
+      },
+    );
+
+    const eventId = insertResult.recordset[0]?.match_event_id;
+
+    // Update score for goal-type events.
+    let homeInc = 0;
+    let awayInc = 0;
+    if (eventType === "GOAL") {
+      homeInc = isHome ? 1 : 0;
+      awayInc = isHome ? 0 : 1;
+    } else if (eventType === "OWN_GOAL") {
+      homeInc = isHome ? 0 : 1;
+      awayInc = isHome ? 1 : 0;
+    }
+
+    if (homeInc || awayInc) {
+      await query(
+        `UPDATE matches
+          SET home_score = COALESCE(home_score, 0) + @homeInc,
+              away_score = COALESCE(away_score, 0) + @awayInc,
+              updated_at = SYSUTCDATETIME()
+          WHERE match_id = @matchId;`,
+        { matchId, homeInc, awayInc },
+      );
+    }
+
+    // Auto-transition scheduled -> in_progress once an event arrives.
+    if (match.status === "scheduled") {
+      await query(
+        `UPDATE matches SET status = 'in_progress', updated_at = SYSUTCDATETIME() WHERE match_id = @matchId;`,
+        { matchId },
+      );
+    }
+
+    await logEvent({
+      eventType: "MATCH_EVENT_CREATED",
+      severity: "info",
+      actorId: req.user?.sub,
+      actorUsername: req.user?.username,
+      actorRole: Array.isArray(req.user?.roles) ? req.user.roles[0] : undefined,
+      entityType: "MATCH",
+      entityId: String(matchId),
+      payload: {
+        id: eventId,
+        teamId: payload.teamId,
+        type: eventType,
+        minute: payload.minute,
+        player: playerName,
+      },
+    });
+
+    res.status(201).json({
+      data: {
+        id: eventId,
+        teamId: payload.teamId,
+        player: playerName,
+        type: eventType,
+        minute: payload.minute,
+        description: payload.description ?? null,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/", ...requireMatchManagement, async (req, res, next) => {
   try {
     const payload = createSchema.parse(req.body ?? {});
     const match = await createMatch(payload);
@@ -183,7 +377,7 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-router.post("/generate/random", async (req, res, next) => {
+router.post("/generate/random", ...requireMatchManagement, async (req, res, next) => {
   try {
     const payload = generateSchema.parse(req.body ?? {});
     const result = await generateRandomMatches(payload);
@@ -196,7 +390,7 @@ router.post("/generate/random", async (req, res, next) => {
   }
 });
 
-router.post("/sync", async (req, res, next) => {
+router.post("/sync", ...requireMatchManagement, async (req, res, next) => {
   try {
     const payload = syncSchema.parse(req.body ?? {});
     const result = await syncMatchesOnly(
@@ -240,7 +434,7 @@ router.get("/:id", async (req, res, next) => {
   }
 });
 
-router.put("/:id", async (req, res, next) => {
+router.put("/:id", ...requireMatchManagement, async (req, res, next) => {
   try {
     const id = Number(req.params.id);
     if (!Number.isInteger(id) || id <= 0) {
@@ -257,7 +451,7 @@ router.put("/:id", async (req, res, next) => {
   }
 });
 
-router.post("/:id/results", async (req, res, next) => {
+router.post("/:id/results", ...requireMatchManagement, async (req, res, next) => {
   try {
     const id = Number(req.params.id);
     if (!Number.isInteger(id) || id <= 0) {
@@ -274,7 +468,7 @@ router.post("/:id/results", async (req, res, next) => {
   }
 });
 
-router.delete("/:id", async (req, res, next) => {
+router.delete("/:id", ...requireMatchManagement, async (req, res, next) => {
   try {
     const id = Number(req.params.id);
     if (!Number.isInteger(id) || id <= 0) {

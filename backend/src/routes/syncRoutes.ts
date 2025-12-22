@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { requireAnyPermission, requireAuth } from "../middleware/authMiddleware";
 import {
   syncAllData,
   syncTeamsOnly,
@@ -8,6 +9,7 @@ import {
 } from "../services/syncService";
 
 const router = Router();
+const requireSyncPermission = [requireAuth, requireAnyPermission("manage_matches", "manage_teams")] as const;
 
 /**
  * POST /sync - Sync all data from Football-Data.org API to database
@@ -22,7 +24,7 @@ const router = Router();
  *   matchDateTo?: string
  * }
  */
-router.post("/", async (req, res, next) => {
+router.post("/", ...requireSyncPermission, async (req, res, next) => {
   try {
     const {
       season,
@@ -67,7 +69,7 @@ router.post("/", async (req, res, next) => {
 /**
  * POST /sync/teams - Sync only teams
  */
-router.post("/teams", async (req, res, next) => {
+router.post("/teams", ...requireSyncPermission, async (req, res, next) => {
   try {
     const { season } = req.body;
     const result = await syncTeamsOnly(season);
@@ -93,7 +95,7 @@ router.post("/teams", async (req, res, next) => {
 /**
  * POST /sync/players - Sync only players
  */
-router.post("/players", async (req, res, next) => {
+router.post("/players", ...requireSyncPermission, async (req, res, next) => {
   try {
     const { season } = req.body;
     const result = await syncPlayersOnly(season);
@@ -119,7 +121,7 @@ router.post("/players", async (req, res, next) => {
 /**
  * POST /sync/matches - Sync only matches
  */
-router.post("/matches", async (req, res, next) => {
+router.post("/matches", ...requireSyncPermission, async (req, res, next) => {
   try {
     const { season, status, dateFrom, dateTo } = req.body;
     const result = await syncMatchesOnly(season, status, dateFrom, dateTo);
@@ -145,7 +147,7 @@ router.post("/matches", async (req, res, next) => {
 /**
  * POST /sync/standings - Sync only standings
  */
-router.post("/standings", async (req, res, next) => {
+router.post("/standings", ...requireSyncPermission, async (req, res, next) => {
   try {
     const { season } = req.body;
     const result = await syncStandingsOnly(season);

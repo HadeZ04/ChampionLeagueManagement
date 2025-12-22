@@ -87,8 +87,11 @@ class ApiService {
     })
   }
 
-  async delete(endpoint) {
-    return this.request(endpoint, { method: 'DELETE' })
+  async delete(endpoint, params = undefined) {
+    const queryString =
+      params && typeof params === 'object' ? new URLSearchParams(params).toString() : ''
+    const url = queryString ? `${endpoint}?${queryString}` : endpoint
+    return this.request(url, { method: 'DELETE' })
   }
 
   // =========================

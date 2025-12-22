@@ -13,6 +13,10 @@ export interface AuditEventInput {
 }
 
 export async function logEvent(input: AuditEventInput): Promise<void> {
+  if ((process.env.NODE_ENV ?? "development") === "test") {
+    return;
+  }
+
   await query(
     `INSERT INTO audit_events (
       event_type,

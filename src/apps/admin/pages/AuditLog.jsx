@@ -1,4 +1,5 @@
 ﻿import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   Search,
   Filter,
@@ -32,6 +33,7 @@ const formatTimestamp = (timestamp) => {
 }
 
 const AuditLog = () => {
+  const [searchParams] = useSearchParams()
   const [logs, setLogs] = useState([])
   const [pagination, setPagination] = useState({
     page: 1,
@@ -53,6 +55,13 @@ const AuditLog = () => {
     }, 350)
     return () => clearTimeout(handle)
   }, [searchTerm])
+
+  useEffect(() => {
+    const userId = searchParams.get('userId')
+    if (userId && !searchTerm) {
+      setSearchTerm(userId)
+    }
+  }, [searchParams, searchTerm])
 
   const normalizedSeverity = useMemo(() => {
     if (onlyCritical) {
@@ -110,8 +119,8 @@ const AuditLog = () => {
   }, [buildQueryPayload])
 
   useEffect(() => {
-    loadLogs()
-  }, [loadLogs])
+    loadLogs(1)
+  }, [loadLogs, debouncedSearch, moduleFilter, normalizedSeverity, fromDate, toDate, pagination.pageSize])
 
   const moduleOptions = useMemo(() => {
     const unique = new Set(logs.map((log) => log.module ?? 'SYSTEM'))

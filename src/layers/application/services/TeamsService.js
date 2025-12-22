@@ -2,6 +2,24 @@ import ApiService from './ApiService'
 import APP_CONFIG from '../../../config/app.config'
 
 class TeamsService {
+  normalizeTeam(payload = {}) {
+    const teamId = payload.team_id ?? payload.teamId ?? payload.id
+    return {
+      id: teamId,
+      name: payload.name,
+      short_name: payload.short_name ?? payload.shortName ?? null,
+      code: payload.code ?? null,
+      city: payload.city ?? null,
+      country: payload.country ?? null,
+      founded_year: payload.founded_year ?? payload.foundedYear ?? null,
+      status: payload.status ?? 'active',
+      governing_body: payload.governing_body ?? payload.governingBody ?? null,
+      description: payload.description ?? null,
+      home_stadium_id: payload.home_stadium_id ?? payload.homeStadiumId ?? null,
+      home_kit_description: payload.home_kit_description ?? payload.homeKitDescription ?? null
+    }
+  }
+
   // Get all teams
   async getAllTeams(filters = {}) {
     try {
@@ -47,23 +65,7 @@ class TeamsService {
     try {
       const endpoint = APP_CONFIG.API.ENDPOINTS.TEAMS.DETAIL.replace(':id', teamId)
       const response = await ApiService.get(endpoint, query)
-      const team = response.data
-      
-      // Map backend data structure to frontend structure
-      return {
-        id: team.team_id,
-        name: team.name,
-        short_name: team.short_name,
-        code: team.code,
-        city: team.city,
-        country: team.country,
-        founded_year: team.founded_year,
-        status: team.status,
-        governing_body: team.governing_body,
-        description: team.description,
-        home_stadium_id: team.home_stadium_id,
-        home_kit_description: team.home_kit_description
-      }
+      return this.normalizeTeam(response?.data ?? {})
     } catch (error) {
       console.error('Failed to fetch team:', error)
       throw error
@@ -74,7 +76,7 @@ class TeamsService {
   async createTeam(teamData) {
     try {
       const response = await ApiService.post(APP_CONFIG.API.ENDPOINTS.TEAMS.CREATE, teamData)
-      return response.data
+      return this.normalizeTeam(response?.data ?? {})
     } catch (error) {
       console.error('Failed to create team:', error)
       throw error
@@ -86,7 +88,7 @@ class TeamsService {
     try {
       const endpoint = APP_CONFIG.API.ENDPOINTS.TEAMS.UPDATE.replace(':id', teamId)
       const response = await ApiService.put(endpoint, teamData)
-      return response.data
+      return this.normalizeTeam(response?.data ?? {})
     } catch (error) {
       console.error('Failed to update team:', error)
       throw error
@@ -110,7 +112,18 @@ class TeamsService {
     try {
       const endpoint = APP_CONFIG.API.ENDPOINTS.TEAMS.PLAYERS.replace(':id', teamId)
       const response = await ApiService.get(endpoint, query)
-      return response.data || []
+      const raw = response?.data || []
+      if (!Array.isArray(raw)) {
+        return []
+      }
+      return raw.map((player) => ({
+        id: player.player_id ?? player.id ?? null,
+        name: player.display_name ?? player.full_name ?? player.name ?? 'Unknown',
+        position: player.preferred_position ?? player.position ?? null,
+        nationality: player.nationality ?? null,
+        dateOfBirth: player.date_of_birth ?? player.dateOfBirth ?? null,
+        shirtNumber: player.shirt_number ?? player.shirtNumber ?? null
+      }))
     } catch (error) {
       console.error('Failed to fetch team players:', error)
       return []
