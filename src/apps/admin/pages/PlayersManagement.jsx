@@ -16,6 +16,8 @@ import {
 } from 'lucide-react'
 import PlayersService from '../../../layers/application/services/PlayersService'
 import TeamsService from '../../../layers/application/services/TeamsService'
+import SeasonPlayerRegistrationForm from '../components/SeasonPlayerRegistrationForm'
+import ImportPlayersCsvModal from '../components/ImportPlayersCsvModal'
 
 const defaultTeamsOption = [{ id: 'all', name: 'All Teams' }]
 
@@ -31,6 +33,7 @@ const PlayersManagement = () => {
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingPlayer, setEditingPlayer] = useState(null)
   const [syncing, setSyncing] = useState(false)
+  const [showImportModal, setShowImportModal] = useState(false)
 
   useEffect(() => {
     let isMounted = true
@@ -185,24 +188,17 @@ const PlayersManagement = () => {
           </div>
           <div className="flex space-x-3">
             <button
-              onClick={handleSync}
-              className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-              disabled={syncing}
+              onClick={() => setShowImportModal(true)}
+              className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm"
             >
-              {syncing ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
-              <span>{syncing ? 'Syncing...' : 'Sync Players'}</span>
-            </button>
-            <button className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
-              <Download size={16} />
-              <span>Export</span>
-            </button>
-            <button className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
               <Upload size={16} />
-              <span>Import</span>
+              <span>Import danh sách cầu thủ (CSV)</span>
             </button>
           </div>
         </div>
       </div>
+
+      <SeasonPlayerRegistrationForm />
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
@@ -312,7 +308,7 @@ const PlayersManagement = () => {
                         <div>
                           <div className="font-medium text-gray-900">{player.full_name}</div>
                           <div className="text-gray-500 text-sm">
-                            {player.date_of_birth 
+                            {player.date_of_birth
                               ? `Born: ${new Date(player.date_of_birth).toLocaleDateString()}`
                               : 'No birth date'}
                           </div>
@@ -479,6 +475,17 @@ const PlayersManagement = () => {
           </div>
         </div>
       )}
+
+      {/* Import CSV Modal */}
+      <ImportPlayersCsvModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onSuccess={() => {
+          alert("Import cầu thủ thành công!");
+          // Trigger reload by resetting page
+          setPagination(prev => ({ ...prev, page: 1 }));
+        }}
+      />
     </div>
   )
 }

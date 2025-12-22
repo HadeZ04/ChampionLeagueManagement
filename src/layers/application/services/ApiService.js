@@ -7,7 +7,9 @@ class ApiService {
     this.retryAttempts = APP_CONFIG.API.RETRY_ATTEMPTS
   }
 
-  // Generic HTTP methods
+  // =========================
+  // Generic HTTP request
+  // =========================
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`
     const config = {
@@ -19,7 +21,6 @@ class ApiService {
       ...options
     }
 
-    // Add authentication token if available
     const token = localStorage.getItem('auth_token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
@@ -27,9 +28,18 @@ class ApiService {
 
     try {
       const response = await fetch(url, config)
-      
+
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        let errorMessage = response.statusText
+        try {
+          const errJson = await response.json()
+          errorMessage = errJson.error || errJson.message || errorMessage
+        } catch (_) { }
+
+        throw {
+          status: response.status,
+          message: errorMessage
+        }
       }
 
       if (response.status === 204 || response.status === 205) {
@@ -37,9 +47,7 @@ class ApiService {
       }
 
       const responseText = await response.text()
-      if (!responseText) {
-        return null
-      }
+      if (!responseText) return null
 
       try {
         return JSON.parse(responseText)
@@ -55,10 +63,7 @@ class ApiService {
   async get(endpoint, params = {}) {
     const queryString = new URLSearchParams(params).toString()
     const url = queryString ? `${endpoint}?${queryString}` : endpoint
-    
-    return this.request(url, {
-      method: 'GET'
-    })
+    return this.request(url, { method: 'GET' })
   }
 
   async post(endpoint, data = {}) {
@@ -83,18 +88,21 @@ class ApiService {
   }
 
   async delete(endpoint) {
-    return this.request(endpoint, {
-      method: 'DELETE'
-    })
+    return this.request(endpoint, { method: 'DELETE' })
   }
 
-  // File upload method
+  // =========================
+  // FILE UPLOAD — FIX CHÍNH
+  // =========================
+  // File upload method (FIXED – DO NOT SKIP)
   async upload(endpoint, file, additionalData = {}) {
     const formData = new FormData()
     formData.append('file', file)
-    
+
     Object.keys(additionalData).forEach(key => {
-      formData.append(key, additionalData[key])
+      if (additionalData[key] !== undefined && additionalData[key] !== null) {
+        formData.append(key, additionalData[key])
+      }
     })
 
     const token = localStorage.getItem('auth_token')
@@ -103,25 +111,42 @@ class ApiService {
       headers.Authorization = `Bearer ${token}`
     }
 
+    const response = await fetch(`${this.baseURL}${endpoint}`, {
+      method: 'POST',
+      headers,
+      body: formData
+    })
+
+    // 🔥 QUAN TRỌNG: đọc body TRƯỚC
+    const responseText = await response.text()
+    let data = null
+
     try {
-      const response = await fetch(`${this.baseURL}${endpoint}`, {
-        method: 'POST',
-        headers,
-        body: formData
-      })
+      data = responseText ? JSON.parse(responseText) : null
+    } catch {
+      data = responseText
+    }
 
-      if (!response.ok) {
-        throw new Error(`Upload failed: ${response.statusText}`)
-      }
+    // ❌ nếu backend trả lỗi
+    if (!response.ok) {
+      const errorMessage =
+        data?.error ||
+        data?.message ||
+        `HTTP ${response.status}`
 
-      return await response.json()
-    } catch (error) {
-      console.error('Upload failed:', error)
+      const error = new Error(errorMessage)
+      error.status = response.status
+      error.payload = data
       throw error
     }
+
+    return data
   }
 
-  // Retry mechanism for failed requests
+
+  // =========================
+  // Retry
+  // =========================
   async requestWithRetry(endpoint, options = {}, attempts = 0) {
     try {
       return await this.request(endpoint, options)
@@ -137,3 +162,4 @@ class ApiService {
 }
 
 export default new ApiService()
+
