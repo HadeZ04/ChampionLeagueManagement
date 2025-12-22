@@ -21,6 +21,8 @@ import importRoutes from "./routes/importRoutes";
 import internalTeamRoutes from "./routes/internalTeamRoutes";
 import internalPlayerRoutes from "./routes/internalPlayerRoutes";
 import adminStandingsRoutes from "./routes/adminStandingsRoutes";
+import seasonRegistrationRoutes from "./routes/seasonRegistrationRoutes";
+import seasonPlayerRoutes from "./routes/seasonPlayerRoutes";
 
 const app = express();
 
@@ -35,6 +37,8 @@ app.use("/api/permissions", permissionRoutes);
 app.use("/api/rulesets", rulesetRoutes);
 app.use("/api/seasons", seasonRoutes);
 app.use("/api/audit-events", auditRoutes);
+app.use("/api/season-players", seasonRegistrationRoutes);
+app.use("/api", seasonPlayerRoutes);
 // Use internal database for teams and players (Champions League data already imported)
 app.use("/api/teams", internalTeamRoutes);
 app.use("/api/players", internalPlayerRoutes);
