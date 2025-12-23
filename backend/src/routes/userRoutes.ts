@@ -12,6 +12,7 @@ import {
   removeRole,
   updateUser,
 } from "../services/userService";
+import { assignTeamToUser, listUserTeams, removeTeamFromUser } from "../services/userTeamService";
 import { AuthenticatedRequest } from "../types";
 
 const router = Router();
@@ -137,6 +138,41 @@ router.delete(
   requirePermission("manage_users"),
   async (req: AuthenticatedRequest, res) => {
     await removeRole(Number(req.params.id), Number(req.params.roleId), req.user!.sub);
+    res.status(204).send();
+  }
+);
+
+router.get(
+  "/:id/teams",
+  requireAuth,
+  requirePermission("manage_users"),
+  async (req, res) => {
+    const teams = await listUserTeams(Number(req.params.id));
+    res.json(teams);
+  }
+);
+
+const teamAssignmentSchema = z.object({
+  teamId: z.number().int().positive(),
+});
+
+router.post(
+  "/:id/teams",
+  requireAuth,
+  requirePermission("manage_users"),
+  validate({ schema: teamAssignmentSchema }),
+  async (req: AuthenticatedRequest, res) => {
+    await assignTeamToUser(Number(req.params.id), req.body.teamId, req.user!.sub);
+    res.status(204).send();
+  }
+);
+
+router.delete(
+  "/:id/teams/:teamId",
+  requireAuth,
+  requirePermission("manage_users"),
+  async (req: AuthenticatedRequest, res) => {
+    await removeTeamFromUser(Number(req.params.id), Number(req.params.teamId), req.user!.sub);
     res.status(204).send();
   }
 );

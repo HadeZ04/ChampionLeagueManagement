@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { hasPermission } from '../utils/accessControl'
+import { hasAnyPermission, hasPermission } from '../utils/accessControl'
 // 1. Import icon mới
 import {
   LayoutDashboard,
@@ -23,6 +23,15 @@ import {
 
 const MENU_SECTIONS = [
   {
+    title: 'Đội của tôi',
+    allowedRoles: ['team_admin'],
+    disallowedRoles: ['super_admin'],
+    items: [
+      { name: 'Đội của tôi', path: '/admin/my-team', icon: Users, permission: 'view_own_team' },
+      { name: 'Đăng ký cầu thủ', path: '/admin/player-registrations', icon: UserCheck, permission: 'manage_own_player_registrations' }
+    ]
+  },
+  {
     title: 'Tổng quan',
     items: [
       { name: 'Bảng điều khiển', path: '/admin/dashboard', icon: LayoutDashboard },
@@ -43,10 +52,8 @@ const MENU_SECTIONS = [
         name: 'Duyệt đăng ký cầu thủ',
         path: '/admin/season-player-approvals',
         icon: ScrollText,
-        permission: 'manage_teams'
+        anyPermissions: ['approve_player_registrations', 'manage_own_player_registrations']
       },
-
-      { name: 'Bảng xếp hạng', path: '/admin/leaderboard', icon: Trophy, permission: 'manage_matches' },
       { name: 'Thống kê cầu thủ', path: '/admin/player-stats', icon: Target, permission: 'manage_matches' },
       { name: 'Bảng đứng', path: '/admin/standings', icon: Trophy, permission: 'manage_matches' }
     ]
@@ -74,17 +81,43 @@ const MENU_SECTIONS = [
 const AdminSidebar = ({ currentUser }) => {
   const location = useLocation()
 
+  const hasAllowedRole = (allowedRoles) => {
+    if (!Array.isArray(allowedRoles) || allowedRoles.length === 0) {
+      return true
+    }
+    const roles = Array.isArray(currentUser?.roles) ? currentUser.roles : []
+    return allowedRoles.some((role) => roles.includes(role))
+  }
+
+  const hasDisallowedRole = (disallowedRoles) => {
+    if (!Array.isArray(disallowedRoles) || disallowedRoles.length === 0) {
+      return false
+    }
+    const roles = Array.isArray(currentUser?.roles) ? currentUser.roles : []
+    return disallowedRoles.some((role) => roles.includes(role))
+  }
+
   const filteredMenu = useMemo(() => {
     return MENU_SECTIONS
-      .map((section) => ({
-        ...section,
-        items: section.items.filter((item) => hasPermission(currentUser, item.permission))
-      }))
+      .filter((section) => hasAllowedRole(section.allowedRoles) && !hasDisallowedRole(section.disallowedRoles))
+      .map((section) => {
+        const items = section.items.filter((item) => {
+          if (!hasAllowedRole(item.allowedRoles) || hasDisallowedRole(item.disallowedRoles)) {
+            return false
+          }
+
+          return Array.isArray(item.anyPermissions)
+            ? hasAnyPermission(currentUser, item.anyPermissions)
+            : hasPermission(currentUser, item.permission)
+        })
+
+        return { ...section, items }
+      })
       .filter((section) => section.items.length > 0)
   }, [currentUser])
 
   return (
-    <aside className="w-64 bg-gray-900 text-white min-h-screen p-4 flex flex-col">
+    <aside className="w-64 bg-gray-900 text-white h-screen p-4 flex flex-col overflow-hidden">
       {/* Logo */}
       <div className="p-4 border-b border-gray-700">
         <div className="flex items-center space-x-3">
@@ -101,9 +134,9 @@ const AdminSidebar = ({ currentUser }) => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 mt-6">
+      <nav className="flex-1 mt-4 min-h-0 overflow-y-auto pr-1">
         {filteredMenu.map((section, sectionIndex) => (
-          <div key={sectionIndex} className="mb-6">
+          <div key={sectionIndex} className="mb-4">
             <h3 className="text-gray-400 text-xs font-semibold uppercase tracking-wide mb-3 px-2">
               {section.title}
             </h3>
@@ -112,7 +145,7 @@ const AdminSidebar = ({ currentUser }) => {
                 <li key={item.name}>
                   <Link
                     to={item.path}
-                    className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${(location.pathname === item.path || location.pathname.startsWith(`${item.path}/`))
+                    className={`flex items-center space-x-3 px-3 py-1.5 rounded-lg transition-colors ${(location.pathname === item.path || location.pathname.startsWith(`${item.path}/`))
                       ? 'bg-blue-600 text-white'
                       : 'text-gray-300 hover:text-white hover:bg-gray-800'
                       }`}

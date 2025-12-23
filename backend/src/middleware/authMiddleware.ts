@@ -32,6 +32,10 @@ export function requirePermission(permission: string) {
     if (!req.user) {
       throw UnauthorizedError("Authentication required");
     }
+    if (Array.isArray(req.user.roles) && req.user.roles.includes("super_admin")) {
+      next();
+      return;
+    }
     if (!req.user.permissions || !req.user.permissions.includes(permission)) {
       throw ForbiddenError("You are not allowed to perform this action");
     }
@@ -45,6 +49,11 @@ export function requireAnyPermission(...permissions: string[]) {
   return (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
     if (!req.user) {
       throw UnauthorizedError("Authentication required");
+    }
+
+    if (Array.isArray(req.user.roles) && req.user.roles.includes("super_admin")) {
+      next();
+      return;
     }
 
     if (requested.length === 0) {

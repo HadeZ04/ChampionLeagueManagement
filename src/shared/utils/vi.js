@@ -1,4 +1,5 @@
 export const ROLE_LABELS = {
+  team_admin: 'Quản trị đội bóng',
   super_admin: 'Quản trị tối cao',
   admin: 'Quản trị viên',
   content_manager: 'Quản lý nội dung',
@@ -19,6 +20,10 @@ export const ROLE_LABELS = {
 }
 
 export const PERMISSION_LABELS = {
+  manage_own_player_registrations: 'Quản lý đăng ký cầu thủ (đội của tôi)',
+  view_own_team: 'Xem đội của tôi',
+  approve_player_registrations: 'Duyệt đăng ký cầu thủ',
+  manage_own_team_squad: 'Quản lý danh sách cầu thủ (đội của tôi)',
   manage_users: 'Quản lý người dùng',
   manage_rulesets: 'Quản lý bộ luật',
   view_audit_logs: 'Xem nhật ký hoạt động',

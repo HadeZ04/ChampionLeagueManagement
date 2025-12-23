@@ -16,7 +16,7 @@ const mapBackendErrorToUserMessage = (errorCode) => {
     return ERROR_MAPPINGS[errorCode] || errorCode;
 };
 
-const SeasonPlayerRegistrationForm = () => {
+const SeasonPlayerRegistrationForm = ({ currentUser, onSuccess }) => {
     const [formData, setFormData] = useState({
         season_id: '',
         season_team_id: '',
@@ -49,7 +49,20 @@ const SeasonPlayerRegistrationForm = () => {
             setLoadingTeams(true);
             try {
                 const data = await ApiService.get(`/seasons/${formData.season_id}/teams`);
-                setSeasonTeams(data.teams || []);
+                const teams = data.teams || [];
+                const scopedTeamIds = Array.isArray(currentUser?.teamIds) ? currentUser.teamIds : null;
+                const scopedTeams = scopedTeamIds ? teams.filter((team) => scopedTeamIds.includes(team.team_id)) : teams;
+
+                setSeasonTeams(scopedTeams);
+
+                if (scopedTeams.length === 1) {
+                    setFormData((prev) => ({ ...prev, season_team_id: scopedTeams[0].season_team_id }));
+                } else if (scopedTeams.length > 0 && formData.season_team_id) {
+                    const stillValid = scopedTeams.some((team) => String(team.season_team_id) === String(formData.season_team_id));
+                    if (!stillValid) {
+                        setFormData((prev) => ({ ...prev, season_team_id: '' }));
+                    }
+                }
             } catch (err) {
                 console.error("Failed to fetch teams", err);
                 setSeasonTeams([]);
@@ -65,7 +78,7 @@ const SeasonPlayerRegistrationForm = () => {
         }, 500);
 
         return () => clearTimeout(timerId);
-    }, [formData.season_id]);
+    }, [formData.season_id, currentUser]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -93,6 +106,37 @@ const SeasonPlayerRegistrationForm = () => {
         }
 
         try {
+            await ApiService.upload('/players/registrations', file, {
+                season_id: Number(formData.season_id),
+                season_team_id: Number(formData.season_team_id),
+                full_name: formData.full_name,
+                date_of_birth: formData.date_of_birth,
+                nationality: formData.nationality || null,
+                position_code: formData.position_code,
+                shirt_number: formData.shirt_number === '' ? null : Number(formData.shirt_number),
+                player_type: formData.player_type
+            });
+
+            setMessage({
+                type: 'success',
+                text: 'Đăng ký cầu thủ thành công.'
+            });
+
+            setFormData(prev => ({
+                ...prev,
+                full_name: '',
+                date_of_birth: '',
+                nationality: '',
+                position_code: '',
+                shirt_number: '',
+                age_on_season_start: '',
+                player_type: 'domestic'
+                // Keep season_id and season_team_id for convenience
+            }));
+            setFile(null);
+            onSuccess?.();
+            return;
+
             // STEP 1: Create Player
             const playerPayload = {
                 full_name: formData.full_name,

@@ -21,6 +21,7 @@ import syncRoutes from "./routes/syncRoutes";
 import importRoutes from "./routes/importRoutes";
 import internalTeamRoutes from "./routes/internalTeamRoutes";
 import internalPlayerRoutes from "./routes/internalPlayerRoutes";
+import playerRegistrationRoutes from "./routes/playerRegistrationRoutes";
 import adminStandingsRoutes from "./routes/adminStandingsRoutes";
 import seasonRegistrationRoutes from "./routes/seasonRegistrationRoutes";
 import seasonPlayerRoutes from "./routes/seasonPlayerRoutes";
@@ -50,6 +51,7 @@ app.use("/api/season-players", seasonRegistrationRoutes);
 app.use("/api", seasonPlayerRoutes);
 // Use internal database for teams and players (Champions League data already imported)
 app.use("/api/teams", internalTeamRoutes);
+app.use("/api/players/registrations", playerRegistrationRoutes);
 app.use("/api/players", internalPlayerRoutes);
 
 // Old routes (Football-Data.org API) - commented out, can be removed later

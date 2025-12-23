@@ -13,7 +13,6 @@ import CMSManagement from './pages/CMSManagement'
 import MediaLibrary from './pages/MediaLibrary'
 import UsersManagement from './pages/UsersManagement'
 import RulesetManagement from './pages/RulesetManagement'
-import LeaderboardManagement from './pages/LeaderboardManagement'
 import PlayerStatsManagement from './pages/PlayerStatsManagement'
 import RolesPermissions from './pages/RolesPermissions'
 import AuditLog from './pages/AuditLog'
@@ -27,6 +26,8 @@ import LiveMatchUpdatePage from './pages/LiveMatchUpdatePage';
 import AccessGuard from './components/AccessGuard';
 import SeasonPlayersManagement from './pages/SeasonPlayersManagement';
 import SeasonPlayerApprovalPage from './pages/SeasonPlayerApprovalPage'
+import MyTeamPage from './pages/MyTeamPage'
+import PlayerRegistrationsPage from './pages/PlayerRegistrationsPage'
 
 
 const AdminApp = ({ onLogout, currentUser }) => {
@@ -67,7 +68,7 @@ const AdminApp = ({ onLogout, currentUser }) => {
           path="players"
           element={
             <AccessGuard permission="manage_teams" currentUser={currentUser}>
-              <PlayersManagement />
+              <PlayersManagement currentUser={currentUser} />
             </AccessGuard>
           }
         />
@@ -117,14 +118,6 @@ const AdminApp = ({ onLogout, currentUser }) => {
           element={
             <AccessGuard permission="manage_rulesets" currentUser={currentUser}>
               <RulesetManagement />
-            </AccessGuard>
-          }
-        />
-        <Route
-          path="leaderboard"
-          element={
-            <AccessGuard permission="manage_matches" currentUser={currentUser}>
-              <LeaderboardManagement />
             </AccessGuard>
           }
         />
@@ -180,8 +173,39 @@ const AdminApp = ({ onLogout, currentUser }) => {
         <Route
           path="season-player-approvals"
           element={
-            <AccessGuard permission="manage_teams" currentUser={currentUser}>
-              <SeasonPlayerApprovalPage />
+            <AccessGuard
+              anyPermissions={['approve_player_registrations', 'manage_own_player_registrations']}
+              currentUser={currentUser}
+            >
+              <SeasonPlayerApprovalPage currentUser={currentUser} />
+            </AccessGuard>
+          }
+        />
+
+        <Route
+          path="my-team"
+          element={
+            <AccessGuard
+              permission="view_own_team"
+              allowedRoles={['team_admin']}
+              disallowedRoles={['super_admin']}
+              currentUser={currentUser}
+            >
+              <MyTeamPage currentUser={currentUser} />
+            </AccessGuard>
+          }
+        />
+
+        <Route
+          path="player-registrations"
+          element={
+            <AccessGuard
+              permission="manage_own_player_registrations"
+              allowedRoles={['team_admin']}
+              disallowedRoles={['super_admin']}
+              currentUser={currentUser}
+            >
+              <PlayerRegistrationsPage currentUser={currentUser} />
             </AccessGuard>
           }
         />

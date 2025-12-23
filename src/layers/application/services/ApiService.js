@@ -163,9 +163,13 @@ class ApiService {
   // FILE UPLOAD — FIX CHÍNH
   // =========================
   // File upload method (FIXED – DO NOT SKIP)
-  async upload(endpoint, file, additionalData = {}) {
+  async upload(endpoint, file, additionalData = {}, options = {}) {
+    const method = options.method || 'POST'
+    const fileField = options.fileField || 'file'
     const formData = new FormData()
-    formData.append('file', file)
+    if (file) {
+      formData.append(fileField, file)
+    }
 
     Object.keys(additionalData).forEach(key => {
       if (additionalData[key] !== undefined && additionalData[key] !== null) {
@@ -180,7 +184,7 @@ class ApiService {
     }
 
     const response = await fetch(`${this.baseURL}${endpoint}`, {
-      method: 'POST',
+      method,
       headers,
       body: formData
     })

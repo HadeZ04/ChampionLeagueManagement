@@ -7,7 +7,9 @@ import {
     approveAllPendingRegistrations,
     importSeasonPlayersFromCSV
 } from "../services/seasonPlayerRegistrationService";
-import { BadRequestError } from "../utils/httpError";
+import { query } from "../db/sqlServer";
+import { getUserTeamIds } from "../services/userTeamService";
+import { BadRequestError, ForbiddenError } from "../utils/httpError";
 import { AuthenticatedRequest } from "../types";
 
 /**
@@ -216,6 +218,31 @@ export async function importCSV(
 
     const userId = req.user?.sub;
     const username = req.user?.username;
+
+    const isGlobalUser =
+        (Array.isArray(req.user?.roles) && req.user?.roles.includes("super_admin")) ||
+        (Array.isArray(req.user?.permissions) && req.user?.permissions.includes("manage_teams"));
+
+    if (!isGlobalUser) {
+        const scopedTeamIds = Array.isArray(req.user?.teamIds) ? req.user?.teamIds : await getUserTeamIds(userId ?? 0);
+        if (!Array.isArray(scopedTeamIds) || scopedTeamIds.length === 0) {
+            throw ForbiddenError("You are not allowed to import players for this team");
+        }
+
+        const teamResult = await query<{ team_id: number }>(
+            `SELECT team_id FROM season_team_participants WHERE season_team_id = @seasonTeamId`,
+            { seasonTeamId: numericSeasonTeamId }
+        );
+
+        const teamId = Number(teamResult.recordset[0]?.team_id);
+        if (!teamId) {
+            throw BadRequestError("SEASON_TEAM_NOT_FOUND");
+        }
+
+        if (!scopedTeamIds.includes(teamId)) {
+            throw ForbiddenError("You are not allowed to import players for this team");
+        }
+    }
 
     const result = await importSeasonPlayersFromCSV({
         season_id: numericSeasonId,

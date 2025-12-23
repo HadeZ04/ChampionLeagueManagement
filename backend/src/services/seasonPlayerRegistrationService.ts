@@ -28,7 +28,8 @@ export interface SeasonPlayerRegistrationData {
  * Đăng ký cầu thủ theo mùa giải
  */
 export async function registerPlayerForSeason(
-    data: SeasonPlayerRegistrationData
+    data: SeasonPlayerRegistrationData,
+    existingTx?: sql.Transaction
 ): Promise<void> {
 
     const {
@@ -47,7 +48,7 @@ export async function registerPlayerForSeason(
     // 1. IN-TRANSACTION VALIDATION
     // =========================
     try {
-        await transaction(async (tx) => {
+        const registerTx = async (tx: sql.Transaction) => {
             // --- VALIDATION: Age & Foreign Limit ---
             const valReq = new sql.Request(tx);
             valReq.input("v_season_id", sql.Int, season_id);
@@ -133,37 +134,76 @@ export async function registerPlayerForSeason(
             const isForeignVal = player_type.toLowerCase() === 'foreign' ? 1 : 0;
             request.input("is_foreign", sql.Bit, isForeignVal);
 
-            if (shirt_number !== undefined && shirt_number !== null) {
-                request.input("shirt_number", sql.Int, shirt_number);
-            }
+            request.input("shirt_number", sql.Int, shirt_number ?? null);
 
             request.input("file_path", sql.NVarChar(255), file_path);
+            request.input("created_by", sql.Int, user_id ?? null);
 
-            await request.query(`
-                INSERT INTO season_player_registrations (
-                    season_id,
-                    player_id,
-                    season_team_id,
-                    position_code,
-                    shirt_number,
-                    player_type,
-                    is_foreign,
-                    file_path,
-                    registration_status
-                )
-                VALUES (
-                    @season_id,
-                    @player_id,
-                    @season_team_id,
-                    @position_code,
-                    @shirt_number,
-                    @player_type,
-                    @is_foreign,
-                    @file_path,
-                    'pending'
-                )
-            `);
-        });
+            try {
+                await request.query(`
+                    INSERT INTO season_player_registrations (
+                        season_id,
+                        player_id,
+                        season_team_id,
+                        position_code,
+                        shirt_number,
+                        player_type,
+                        is_foreign,
+                        file_path,
+                        registration_status,
+                        created_by
+                    )
+                    VALUES (
+                        @season_id,
+                        @player_id,
+                        @season_team_id,
+                        @position_code,
+                        @shirt_number,
+                        @player_type,
+                        @is_foreign,
+                        @file_path,
+                        'pending',
+                        @created_by
+                    )
+                `);
+            } catch (err: any) {
+                // Allow older schemas that don't yet have created_by.
+                if (err?.number === 207 || /created_by/i.test(String(err?.message ?? ""))) {
+                    await request.query(`
+                        INSERT INTO season_player_registrations (
+                            season_id,
+                            player_id,
+                            season_team_id,
+                            position_code,
+                            shirt_number,
+                            player_type,
+                            is_foreign,
+                            file_path,
+                            registration_status
+                        )
+                        VALUES (
+                            @season_id,
+                            @player_id,
+                            @season_team_id,
+                            @position_code,
+                            @shirt_number,
+                            @player_type,
+                            @is_foreign,
+                            @file_path,
+                            'pending'
+                        )
+                    `);
+                    return;
+                }
+                throw err;
+            }
+        };
+
+        if (existingTx) {
+            await registerTx(existingTx);
+        } else {
+            await transaction(registerTx);
+        }
     } catch (err: any) {
         /**
          * =========================
@@ -297,14 +337,30 @@ export async function approveRegistration(
         updateReq.input("id", sql.Int, id);
         updateReq.input("approved_by", sql.Int, userId ?? null);
 
-        await updateReq.query(`
-            UPDATE season_player_registrations
-            SET
-                registration_status = 'approved',
-                approved_at = GETDATE(),
-                approved_by = @approved_by
-            WHERE season_player_id = @id
-        `);
+        try {
+            await updateReq.query(`
+                UPDATE season_player_registrations
+                SET
+                    registration_status = 'approved',
+                    approved_at = GETDATE(),
+                    approved_by = @approved_by,
+                    reject_reason = NULL
+                WHERE season_player_id = @id
+            `);
+        } catch (err: any) {
+            if (err?.number === 207 || /reject_reason/i.test(String(err?.message ?? ""))) {
+                await updateReq.query(`
+                    UPDATE season_player_registrations
+                    SET
+                        registration_status = 'approved',
+                        approved_at = GETDATE(),
+                        approved_by = @approved_by
+                    WHERE season_player_id = @id
+                `);
+                return;
+            }
+            throw err;
+        }
     });
 }
 
@@ -343,12 +399,27 @@ export async function rejectRegistration(
         // 2. Update status -> rejected (KHÔNG dùng cột không tồn tại)
         const updateReq = new sql.Request(tx);
         updateReq.input("id", sql.Int, id);
+        updateReq.input("reason", sql.NVarChar(255), reason);
 
-        await updateReq.query(`
-            UPDATE season_player_registrations
-            SET registration_status = 'rejected'
-            WHERE season_player_id = @id
-        `);
+        try {
+            await updateReq.query(`
+                UPDATE season_player_registrations
+                SET
+                    registration_status = 'rejected',
+                    reject_reason = @reason
+                WHERE season_player_id = @id
+            `);
+        } catch (err: any) {
+            if (err?.number === 207 || /reject_reason/i.test(String(err?.message ?? ""))) {
+                await updateReq.query(`
+                    UPDATE season_player_registrations
+                    SET registration_status = 'rejected'
+                    WHERE season_player_id = @id
+                `);
+                return;
+            }
+            throw err;
+        }
     });
 }
 /**

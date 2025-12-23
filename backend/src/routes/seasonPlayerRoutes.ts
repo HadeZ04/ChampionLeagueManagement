@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireAuth } from "../middleware/authMiddleware";
+import { requireAnyPermission, requireAuth, requirePermission } from "../middleware/authMiddleware";
 import { uploadCsv } from "../middleware/uploadCsvMiddleware";
 
 import {
@@ -34,6 +34,7 @@ router.get("/seasons/:seasonId/teams", requireAuth, listSeasonTeams);
 router.post(
     "/season-players/approve-all",
     requireAuth,
+    requirePermission("approve_player_registrations"),
     approveAll
 );
 
@@ -44,6 +45,7 @@ router.post(
 router.post(
     "/season-players/import-csv",
     requireAuth,
+    requireAnyPermission("manage_teams", "manage_own_player_registrations"),
     uploadCsv,
     importCSV
 );

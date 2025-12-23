@@ -126,6 +126,13 @@ export const APP_CONFIG = {
         APPROVE_ALL: '/season-players/approve-all',
         REJECT: '/season-players/:id/reject'
       },
+      PLAYER_REGISTRATIONS: {
+        LIST: '/players/registrations',
+        CREATE: '/players/registrations',
+        UPDATE: '/players/registrations/:id',
+        APPROVE: '/players/registrations/:id/approve',
+        REJECT: '/players/registrations/:id/reject'
+      },
       LEADERBOARD: {
         LIST: '/leaderboard',
         DETAIL: '/leaderboard/:id',
