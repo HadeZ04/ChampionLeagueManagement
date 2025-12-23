@@ -183,14 +183,14 @@ const LoginPage = ({ onLogin, isAuthenticated }) => {
                     </a>
                   </div>
 
-                  {/* Strong Action Button */}
+                  {/* Strong Action Button - Consistent spacing with public login */}
                   <button
                     type="submit"
                     disabled={isLoading}
                     className="group relative w-full overflow-hidden rounded-lg bg-blue-600 p-[1px] focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-900 mt-2"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-cyan-500 to-indigo-600 transition-all duration-300 group-hover:opacity-100 opacity-80" />
-                    <span className="relative flex items-center justify-center w-full py-4 bg-[#0a0f1e] rounded-[7px] group-hover:bg-opacity-0 transition-all duration-300">
+                    <span className="relative flex items-center justify-center w-full py-3.5 bg-[#0a0f1e] rounded-[7px] group-hover:bg-opacity-0 transition-all duration-300">
                       {isLoading ? (
                         <>
                           <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3"></div>

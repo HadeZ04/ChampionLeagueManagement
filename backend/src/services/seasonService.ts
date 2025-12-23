@@ -497,93 +497,164 @@ export async function getInternalStandings(filters: { seasonId?: number; season?
     
     // If season year provided (like "2024"), find the corresponding seasonId
     if (!seasonId && filters.season) {
-      const seasonByYear = await query<{ season_id: number }>(
-        `SELECT TOP 1 season_id 
-         FROM seasons 
-         WHERE (
-           name LIKE @seasonPattern OR 
-           code LIKE @seasonPattern OR
-           YEAR(start_date) = @seasonYear
-         )
-         AND status IN ('in_progress', 'completed')
-         ORDER BY start_date DESC`,
-        { 
-          seasonPattern: `%${filters.season}%`,
-          seasonYear: Number(filters.season)
+      try {
+        const seasonByYear = await query<{ season_id: number }>(
+          `SELECT TOP 1 season_id 
+           FROM seasons 
+           WHERE (
+             name LIKE @seasonPattern OR 
+             code LIKE @seasonPattern OR
+             YEAR(start_date) = @seasonYear
+           )
+           AND status IN ('in_progress', 'completed')
+           ORDER BY start_date DESC`,
+          { 
+            seasonPattern: `%${filters.season}%`,
+            seasonYear: isNaN(Number(filters.season)) ? 0 : Number(filters.season)
+          }
+        );
+        
+        if (seasonByYear.recordset && seasonByYear.recordset.length > 0) {
+          seasonId = seasonByYear.recordset[0].season_id;
         }
-      );
-      
-      if (seasonByYear.recordset.length > 0) {
-        seasonId = seasonByYear.recordset[0].season_id;
+      } catch (err) {
+        console.log('[getInternalStandings] Season lookup by year failed:', err);
       }
     }
     
     if (!seasonId) {
       // Get latest season
-      const latestSeason = await query<{ season_id: number }>(
-        `SELECT TOP 1 season_id 
-         FROM seasons 
-         WHERE status IN ('in_progress', 'completed')
-         ORDER BY start_date DESC, season_id DESC`
-      );
-      
-      if (latestSeason.recordset.length === 0) {
-        throw new Error('No season found');
+      try {
+        const latestSeason = await query<{ season_id: number }>(
+          `SELECT TOP 1 season_id 
+           FROM seasons 
+           WHERE status IN ('in_progress', 'completed')
+           ORDER BY start_date DESC, season_id DESC`
+        );
+        
+        if (!latestSeason.recordset || latestSeason.recordset.length === 0) {
+          console.log('[getInternalStandings] No active season found, returning empty standings');
+          return {
+            season: {
+              year: new Date().getFullYear(),
+              label: `${new Date().getFullYear()}/${new Date().getFullYear() + 1}`,
+              startDate: '',
+              endDate: ''
+            },
+            updated: new Date().toISOString(),
+            table: []
+          };
+        }
+        
+        seasonId = latestSeason.recordset[0].season_id;
+      } catch (err) {
+        console.log('[getInternalStandings] Latest season query failed:', err);
+        return {
+          season: {
+            year: new Date().getFullYear(),
+            label: `${new Date().getFullYear()}/${new Date().getFullYear() + 1}`,
+            startDate: '',
+            endDate: ''
+          },
+          updated: new Date().toISOString(),
+          table: []
+        };
       }
-      
-      seasonId = latestSeason.recordset[0].season_id;
     }
 
     // Get season details
-    const seasonInfo = await query<{
-      season_id: number;
-      name: string;
-      code: string | null;
-      status: SeasonStatus;
-      start_date: string | null;
-      end_date: string | null;
-    }>(
-      `SELECT season_id, name, code, status, start_date, end_date
-       FROM seasons
-       WHERE season_id = @seasonId`,
-      { seasonId }
-    );
+    let season: any;
+    let startYear: number;
+    
+    try {
+      const seasonInfo = await query<{
+        season_id: number;
+        name: string;
+        code: string | null;
+        status: SeasonStatus;
+        start_date: string | null;
+        end_date: string | null;
+      }>(
+        `SELECT season_id, name, code, status, start_date, end_date
+         FROM seasons
+         WHERE season_id = @seasonId`,
+        { seasonId }
+      );
 
-    if (seasonInfo.recordset.length === 0) {
-      throw new Error('Season not found');
+      if (!seasonInfo.recordset || seasonInfo.recordset.length === 0) {
+        console.log('[getInternalStandings] Season not found, returning empty standings');
+        return {
+          season: {
+            year: new Date().getFullYear(),
+            label: `${new Date().getFullYear()}/${new Date().getFullYear() + 1}`,
+            startDate: '',
+            endDate: ''
+          },
+          updated: new Date().toISOString(),
+          table: []
+        };
+      }
+
+      season = seasonInfo.recordset[0];
+      startYear = season.start_date ? new Date(season.start_date).getFullYear() : new Date().getFullYear();
+    } catch (err) {
+      console.log('[getInternalStandings] Season info query failed:', err);
+      return {
+        season: {
+          year: new Date().getFullYear(),
+          label: `${new Date().getFullYear()}/${new Date().getFullYear() + 1}`,
+          startDate: '',
+          endDate: ''
+        },
+        updated: new Date().toISOString(),
+        table: []
+      };
     }
 
-    const season = seasonInfo.recordset[0];
-    const startYear = season.start_date ? new Date(season.start_date).getFullYear() : new Date().getFullYear();
-
-    // Get standings
-    const standings = await query(
-      `SELECT 
-        ROW_NUMBER() OVER (ORDER BY sts.points DESC, sts.goal_difference DESC, sts.goals_for DESC) AS position,
-        t.team_id AS teamId,
-        t.name AS teamName,
-        t.short_name AS shortName,
-        t.tla,
-        t.logo AS crest,
-        sts.matches_played AS played,
-        sts.wins AS won,
-        sts.draws AS draw,
-        sts.losses AS lost,
-        sts.goals_for AS goalsFor,
-        sts.goals_against AS goalsAgainst,
-        sts.goal_difference AS goalDifference,
-        sts.points,
-        stp.status
-       FROM season_team_statistics sts
-       INNER JOIN season_team_participants stp ON sts.season_team_id = stp.season_team_id
-       INNER JOIN teams t ON stp.team_id = t.team_id
-       WHERE sts.season_id = @seasonId
-       ORDER BY sts.points DESC, sts.goal_difference DESC, sts.goals_for DESC`,
-      { seasonId }
-    );
+    // Get standings - handle if table doesn't exist or is empty
+    let standings: any;
+    try {
+      standings = await query(
+        `SELECT 
+          ROW_NUMBER() OVER (ORDER BY sts.points DESC, sts.goal_difference DESC, sts.goals_for DESC) AS position,
+          t.team_id AS teamId,
+          t.name AS teamName,
+          t.short_name AS shortName,
+          t.tla,
+          t.logo AS crest,
+          sts.matches_played AS played,
+          sts.wins AS won,
+          sts.draws AS draw,
+          sts.losses AS lost,
+          sts.goals_for AS goalsFor,
+          sts.goals_against AS goalsAgainst,
+          sts.goal_difference AS goalDifference,
+          sts.points,
+          stp.status
+         FROM season_team_statistics sts
+         INNER JOIN season_team_participants stp ON sts.season_team_id = stp.season_team_id
+         INNER JOIN teams t ON stp.team_id = t.team_id
+         WHERE sts.season_id = @seasonId
+         ORDER BY sts.points DESC, sts.goal_difference DESC, sts.goals_for DESC`,
+        { seasonId }
+      );
+    } catch (err) {
+      console.log('[getInternalStandings] Standings query failed:', err);
+      // Return empty standings if query fails
+      return {
+        season: {
+          year: startYear,
+          label: normalizeSeasonLabel(season),
+          startDate: season.start_date || '',
+          endDate: season.end_date || ''
+        },
+        updated: new Date().toISOString(),
+        table: []
+      };
+    }
 
     // Calculate status based on position
-    const table = standings.recordset.map((row: any, index: number) => {
+    const table = (standings.recordset || []).map((row: any, index: number) => {
       let status = 'qualified';
       if (row.position > 24) {
         status = 'eliminated';

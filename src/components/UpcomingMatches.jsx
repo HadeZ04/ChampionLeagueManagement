@@ -1,43 +1,55 @@
 import React, { useEffect, useState } from 'react'
-import { Calendar, Clock, MapPin, Tv } from 'lucide-react'
+import { Calendar, Clock, MapPin, Tv, AlertCircle } from 'lucide-react'
 import MatchesService from '../layers/application/services/MatchesService'
+import logger from '../shared/utils/logger'
 
 const UpcomingMatches = () => {
   const [upcomingMatches, setUpcomingMatches] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  const fetchMatches = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await MatchesService.getAllMatches({
+        status: 'SCHEDULED',
+        limit: 4
+      })
+      const mapped = (response.matches || []).map(match => ({
+        id: match.id,
+        date: new Date(match.utcDate),
+        homeTeam: {
+          name: match.homeTeamName,
+          shortName: match.homeTeamTla || match.homeTeamName.slice(0, 3).toUpperCase()
+        },
+        awayTeam: {
+          name: match.awayTeamName,
+          shortName: match.awayTeamTla || match.awayTeamName.slice(0, 3).toUpperCase()
+        },
+        venue: match.venue || 'Chưa xác định',
+        group: match.groupName || match.stage || 'Vòng phân hạng'
+      }))
+      setUpcomingMatches(mapped)
+    } catch (err) {
+      logger.error('Không thể tải các trận sắp diễn ra', err)
+      setError(err?.message || 'Không thể tải dữ liệu trận đấu')
+      setUpcomingMatches([])
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
     let isMounted = true
-    const fetchMatches = async () => {
-      try {
-        setLoading(true)
-        const response = await MatchesService.getAllMatches({
-          status: 'SCHEDULED',
-          limit: 4
-        })
-        if (!isMounted) return
-        const mapped = (response.matches || []).map(match => ({
-          id: match.id,
-          date: new Date(match.utcDate),
-          homeTeam: {
-            name: match.homeTeamName,
-            shortName: match.homeTeamTla || match.homeTeamName.slice(0, 3).toUpperCase()
-          },
-          awayTeam: {
-            name: match.awayTeamName,
-            shortName: match.awayTeamTla || match.awayTeamName.slice(0, 3).toUpperCase()
-          },
-          venue: match.venue || 'Chưa xác định',
-          group: match.groupName || match.stage || 'Vòng phân hạng'
-        }))
-        setUpcomingMatches(mapped)
-      } catch (err) {
-        console.error('Không thể tải các trận sắp diễn ra', err)
-      } finally {
-        if (isMounted) setLoading(false)
+    fetchMatches().then(() => {
+      if (!isMounted) {
+        // Reset state if unmounted during fetch
+        setUpcomingMatches([])
+        setError(null)
+        setLoading(false)
       }
-    }
-    fetchMatches()
+    })
     return () => {
       isMounted = false
     }
@@ -94,6 +106,15 @@ const UpcomingMatches = () => {
         <Calendar className="text-white" size={24} />
         <h2 className="text-2xl font-bold">Trận sắp diễn ra</h2>
         <div className="flex-1" />
+        {error && (
+          <button
+            onClick={fetchMatches}
+            className="inline-flex items-center gap-2 rounded-full border border-white/30 px-4 py-2 text-xs uppercase tracking-[0.3em] text-white/80 transition-colors hover:bg-white/10"
+            disabled={loading}
+          >
+            Thử lại
+          </button>
+        )}
         <a
           href="/matches"
           className="inline-flex items-center gap-2 rounded-full border border-white/30 px-4 py-2 text-xs uppercase tracking-[0.3em] text-white/80 transition-colors hover:bg-white/10"
@@ -101,6 +122,20 @@ const UpcomingMatches = () => {
           Xem lịch thi đấu
         </a>
       </div>
+
+      {/* Error State */}
+      {error && !loading && (
+        <div className="text-center py-8 bg-red-500/10 rounded-lg border border-red-500/30 mb-4">
+          <AlertCircle className="mx-auto mb-2 text-red-200" size={32} />
+          <p className="text-sm text-white/90 mb-2">{error}</p>
+          <button
+            onClick={fetchMatches}
+            className="text-xs text-white/70 hover:text-white underline"
+          >
+            Nhấn để thử lại
+          </button>
+        </div>
+      )}
 
       <div className="space-y-4">
         {loading && (
@@ -186,3 +221,4 @@ const UpcomingMatches = () => {
 }
 
 export default UpcomingMatches
+

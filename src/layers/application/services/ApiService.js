@@ -1,4 +1,5 @@
 import APP_CONFIG from '../../../config/app.config'
+import logger from '../../../shared/utils/logger'
 
 class ApiService {
   constructor() {
@@ -12,52 +13,116 @@ class ApiService {
   // =========================
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`
-    const config = {
-      timeout: this.timeout,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-      },
-      ...options
-    }
+    let lastError = null
 
-    const token = localStorage.getItem('auth_token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
+    // Retry logic
+    for (let attempt = 1; attempt <= this.retryAttempts; attempt++) {
+      try {
+        const token = localStorage.getItem('auth_token')
+        const headers = {
+          'Content-Type': 'application/json',
+          ...options.headers
+        }
+        if (token) {
+          headers.Authorization = `Bearer ${token}`
+        }
 
-    try {
-      const response = await fetch(url, config)
+        // Add timeout wrapper
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), this.timeout)
 
-      if (!response.ok) {
-        let errorMessage = response.statusText
+        const response = await fetch(url, {
+          ...options,
+          headers,
+          signal: controller.signal
+        })
+
+        clearTimeout(timeoutId)
+
+        if (!response.ok) {
+          let errorMessage = response.statusText
+          try {
+            const errJson = await response.json()
+            errorMessage = errJson.error || errJson.message || errorMessage
+          } catch (_) { }
+
+          const error = {
+            status: response.status,
+            message: errorMessage,
+            retryable: response.status >= 500
+          }
+
+          // Global error handling
+          if (response.status === 401) {
+            // Auto logout and redirect for unauthorized
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('auth:unauthorized', { detail: { error } }))
+            }
+            throw { ...error, message: 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.' }
+          }
+
+          if (response.status === 403) {
+            throw { ...error, message: 'Bạn không có quyền truy cập tài nguyên này.' }
+          }
+
+          // Retry on server errors (5xx)
+          if (response.status >= 500 && attempt < this.retryAttempts) {
+            logger.warn(`API request failed with ${response.status} (attempt ${attempt}/${this.retryAttempts}), retrying...`)
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt)) // Exponential backoff
+            continue
+          }
+
+          // Dispatch global error event for monitoring
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('api:error', { 
+              detail: { error, endpoint, attempt } 
+            }))
+          }
+
+          throw error
+        }
+
+        // Success - return data
+        if (response.status === 204 || response.status === 205) {
+          return null
+        }
+
+        const responseText = await response.text()
+        if (!responseText) return null
+
         try {
-          const errJson = await response.json()
-          errorMessage = errJson.error || errJson.message || errorMessage
-        } catch (_) { }
+          return JSON.parse(responseText)
+        } catch {
+          return responseText
+        }
 
-        throw {
-          status: response.status,
-          message: errorMessage
+      } catch (error) {
+        lastError = error
+
+        // Don't retry on abort (timeout) or client errors (4xx)
+        if (error.name === 'AbortError') {
+          throw {
+            status: 408,
+            message: 'Request timeout',
+            retryable: false
+          }
+        }
+
+        if (error.status && error.status >= 400 && error.status < 500) {
+          throw error
+        }
+
+        // Retry on network errors or server errors
+        if (attempt < this.retryAttempts) {
+          logger.warn(`API request failed (attempt ${attempt}/${this.retryAttempts}), retrying...`, error)
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt))
+          continue
         }
       }
-
-      if (response.status === 204 || response.status === 205) {
-        return null
-      }
-
-      const responseText = await response.text()
-      if (!responseText) return null
-
-      try {
-        return JSON.parse(responseText)
-      } catch {
-        return responseText
-      }
-    } catch (error) {
-      console.error('API Request failed:', error)
-      throw error
     }
+
+    logger.error('API Request failed after all retries:', lastError)
+    throw lastError
   }
 
   async get(endpoint, params = {}) {

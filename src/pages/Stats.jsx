@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Trophy, Target, Users, TrendingUp, Award, Zap, Shield, Clock, X } from 'lucide-react'
 import StatsService from '../layers/application/services/StatsService'
+import logger from '../shared/utils/logger'
 
 const Stats = () => {
   const [selectedCategory, setSelectedCategory] = useState('goals')
@@ -80,7 +81,7 @@ const Stats = () => {
       const detail = await StatsService.getPlayerStatDetail(player.id)
       setDetailData(detail ?? player)
     } catch (error) {
-      console.error('Failed to load player detail', error)
+      logger.error('Failed to load player detail', error)
       setDetailData(player)
     } finally {
       setDetailLoading(false)
@@ -170,19 +171,19 @@ const Stats = () => {
   return (
     <div className="uefa-container py-8">
       {/* Breadcrumb */}
-      <nav className="uefa-breadcrumb">
-        <a href="#" className="uefa-breadcrumb-item">Home</a>
-        <span className="uefa-breadcrumb-separator">/</span>
-        <a href="#" className="uefa-breadcrumb-item">Champions League</a>
-        <span className="uefa-breadcrumb-separator">/</span>
-        <span className="text-uefa-dark">Statistics</span>
+      <nav className="flex items-center gap-2 text-sm mb-6">
+        <a href="#" className="text-cyan-400 hover:text-cyan-300 transition-colors">Trang chủ</a>
+        <span className="text-white/40">/</span>
+        <a href="#" className="text-slate-300 hover:text-slate-200 transition-colors">Champions League</a>
+        <span className="text-white/40">/</span>
+        <span className="text-white font-semibold">Thống kê</span>
       </nav>
 
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="uefa-section-title">UEFA Champions League Statistics</h1>
-        <p className="uefa-section-subtitle">
-          Player and team statistics for the 2024/25 season
+        <h1 className="text-4xl font-bold text-white">Thống kê UEFA Champions League</h1>
+        <p className="text-slate-300 text-lg mt-3">
+          Thống kê cầu thủ và đội bóng mùa giải 2024/25
         </p>
       </div>
 
@@ -202,17 +203,18 @@ const Stats = () => {
 
       {/* Player Statistics */}
       <div className="mb-12">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <h2 className="text-2xl font-bold text-uefa-dark">Player Statistics</h2>
-          <div className="flex items-center space-x-3">
-            <span className="text-uefa-gray text-sm uppercase tracking-wide">Season</span>
+        <div className="px-4 sm:px-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+          <h2 className="text-2xl font-bold text-white">Thống kê cầu thủ</h2>
+          <div className="flex items-center gap-3">
+            <span className="text-slate-400 text-sm uppercase tracking-wide">Mùa giải</span>
             <select
-              className="uefa-select bg-white text-uefa-dark w-48"
+              className="h-11 px-4 rounded-full bg-[#020617]/85 border border-white/15 text-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-400/70 focus:border-cyan-400/70 transition w-48 appearance-none cursor-pointer"
               value={seasonFilter}
               onChange={(event) => setSeasonFilter(event.target.value)}
+              style={{backgroundImage: "url('data:image/svg+xml;utf8,<svg fill=\'%23cbd5e1\' height=\'24\' viewBox=\'0 0 24 24\' width=\'24\' xmlns=\'http://www.w3.org/2000/svg\'><path d=\'M7 10l5 5 5-5z\'/></svg>')", backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '20px'}}
             >
               {seasonOptions.map((season) => (
-                <option key={season} value={season}>
+                <option key={season} value={season} className="bg-[#0a1929] text-white">
                   {season}
                 </option>
               ))}
@@ -227,25 +229,31 @@ const Stats = () => {
         )}
 
         {/* Category Tabs */}
-        <div className="uefa-filter-tabs mb-6">
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
-              className={`uefa-filter-tab ${selectedCategory === category.id ? 'active' : ''}`}
-            >
-              <category.icon size={16} className="mr-2" />
-              {category.name}
-            </button>
-          ))}
+        <div className="px-4 sm:px-0 overflow-x-auto no-scrollbar mb-6">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/5 p-1 border border-white/10">
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setSelectedCategory(category.id)}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all duration-200 whitespace-nowrap ${
+                  selectedCategory === category.id 
+                    ? 'bg-gradient-to-r from-[#2563EB] to-[#22C55E] text-white shadow-sm' 
+                    : 'text-slate-200/80 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <category.icon size={16} className={selectedCategory === category.id ? 'text-white' : 'text-slate-300'} />
+                {category.name}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="mb-4">
+        <div className="px-4 sm:px-0 mb-4">
           <div className="relative max-w-md">
             <input
               type="text"
               placeholder="Search players, clubs or nationality..."
-              className="w-full rounded-uefa border border-gray-300 py-2 pl-3 pr-3 text-sm text-gray-700 focus:border-uefa-blue focus:outline-none"
+              className="w-full h-11 px-4 rounded-full bg-[#020617]/85 border border-white/15 text-slate-50 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-400/70 focus:border-cyan-400/70 transition"
               value={playerSearch}
               onChange={(event) => setPlayerSearch(event.target.value)}
             />

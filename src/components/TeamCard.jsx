@@ -40,7 +40,7 @@ const TeamCard = ({ team }) => {
         </div>
         <div className="text-right">
           <div className="text-3xl font-bold text-uefa-blue">#{team.position}</div>
-          <div className="text-uefa-gray text-sm font-medium">Position</div>
+          <div className="text-uefa-gray text-sm font-medium">Vị trí</div>
         </div>
       </div>
 
@@ -48,11 +48,11 @@ const TeamCard = ({ team }) => {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="text-center p-4 bg-uefa-light-gray rounded-uefa group-hover:bg-uefa-blue/10 transition-colors">
           <div className="text-2xl font-bold text-uefa-dark">{team.points}</div>
-          <div className="text-uefa-gray text-sm font-medium">Points</div>
+          <div className="text-uefa-gray text-sm font-medium">Điểm</div>
         </div>
         <div className="text-center p-4 bg-uefa-light-gray rounded-uefa group-hover:bg-uefa-blue/10 transition-colors">
           <div className="text-2xl font-bold text-uefa-dark">{team.goalsFor}</div>
-          <div className="text-uefa-gray text-sm font-medium">Goals</div>
+          <div className="text-uefa-gray text-sm font-medium">Bàn thắng</div>
         </div>
       </div>
 
@@ -60,21 +60,21 @@ const TeamCard = ({ team }) => {
       <div className="flex justify-between items-center mb-6 p-4 bg-uefa-light-gray rounded-uefa">
         <div className="text-center">
           <div className="text-xl font-bold text-uefa-green">{team.won}</div>
-          <div className="text-uefa-gray text-xs font-medium">Wins</div>
+          <div className="text-uefa-gray text-xs font-medium">Thắng</div>
         </div>
         <div className="text-center">
           <div className="text-xl font-bold text-uefa-yellow">{team.drawn}</div>
-          <div className="text-uefa-gray text-xs font-medium">Draws</div>
+          <div className="text-uefa-gray text-xs font-medium">Hòa</div>
         </div>
         <div className="text-center">
           <div className="text-xl font-bold text-uefa-red">{team.lost}</div>
-          <div className="text-uefa-gray text-xs font-medium">Losses</div>
+          <div className="text-uefa-gray text-xs font-medium">Thua</div>
         </div>
         <div className="text-center">
           <div className="text-xl font-bold text-uefa-dark">
             {team.goalsFor - team.goalsAgainst > 0 ? '+' : ''}{team.goalsFor - team.goalsAgainst}
           </div>
-          <div className="text-uefa-gray text-xs font-medium">GD</div>
+          <div className="text-uefa-gray text-xs font-medium">HS</div>
         </div>
       </div>
 
@@ -83,35 +83,35 @@ const TeamCard = ({ team }) => {
         <div className="flex items-center justify-between">
           <span className="text-uefa-gray flex items-center">
             <Users size={14} className="mr-2" />
-            Coach:
+            Huấn luyện viên:
           </span>
           <span className="text-uefa-dark font-semibold">{team.coach}</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-uefa-gray flex items-center">
             <MapPin size={14} className="mr-2" />
-            Stadium:
+            Sân vận động:
           </span>
           <span className="text-uefa-dark font-semibold">{team.stadium}</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-uefa-gray flex items-center">
             <Target size={14} className="mr-2" />
-            Capacity:
+            Sức chứa:
           </span>
           <span className="text-uefa-dark font-semibold">{team.capacity?.toLocaleString()}</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-uefa-gray flex items-center">
             <Calendar size={14} className="mr-2" />
-            Founded:
+            Thành lập:
           </span>
           <span className="text-uefa-dark font-semibold">{team.founded}</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-uefa-gray flex items-center">
             <Trophy size={14} className="mr-2" />
-            UCL Titles:
+            Danh hiệu Cúp C1:
           </span>
           <span className="text-uefa-dark font-semibold flex items-center">
             {team.titles}
@@ -123,10 +123,10 @@ const TeamCard = ({ team }) => {
       {/* Action Buttons */}
       <div className="flex space-x-3">
         <button className="flex-1 uefa-btn-primary text-sm py-2 group-hover:shadow-lg transition-all">
-          Team Details
+          Chi tiết đội
         </button>
         <button className="flex-1 uefa-btn-secondary text-sm py-2 group-hover:shadow-lg transition-all">
-          Fixtures
+          Lịch thi đấu
         </button>
       </div>
     </div>

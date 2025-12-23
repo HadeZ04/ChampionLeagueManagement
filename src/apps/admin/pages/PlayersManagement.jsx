@@ -19,7 +19,7 @@ import TeamsService from '../../../layers/application/services/TeamsService'
 import SeasonPlayerRegistrationForm from '../components/SeasonPlayerRegistrationForm'
 import ImportPlayersCsvModal from '../components/ImportPlayersCsvModal'
 
-const defaultTeamsOption = [{ id: 'all', name: 'All Teams' }]
+const defaultTeamsOption = [{ id: 'all', name: 'Tất cả đội' }]
 
 const PlayersManagement = () => {
   const [searchTerm, setSearchTerm] = useState('')
@@ -65,7 +65,7 @@ const PlayersManagement = () => {
       try {
         const filters = {
           search: searchTerm,
-          position: selectedPosition !== 'all' && selectedPosition !== 'All Positions' ? selectedPosition : '',
+          position: selectedPosition !== 'all' && selectedPosition !== 'Tất cả vị trí' ? selectedPosition : '',
           teamId: selectedTeam !== 'all' ? Number(selectedTeam) : '',
           page: pagination.page,
           limit: pagination.limit
@@ -81,7 +81,7 @@ const PlayersManagement = () => {
       } catch (err) {
         console.error('Failed to load players', err)
         if (isMounted) {
-          setError('Unable to load players from the server.')
+          setError('Không thể tải cầu thủ từ máy chủ.')
         }
       } finally {
         if (isMounted) {
@@ -98,7 +98,7 @@ const PlayersManagement = () => {
 
   const positions = useMemo(() => {
     const set = new Set(players.map(player => player.preferred_position || 'Unknown'))
-    return ['All Positions', ...Array.from(set)]
+    return ['Tất cả vị trí', ...Array.from(set)]
   }, [players])
 
   const totalGoals = useMemo(
@@ -122,14 +122,14 @@ const PlayersManagement = () => {
   }
 
   const handleDelete = async (playerId) => {
-    const confirmed = window.confirm('Are you sure you want to remove this player?')
+    const confirmed = window.confirm('Bạn có chắc chắn muốn xóa cầu thủ này?')
     if (!confirmed) return
     try {
       await PlayersService.deletePlayer(playerId)
       setPlayers(prev => prev.filter(player => player.player_id !== playerId))
     } catch (err) {
       console.error('Failed to delete player', err)
-      alert('Could not delete player. Please try again.')
+      alert('Không thể xóa cầu thủ. Vui lòng thử lại.')
     }
   }
 

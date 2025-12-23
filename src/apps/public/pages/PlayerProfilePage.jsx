@@ -50,7 +50,7 @@ const PlayerProfilePage = () => {
         <div className="uefa-container py-8">
             {/* Player Header */}
             <div className="flex items-end gap-6 mb-8">
-                <img src={player.portraitUrl} alt={player.fullName} className="w-40 h-40 rounded-full border-4 border-white shadow-lg" />
+                <img src={player.portraitUrl} alt={player.fullName} className="w-40 h-40 rounded-full border-4 border-white shadow-lg" loading="lazy" />
                 <div>
                     <p className="text-gray-500">{toPlayerPositionLabel(player.position)}</p>
                     <h1 className="text-5xl font-bold text-uefa-dark">{player.fullName}</h1>

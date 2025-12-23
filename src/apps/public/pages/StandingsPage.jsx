@@ -4,6 +4,7 @@ import StandingsTable from '../components/StandingsTable';
 import TopScorers from '../components/TopScorers';
 import UpcomingMatches from '../components/UpcomingMatches';
 import TeamsService from '../../../layers/application/services/TeamsService';
+import logger from '../../../shared/utils/logger';
 
 const phases = [
   { id: 'league', name: 'Vòng phân hạng', icon: Users },
@@ -37,7 +38,7 @@ const StandingsPage = () => {
           setSelectedSeason(String(data[0].year));
         }
       } catch (err) {
-        console.error('Không thể tải danh sách mùa giải', err);
+        logger.error('Không thể tải danh sách mùa giải', err);
         setError('Không thể tải danh sách mùa giải.');
       } finally {
         setIsLoadingSeasons(false);
@@ -89,35 +90,35 @@ const StandingsPage = () => {
   }, [standings]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-transparent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Hero Section */}
-        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-600 p-8 lg:p-12 shadow-2xl">
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRjMC0yLjIxIDEuNzktNCA0LTRzNCAxLjc5IDQgNC0xLjc5IDQtNCA0LTQtMS43OS00LTR6bTAgMTBjMC0yLjIxIDEuNzktNCA0LTRzNCAxLjc5IDQgNC0xLjc5IDQtNCA0LTQtMS43OS00LTR6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-20"></div>
+        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0F172A] via-[#1E3A8A] to-[#4C1D95] p-6 md:p-8 shadow-[0_0_60px_rgba(0,0,0,0.6)] border border-white/10 backdrop-blur-sm">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0YzAtMi4yMSAxLjc5LTQgNC00czQgMS43OSA0IDQtMS43OSA0LTQgNC00LTEuNzktNC00em0wIDEwYzAtMi4yMSAxLjc5LTQgNC00czQgMS43OSA0IDQtMS43OSA0LTQgNC00LTEuNzktNC00eiIvPjwvZz48L2c+PC9zdmc+')] opacity-30"></div>
           
           <div className="relative flex flex-col lg:flex-row gap-8 items-start lg:items-center justify-between">
             <div className="flex-1 space-y-4">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm border border-white/30">
-                <Trophy size={16} className="text-yellow-300" />
-                <span className="text-xs uppercase tracking-wider text-white font-bold">Cúp C1 châu Âu</span>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white text-sm">
+                <Trophy size={14} className="text-cyan-400" />
+                <span className="uppercase tracking-wider font-bold">Cúp C1 châu Âu</span>
               </div>
               
-              <h1 className="text-4xl lg:text-5xl font-black text-white leading-tight">
+              <h1 className="text-3xl md:text-4xl font-extrabold text-white leading-tight">
                 Bảng xếp hạng vòng phân hạng
               </h1>
               
-              <p className="text-lg text-blue-100 max-w-2xl leading-relaxed">
+              <p className="mt-2 text-sm md:text-base text-slate-200/85 max-w-2xl leading-relaxed">
                 Theo dõi suất đi tiếp, nhóm tranh vé và phong độ gần đây dựa trên dữ liệu giải đấu.
               </p>
               
               {selectedSeason && standings?.updated && (
-                <div className="flex flex-wrap gap-4 text-sm text-blue-100">
+                <div className="flex flex-wrap gap-4 text-sm text-slate-300">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                    <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.6)]"></div>
                     <span>Mùa {selectedSeason}/{Number(selectedSeason) + 1}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <TrendingUp size={16} />
+                    <TrendingUp size={16} className="text-cyan-400" />
                     <span>Cập nhật {new Date(standings.updated).toLocaleString('vi-VN')}</span>
                   </div>
                 </div>
@@ -126,12 +127,12 @@ const StandingsPage = () => {
 
             <div className="flex flex-wrap gap-3">
               <select
-                className="px-6 py-3 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 text-white font-semibold cursor-pointer hover:bg-white/30 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/50"
+                className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium cursor-pointer transition focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
                 value={selectedSeason}
                 onChange={(event) => setSelectedSeason(event.target.value)}
                 disabled={isLoadingSeasons || seasons.length === 0}
               >
-                {isLoadingSeasons && <option>Đang tải...</option>}
+                {isLoadingSeasons && <option className="text-slate-900">Đang tải...</option>}
                 {!isLoadingSeasons &&
                   seasons.map((season) => (
                     <option key={season.id} value={season.year} className="text-slate-900">
@@ -140,12 +141,12 @@ const StandingsPage = () => {
                   ))}
               </select>
               
-              <button className="px-6 py-3 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 text-white font-semibold hover:bg-white/30 transition-all duration-300 flex items-center gap-2 group">
+              <button className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium transition flex items-center gap-2 group">
                 <Download size={18} className="group-hover:animate-bounce" />
                 <span>Xuất</span>
               </button>
               
-              <button className="px-6 py-3 rounded-xl bg-white text-blue-600 font-semibold hover:bg-blue-50 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl hover:scale-105">
+              <button className="px-4 py-2 rounded-full bg-gradient-to-r from-[#2563EB] to-[#22C55E] text-white font-medium hover:shadow-lg transition flex items-center gap-2">
                 <Share2 size={18} />
                 <span>Chia sẻ</span>
               </button>
@@ -154,25 +155,20 @@ const StandingsPage = () => {
         </section>
 
         {/* Phase Selector */}
-        <div className="flex flex-wrap gap-3">
-          {phases.map((phase, index) => {
+        <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full p-1 mt-6">
+          {phases.map((phase) => {
             const Icon = phase.icon;
             return (
               <button
                 key={phase.id}
                 onClick={() => setSelectedPhase(phase.id)}
-                className={`
-                  px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 backdrop-blur-xl
-                  ${selectedPhase === phase.id
-                    ? 'bg-gradient-to-r from-blue-500/80 to-indigo-500/80 text-white shadow-lg shadow-blue-500/30 scale-105 border border-white/20'
-                    : 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
-                  }
-                `}
-                style={{
-                  animation: `fadeInUp 0.4s ease-out ${index * 0.1}s both`
-                }}
+                className={`inline-flex items-center gap-2 px-5 py-2 rounded-full font-semibold text-sm transition-all duration-200 ${
+                  selectedPhase === phase.id
+                    ? 'bg-gradient-to-r from-[#2563EB] to-[#06B6D4] text-white shadow-sm'
+                    : 'bg-[#020617]/80 text-slate-200/85 border border-white/10 hover:bg-white/10 hover:text-white'
+                }`}
               >
-                <Icon size={18} />
+                <Icon size={18} className={selectedPhase === phase.id ? 'text-white' : 'text-slate-300'} />
                 <span>{phase.name}</span>
               </button>
             );
@@ -180,30 +176,19 @@ const StandingsPage = () => {
         </div>
 
         {/* Group Filter */}
-        <div className="flex flex-wrap gap-3">
-          {groups.map((group, index) => (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {groups.map((group) => (
             <button
               key={group.id}
               onClick={() => setSelectedGroup(group.id)}
-              className={`
-                px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-3 backdrop-blur-xl
-                ${selectedGroup === group.id
-                  ? 'bg-white/20 text-white shadow-lg border-2 border-white/40 scale-105'
-                  : 'bg-white/10 text-white/80 hover:bg-white/15 border border-white/20 hover:border-white/30'
-                }
-              `}
-              style={{
-                animation: `fadeInUp 0.4s ease-out ${index * 0.1}s both`
-              }}
+              className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full font-medium text-sm border transition-all duration-200 ${
+                selectedGroup === group.id
+                  ? 'bg-white/15 text-white border-white/25 shadow-sm'
+                  : 'bg-[#020617]/70 text-slate-200/85 border-white/10 hover:bg-white/10 hover:text-white'
+              }`}
             >
               <span>{group.name}</span>
-              <span className={`
-                px-2 py-1 rounded-lg text-xs font-bold backdrop-blur-sm
-                ${selectedGroup === group.id
-                  ? 'bg-white/30 text-white'
-                  : 'bg-white/10 text-white/70'
-                }
-              `}>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-black/40 text-slate-100">
                 {group.count}
               </span>
             </button>
@@ -216,10 +201,17 @@ const StandingsPage = () => {
             <div className="w-12 h-12 rounded-full bg-rose-500/30 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-rose-400/30">
               <Trophy size={24} className="text-rose-300" />
             </div>
-            <div>
+            <div className="flex-1">
               <h3 className="font-bold text-white">Lỗi tải dữ liệu</h3>
               <p className="text-white/80">{error}</p>
             </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-all duration-300 font-semibold flex items-center gap-2"
+            >
+              <TrendingUp size={16} />
+              Thử lại
+            </button>
           </div>
         )}
 

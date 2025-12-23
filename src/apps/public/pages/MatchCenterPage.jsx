@@ -84,10 +84,14 @@ const MatchCenterPage = () => {
             {timeline.map(event => (
               <div key={event.minute} className="flex items-center gap-4">
                 <div className="w-16 text-right text-slate-400 text-sm">{event.minute}'</div>
-                <div className="flex-1 h-px bg-slate-100" />
-                <div className={`rounded-3xl px-4 py-2 border ${event.team === 'home' ? 'border-[#0055FF]/30 bg-[#0055FF]/5' : 'border-slate-200 bg-white'}`}>
-                  <p className="text-slate-900 font-semibold">{event.player}</p>
-                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{event.team === 'home' ? HOME_TEAM_NAME : AWAY_TEAM_NAME}</p>
+                <div className="flex-1 h-px bg-white/10" />
+                <div className={`rounded-3xl px-4 py-2 border ${
+                  event.team === 'home' 
+                    ? 'border-cyan-400/30 bg-cyan-500/10' 
+                    : 'border-white/20 bg-[#020617]/80'
+                }`}>
+                  <p className="text-white font-semibold">{event.player}</p>
+                  <p className="text-xs uppercase tracking-[0.3em] text-slate-300">{event.team === 'home' ? HOME_TEAM_NAME : AWAY_TEAM_NAME}</p>
                 </div>
               </div>
             ))}
@@ -113,16 +117,16 @@ const MatchCenterPage = () => {
         <section className="grid md:grid-cols-2 gap-6">
           {[HOME_TEAM_NAME, AWAY_TEAM_NAME].map((team, idx) => (
             <div key={team} className="glass-card p-6 space-y-3">
-              <div className="flex items-center gap-2 text-slate-500">
+              <div className="flex items-center gap-2 text-slate-300">
                 <Shield size={16} /> {team}
               </div>
               <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{idx === 0 ? '4-3-3' : '4-4-2'}</p>
-              <div className="grid grid-cols-2 gap-3 text-slate-600">
+              <div className="grid grid-cols-2 gap-3">
                 {(idx === 0
                   ? ['Ederson', 'Walker', 'Dias', 'Stones', 'Akanji', 'Rodri', 'Silva', 'De Bruyne', 'Foden', 'Alvarez', 'Haaland']
                   : ['Courtois', 'Carvajal', 'Rudiger', 'Nacho', 'Mendy', 'Valverde', 'Modric', 'Bellingham', 'Kroos', 'Rodrygo', 'Vinicius']
                 ).map(player => (
-                  <div key={player} className="rounded-2xl border border-slate-100 px-3 py-2 text-sm bg-white">{player}</div>
+                  <div key={player} className="rounded-2xl border border-white/10 px-3 py-2 text-sm bg-[#020617]/60 text-white">{player}</div>
                 ))}
               </div>
             </div>
@@ -131,19 +135,19 @@ const MatchCenterPage = () => {
       )}
 
       <section className="glass-card p-8 grid md:grid-cols-3 gap-6">
-        <div className="rounded-3xl border border-slate-100 p-6 text-center bg-slate-50/70">
-          <Clock className="mx-auto mb-3 text-[#0055FF]" />
-          <p className="text-2xl font-semibold text-slate-900">67'</p>
+        <div className="rounded-3xl border border-white/10 p-6 text-center bg-[#020617]/60 backdrop-blur-sm">
+          <Clock className="mx-auto mb-3 text-cyan-400" />
+          <p className="text-2xl font-semibold text-white">67'</p>
           <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Thời gian</p>
         </div>
-        <div className="rounded-3xl border border-slate-100 p-6 text-center bg-slate-50/70">
-          <Activity className="mx-auto mb-3 text-[#00E5FF]" />
-          <p className="text-2xl font-semibold text-slate-900">17</p>
+        <div className="rounded-3xl border border-white/10 p-6 text-center bg-[#020617]/60 backdrop-blur-sm">
+          <Activity className="mx-auto mb-3 text-blue-400" />
+          <p className="text-2xl font-semibold text-white">17</p>
           <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Tổng cú sút</p>
         </div>
-        <div className="rounded-3xl border border-slate-100 p-6 text-center bg-slate-50/70">
-          <Users className="mx-auto mb-3 text-[#8454FF]" />
-          <p className="text-2xl font-semibold text-slate-900">55,321</p>
+        <div className="rounded-3xl border border-white/10 p-6 text-center bg-[#020617]/60 backdrop-blur-sm">
+          <Users className="mx-auto mb-3 text-purple-400" />
+          <p className="text-2xl font-semibold text-white">55,321</p>
           <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Khán giả</p>
         </div>
       </section>

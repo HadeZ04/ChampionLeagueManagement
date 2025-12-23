@@ -1,12 +1,14 @@
 import React, { useState } from 'react'
 import { Search, Users, Trophy, Target, MapPin, Calendar } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const Teams = () => {
+  const { t } = useTranslation()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCountry, setSelectedCountry] = useState('all')
 
   const countries = [
-    { id: 'all', name: 'All Countries' },
+    { id: 'all', name: t('teams.allCountries') },
     { id: 'england', name: 'England' },
     { id: 'spain', name: 'Spain' },
     { id: 'italy', name: 'Italy' },
@@ -398,7 +400,7 @@ const Teams = () => {
           <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-uefa-gray" />
           <input
             type="text"
-            placeholder="Search teams, cities, or coaches..."
+            placeholder="Tìm kiếm đội, thành phố, huấn luyện viên..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="uefa-input pl-10"
@@ -438,7 +440,7 @@ const Teams = () => {
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold text-uefa-blue">#{team.position}</div>
-                <div className="text-uefa-gray text-sm">Position</div>
+                <div className="text-uefa-gray text-sm">Vị trí</div>
               </div>
             </div>
 
@@ -446,15 +448,15 @@ const Teams = () => {
             <div className="grid grid-cols-3 gap-3 mb-6">
               <div className="text-center p-3 bg-uefa-light-gray rounded-uefa group-hover:bg-uefa-blue/10 transition-colors">
                 <div className="text-xl font-bold text-uefa-dark">{team.points}</div>
-                <div className="text-uefa-gray text-xs">Points</div>
+                <div className="text-uefa-gray text-xs">Điểm</div>
               </div>
               <div className="text-center p-3 bg-uefa-light-gray rounded-uefa group-hover:bg-uefa-blue/10 transition-colors">
                 <div className="text-xl font-bold text-uefa-dark">{team.goalsFor}</div>
-                <div className="text-uefa-gray text-xs">Goals</div>
+                <div className="text-uefa-gray text-xs">Bàn thắng</div>
               </div>
               <div className="text-center p-3 bg-uefa-light-gray rounded-uefa group-hover:bg-uefa-blue/10 transition-colors">
                 <div className="text-xl font-bold text-uefa-dark">{((team.won / team.played) * 100).toFixed(0)}%</div>
-                <div className="text-uefa-gray text-xs">Win Rate</div>
+                <div className="text-uefa-gray text-xs">Tỉ lệ thắng</div>
               </div>
             </div>
 
@@ -462,21 +464,21 @@ const Teams = () => {
             <div className="grid grid-cols-4 gap-2 mb-6 p-4 bg-uefa-light-gray rounded-uefa">
               <div className="text-center">
                 <div className="text-lg font-bold text-uefa-green">{team.won}</div>
-                <div className="text-uefa-gray text-xs">Wins</div>
+                <div className="text-uefa-gray text-xs">Thắng</div>
               </div>
               <div className="text-center">
                 <div className="text-lg font-bold text-uefa-yellow">{team.drawn}</div>
-                <div className="text-uefa-gray text-xs">Draws</div>
+                <div className="text-uefa-gray text-xs">Hòa</div>
               </div>
               <div className="text-center">
                 <div className="text-lg font-bold text-uefa-red">{team.lost}</div>
-                <div className="text-uefa-gray text-xs">Losses</div>
+                <div className="text-uefa-gray text-xs">Thua</div>
               </div>
               <div className="text-center">
                 <div className="text-lg font-bold text-uefa-dark">
                   {team.goalsFor - team.goalsAgainst > 0 ? '+' : ''}{team.goalsFor - team.goalsAgainst}
                 </div>
-                <div className="text-uefa-gray text-xs">GD</div>
+                <div className="text-uefa-gray text-xs">Hiệu số</div>
               </div>
             </div>
 
@@ -485,35 +487,35 @@ const Teams = () => {
               <div className="flex items-center justify-between">
                 <span className="text-uefa-gray flex items-center">
                   <Users size={14} className="mr-2" />
-                  Coach:
+                  Huấn luyện viên:
                 </span>
                 <span className="text-uefa-dark font-semibold">{team.coach}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-uefa-gray flex items-center">
                   <MapPin size={14} className="mr-2" />
-                  Stadium:
+                  Sân vận động:
                 </span>
                 <span className="text-uefa-dark font-semibold">{team.stadium}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-uefa-gray flex items-center">
                   <Target size={14} className="mr-2" />
-                  Capacity:
+                  Sức chứa:
                 </span>
                 <span className="text-uefa-dark font-semibold">{team.capacity?.toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-uefa-gray flex items-center">
                   <Calendar size={14} className="mr-2" />
-                  Founded:
+                  Thành lập:
                 </span>
                 <span className="text-uefa-dark font-semibold">{team.founded}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-uefa-gray flex items-center">
                   <Trophy size={14} className="mr-2" />
-                  UCL Titles:
+                  Danh hiệu UCL:
                 </span>
                 <span className="text-uefa-dark font-semibold flex items-center">
                   {team.titles}
@@ -522,19 +524,19 @@ const Teams = () => {
               </div>
               {team.marketValue && (
                 <div className="flex items-center justify-between">
-                  <span className="text-uefa-gray">Market Value:</span>
+                  <span className="text-uefa-gray">Giá trị thị trường:</span>
                   <span className="text-uefa-dark font-semibold">{team.marketValue}</span>
                 </div>
               )}
               {team.averageAge && (
                 <div className="flex items-center justify-between">
-                  <span className="text-uefa-gray">Average Age:</span>
-                  <span className="text-uefa-dark font-semibold">{team.averageAge} years</span>
+                  <span className="text-uefa-gray">Tuổi trung bình:</span>
+                  <span className="text-uefa-dark font-semibold">{team.averageAge} năm</span>
                 </div>
               )}
               {team.topScorer && (
                 <div className="flex items-center justify-between">
-                  <span className="text-uefa-gray">Top Scorer:</span>
+                  <span className="text-uefa-gray">Vương phá lưới:</span>
                   <span className="text-uefa-dark font-semibold">{team.topScorer}</span>
                 </div>
               )}
@@ -543,7 +545,7 @@ const Teams = () => {
             {/* Key Players */}
             {team.keyPlayers && (
               <div className="mb-6">
-                <h4 className="font-semibold text-uefa-dark mb-3 text-sm">Key Players</h4>
+                <h4 className="font-semibold text-uefa-dark mb-3 text-sm">Cầu thủ chủ chốt</h4>
                 <div className="flex flex-wrap gap-2">
                   {team.keyPlayers.map((player, index) => (
                     <span key={index} className="bg-uefa-blue/10 text-uefa-blue px-2 py-1 rounded text-xs font-medium">
@@ -557,10 +559,10 @@ const Teams = () => {
             {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-3">
               <button className="uefa-btn-primary text-sm py-2 group-hover:shadow-lg transition-all">
-                Team Profile
+                Hồ sơ đội
               </button>
               <button className="uefa-btn-secondary text-sm py-2 group-hover:shadow-lg transition-all">
-                Squad & Stats
+                Đội hình & Thống kê
               </button>
             </div>
           </div>
@@ -571,8 +573,8 @@ const Teams = () => {
       {filteredTeams.length === 0 && (
         <div className="text-center py-12">
           <Users size={48} className="mx-auto text-uefa-gray mb-4" />
-          <h3 className="text-xl font-semibold text-uefa-dark mb-2">No teams found</h3>
-          <p className="text-uefa-gray">Try adjusting your search or filter criteria.</p>
+          <h3 className="text-xl font-semibold text-uefa-dark mb-2">Không tìm thấy đội bóng</h3>
+          <p className="text-uefa-gray">Thử điều chỉnh tìm kiếm hoặc bộ lọc của bạn.</p>
         </div>
       )}
 
@@ -581,19 +583,19 @@ const Teams = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div className="text-center">
             <div className="text-3xl font-bold text-uefa-blue mb-2">{teams.length}</div>
-            <div className="text-uefa-gray">Total Teams</div>
+            <div className="text-uefa-gray">Tổng số đội</div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold text-uefa-blue mb-2">{new Set(teams.map(t => t.country)).size}</div>
-            <div className="text-uefa-gray">Countries</div>
+            <div className="text-uefa-gray">Quốc gia</div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold text-uefa-blue mb-2">{teams.reduce((sum, team) => sum + team.titles, 0)}</div>
-            <div className="text-uefa-gray">Total UCL Titles</div>
+            <div className="text-uefa-gray">Tổng danh hiệu UCL</div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold text-uefa-blue mb-2">{Math.round(teams.reduce((sum, team) => sum + team.capacity, 0) / teams.length).toLocaleString()}</div>
-            <div className="text-uefa-gray">Avg. Capacity</div>
+            <div className="text-uefa-gray">Sức chứa TB</div>
           </div>
         </div>
       </div>

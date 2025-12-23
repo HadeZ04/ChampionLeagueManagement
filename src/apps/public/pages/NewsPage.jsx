@@ -30,13 +30,13 @@ const newsArticles = [
 ];
 
 const NewsCard = ({ article }) => (
-  <div className="bg-white rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300">
-    <img src={article.imageUrl} alt={article.title} className="w-full h-48 object-cover" />
+  <div className="bg-[#020617]/80 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.4)] transform hover:-translate-y-2 hover:border-cyan-400/30 transition-all duration-300">
+    <img src={article.imageUrl} alt={article.title} className="w-full h-48 object-cover" loading="lazy" />
     <div className="p-6">
-      <p className="text-sm text-gray-500 mb-2">{article.category} • {article.date}</p>
-      <h3 className="text-xl font-bold text-uefa-blue mb-2 hover:text-uefa-yellow transition-colors">{article.title}</h3>
-      <p className="text-gray-700">{article.excerpt}</p>
-      <a href="#" className="inline-block mt-4 font-semibold text-uefa-blue hover:underline">
+      <p className="text-sm text-slate-400 mb-2">{article.category} • {article.date}</p>
+      <h3 className="text-xl font-bold text-white mb-2 hover:text-cyan-400 transition-colors">{article.title}</h3>
+      <p className="text-slate-300">{article.excerpt}</p>
+      <a href="#" className="inline-block mt-4 font-semibold text-cyan-400 hover:text-cyan-300 transition-colors">
         Đọc thêm →
       </a>
     </div>
@@ -47,7 +47,7 @@ const NewsCard = ({ article }) => (
 const NewsPage = () => {
   return (
     <div className="container mx-auto p-4 md:p-8">
-      <h1 className="text-4xl font-bold text-uefa-blue mb-8 border-l-4 border-uefa-yellow pl-4">
+      <h1 className="text-4xl font-bold text-white mb-8 border-l-4 border-cyan-400 pl-4">
         Tin tức mới nhất
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

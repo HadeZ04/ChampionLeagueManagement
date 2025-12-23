@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import toast, { Toaster } from 'react-hot-toast'
+import logger from '../../../shared/utils/logger'
 import {
   Download,
   Edit,
@@ -64,7 +65,7 @@ const TeamsManagement = () => {
           total: response.total
         }))
       } catch (err) {
-        console.error('Failed to load teams', err)
+        logger.error('Failed to load teams', err)
         if (isMounted) {
           setError(err?.message || 'Unable to load teams from the server.')
         }
@@ -113,15 +114,15 @@ const TeamsManagement = () => {
   }
 
   const handleDelete = async (teamId) => {
-    const confirmed = window.confirm('Are you sure you want to remove this team?')
+    const confirmed = window.confirm('Bạn có chắc chắn muốn xóa đội này?')
     if (!confirmed) return
     try {
       await TeamsService.deleteTeam(teamId)
-      toast.success('Team deleted')
+      toast.success('Đã xóa đội')
       setReloadKey(prev => prev + 1)
     } catch (err) {
-      console.error('Failed to delete team', err)
-      toast.error(err?.message || 'Could not delete team. Please try again.')
+      logger.error('Failed to delete team', err)
+      toast.error(err?.message || 'Không thể xóa đội. Vui lòng thử lại.')
     }
   }
 
@@ -131,7 +132,7 @@ const TeamsManagement = () => {
 
     const teamName = (editingTeam.name || '').trim()
     if (!teamName) {
-      toast.error('Team name is required')
+      toast.error('Tên đội là bắt buộc')
       return
     }
 
@@ -148,17 +149,17 @@ const TeamsManagement = () => {
 
       if (isCreating) {
         await TeamsService.createTeam(payload)
-        toast.success('Team created')
+        toast.success('Đã tạo đội')
       } else {
         await TeamsService.updateTeam(editingTeam.id, payload)
-        toast.success('Team updated')
+        toast.success('Đã cập nhật đội')
       }
 
       closeModal()
       setReloadKey(prev => prev + 1)
     } catch (err) {
-      console.error('Failed to save team', err)
-      toast.error(err?.message || 'Could not save team. Please retry.')
+      logger.error('Failed to save team', err)
+      toast.error(err?.message || 'Không thể lưu đội. Vui lòng thử lại.')
     } finally {
       setIsSaving(false)
     }
@@ -183,8 +184,8 @@ const TeamsManagement = () => {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Teams Management</h1>
-            <p className="text-gray-600 mt-2">Manage teams registered in your internal tournament system.</p>
+            <h1 className="text-3xl font-bold text-gray-900">Quản lý đội bóng</h1>
+            <p className="text-gray-600 mt-2">Quản lý các đội bóng đăng ký trong hệ thống giải đấu nội bộ.</p>
           </div>
           <div className="flex space-x-3">
             <button
@@ -192,15 +193,15 @@ const TeamsManagement = () => {
               className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
             >
               <Plus size={16} />
-              <span>Add Team</span>
+              <span>Thêm đội</span>
             </button>
             <button
               type="button"
-              onClick={() => toast('Export not implemented yet')}
+              onClick={() => toast('Xuất dữ liệu chưa được triển khai')}
               className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
             >
               <Download size={16} />
-              <span>Export</span>
+              <span>Xuất</span>
             </button>
             <button
               type="button"

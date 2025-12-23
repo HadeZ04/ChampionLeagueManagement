@@ -1,524 +1,139 @@
-import React, { useState } from 'react'
-import { ChevronDown, Trophy, Target, Users, TrendingUp, TrendingDown, Minus, Download, Share2 } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { ChevronDown, Trophy, Target, Users, TrendingUp, TrendingDown, Minus, Download, Share2, RefreshCw } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import StandingsTable from '../components/StandingsTable'
 import TopScorers from '../components/TopScorers'
 import UpcomingMatches from '../components/UpcomingMatches'
 import LiveTicker from '../components/LiveTicker'
+import LoadingState from '../shared/components/LoadingState'
+import ErrorState from '../shared/components/ErrorState'
+import EmptyState from '../shared/components/EmptyState'
+import useApiWithTimeout from '../shared/utils/useApiWithTimeout'
+import { APP_CONFIG } from '../config/app.config'
+import logger from '../shared/utils/logger'
 
 const Standings = () => {
+  const { t } = useTranslation()
   const [selectedPhase, setSelectedPhase] = useState('league')
   const [selectedGroup, setSelectedGroup] = useState('all')
   const [showLiveTicker, setShowLiveTicker] = useState(true)
+  
+  // API State Management with timeout
+  const { loading, error, data: apiData, fetchData } = useApiWithTimeout(15000)
+  const [standings, setStandings] = useState([])
+  const [seasonInfo, setSeasonInfo] = useState(null)
+  const [lastUpdated, setLastUpdated] = useState(null)
 
   const phases = [
-    { id: 'league', name: 'League Phase', active: true },
-    { id: 'knockout', name: 'Knockout Phase', active: false },
+    { id: 'league', name: t('standings.leaguePhase'), active: true },
+    { id: 'knockout', name: t('standings.knockoutPhase'), active: false },
   ]
 
   const groups = [
-    { id: 'all', name: 'All Teams' },
-    { id: 'qualified', name: 'Qualified' },
-    { id: 'playoff', name: 'Playoff' },
-    { id: 'eliminated', name: 'Eliminated' },
+    { id: 'all', name: t('standings.allGroups') },
+    { id: 'qualified', name: 'Đã lọt vào' },
+    { id: 'playoff', name: 'Phải đá play-off' },
+    { id: 'eliminated', name: 'Bị loại' },
   ]
 
-  const standings = [
-    {
-      position: 1,
-      team: 'Liverpool',
-      logo: 'https://img.uefa.com/imgml/TP/teams/logos/50x50/7889.png',
-      country: 'ENG',
-      countryFlag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-      played: 6,
-      won: 6,
-      drawn: 0,
-      lost: 0,
-      goalsFor: 13,
-      goalsAgainst: 1,
-      goalDifference: 12,
-      points: 18,
-      form: ['W', 'W', 'W', 'W', 'W'],
-      status: 'qualified',
-      change: 0,
-      nextMatch: 'vs Lille (H)',
-      coefficient: 89.000
-    },
-    {
-      position: 2,
-      team: 'Barcelona',
-      logo: 'https://img.uefa.com/imgml/TP/teams/logos/50x50/50080.png',
-      country: 'ESP',
-      countryFlag: '🇪🇸',
-      played: 6,
-      won: 5,
-      drawn: 0,
-      lost: 1,
-      goalsFor: 21,
-      goalsAgainst: 7,
-      goalDifference: 14,
-      points: 15,
-      form: ['W', 'W', 'L', 'W', 'W'],
-      status: 'qualified',
-      change: 1,
-      nextMatch: 'vs Atalanta (H)',
-      coefficient: 86.000
-    },
-    {
-      position: 3,
-      team: 'Arsenal',
-      logo: 'https://img.uefa.com/imgml/TP/teams/logos/50x50/52280.png',
-      country: 'ENG',
-      countryFlag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-      played: 6,
-      won: 4,
-      drawn: 1,
-      lost: 1,
-      goalsFor: 11,
-      goalsAgainst: 2,
-      goalDifference: 9,
-      points: 13,
-      form: ['W', 'D', 'W', 'W', 'W'],
-      status: 'qualified',
-      change: 0,
-      nextMatch: 'vs Dinamo Zagreb (H)',
-      coefficient: 78.000
-    },
-    {
-      position: 4,
-      team: 'Inter',
-      logo: '⚫',
-      played: 6,
-      won: 4,
-      drawn: 1,
-      lost: 1,
-      goalsFor: 7,
-      goalsAgainst: 1,
-      goalDifference: 6,
-      points: 13,
-      form: ['W', 'W', 'D', 'L', 'W'],
-      status: 'qualified'
-    },
-    {
-      position: 5,
-      team: 'Sporting CP',
-      logo: '🟢',
-      played: 6,
-      won: 4,
-      drawn: 1,
-      lost: 1,
-      goalsFor: 11,
-      goalsAgainst: 6,
-      goalDifference: 5,
-      points: 13,
-      form: ['W', 'W', 'W', 'L', 'D'],
-      status: 'qualified'
-    },
-    {
-      position: 6,
-      team: 'Brest',
-      logo: '🔵',
-      played: 6,
-      won: 4,
-      drawn: 1,
-      lost: 1,
-      goalsFor: 10,
-      goalsAgainst: 6,
-      goalDifference: 4,
-      points: 13,
-      form: ['W', 'D', 'W', 'W', 'L'],
-      status: 'qualified'
-    },
-    {
-      position: 7,
-      team: 'Borussia Dortmund',
-      logo: '🟡',
-      played: 6,
-      won: 4,
-      drawn: 0,
-      lost: 2,
-      goalsFor: 16,
-      goalsAgainst: 10,
-      goalDifference: 6,
-      points: 12,
-      form: ['L', 'W', 'W', 'W', 'W'],
-      status: 'qualified'
-    },
-    {
-      position: 8,
-      team: 'Bayern Munich',
-      logo: '🔴',
-      played: 6,
-      won: 4,
-      drawn: 0,
-      lost: 2,
-      goalsFor: 17,
-      goalsAgainst: 8,
-      goalDifference: 9,
-      points: 12,
-      form: ['W', 'L', 'W', 'W', 'L'],
-      status: 'qualified'
-    },
-    {
-      position: 9,
-      team: 'Atletico Madrid',
-      logo: '🔴',
-      played: 6,
-      won: 4,
-      drawn: 0,
-      lost: 2,
-      goalsFor: 14,
-      goalsAgainst: 10,
-      goalDifference: 4,
-      points: 12,
-      form: ['W', 'W', 'L', 'W', 'L'],
-      status: 'playoff'
-    },
-    {
-      position: 10,
-      team: 'AC Milan',
-      logo: '🔴',
-      played: 6,
-      won: 4,
-      drawn: 0,
-      lost: 2,
-      goalsFor: 12,
-      goalsAgainst: 9,
-      goalDifference: 3,
-      points: 12,
-      form: ['W', 'L', 'W', 'W', 'L'],
-      status: 'playoff'
-    },
-    {
-      position: 11,
-      team: 'Atalanta',
-      logo: '⚫',
-      played: 6,
-      won: 3,
-      drawn: 2,
-      lost: 1,
-      goalsFor: 13,
-      goalsAgainst: 4,
-      goalDifference: 9,
-      points: 11,
-      form: ['D', 'W', 'W', 'D', 'W'],
-      status: 'playoff'
-    },
-    {
-      position: 12,
-      team: 'Juventus',
-      logo: '⚫',
-      played: 6,
-      won: 3,
-      drawn: 2,
-      lost: 1,
-      goalsFor: 9,
-      goalsAgainst: 5,
-      goalDifference: 4,
-      points: 11,
-      form: ['D', 'W', 'D', 'W', 'W'],
-      status: 'playoff'
-    },
-    {
-      position: 13,
-      team: 'Benfica',
-      logo: '🔴',
-      played: 6,
-      won: 3,
-      drawn: 1,
-      lost: 2,
-      goalsFor: 10,
-      goalsAgainst: 7,
-      goalDifference: 3,
-      points: 10,
-      form: ['L', 'W', 'W', 'D', 'L'],
-      status: 'playoff'
-    },
-    {
-      position: 14,
-      team: 'AS Monaco',
-      logo: '🔴',
-      played: 6,
-      won: 3,
-      drawn: 1,
-      lost: 2,
-      goalsFor: 12,
-      goalsAgainst: 10,
-      goalDifference: 2,
-      points: 10,
-      form: ['W', 'L', 'D', 'W', 'L'],
-      status: 'playoff'
-    },
-    {
-      position: 15,
-      team: 'Aston Villa',
-      logo: '🟣',
-      played: 6,
-      won: 3,
-      drawn: 1,
-      lost: 2,
-      goalsFor: 9,
-      goalsAgainst: 8,
-      goalDifference: 1,
-      points: 10,
-      form: ['L', 'W', 'W', 'D', 'L'],
-      status: 'playoff'
-    },
-    {
-      position: 16,
-      team: 'Feyenoord',
-      logo: '🔴',
-      played: 6,
-      won: 3,
-      drawn: 1,
-      lost: 2,
-      goalsFor: 14,
-      goalsAgainst: 15,
-      goalDifference: -1,
-      points: 10,
-      form: ['W', 'L', 'D', 'W', 'L'],
-      status: 'playoff'
-    },
-    {
-      position: 17,
-      team: 'Club Brugge',
-      logo: '⚫',
-      played: 6,
-      won: 3,
-      drawn: 1,
-      lost: 2,
-      goalsFor: 6,
-      goalsAgainst: 8,
-      goalDifference: -2,
-      points: 10,
-      form: ['L', 'W', 'W', 'D', 'L'],
-      status: 'playoff'
-    },
-    {
-      position: 18,
-      team: 'Real Madrid',
-      logo: '⚪',
-      played: 6,
-      won: 3,
-      drawn: 0,
-      lost: 3,
-      goalsFor: 12,
-      goalsAgainst: 11,
-      goalDifference: 1,
-      points: 9,
-      form: ['L', 'W', 'L', 'W', 'W'],
-      status: 'playoff'
-    },
-    {
-      position: 19,
-      team: 'Celtic',
-      logo: '🟢',
-      played: 6,
-      won: 2,
-      drawn: 3,
-      lost: 1,
-      goalsFor: 10,
-      goalsAgainst: 10,
-      goalDifference: 0,
-      points: 9,
-      form: ['D', 'W', 'D', 'D', 'W'],
-      status: 'playoff'
-    },
-    {
-      position: 20,
-      team: 'Manchester City',
-      logo: '🔵',
-      played: 6,
-      won: 2,
-      drawn: 2,
-      lost: 2,
-      goalsFor: 13,
-      goalsAgainst: 9,
-      goalDifference: 4,
-      points: 8,
-      form: ['L', 'D', 'W', 'D', 'W'],
-      status: 'playoff'
-    },
-    {
-      position: 21,
-      team: 'PSV',
-      logo: '🔴',
-      played: 6,
-      won: 2,
-      drawn: 2,
-      lost: 2,
-      goalsFor: 10,
-      goalsAgainst: 8,
-      goalDifference: 2,
-      points: 8,
-      form: ['D', 'L', 'W', 'D', 'W'],
-      status: 'playoff'
-    },
-    {
-      position: 22,
-      team: 'Dinamo Zagreb',
-      logo: '🔵',
-      played: 6,
-      won: 2,
-      drawn: 2,
-      lost: 2,
-      goalsFor: 10,
-      goalsAgainst: 15,
-      goalDifference: -5,
-      points: 8,
-      form: ['L', 'D', 'W', 'D', 'W'],
-      status: 'playoff'
-    },
-    {
-      position: 23,
-      team: 'Paris Saint-Germain',
-      logo: '🔵',
-      played: 6,
-      won: 2,
-      drawn: 2,
-      lost: 2,
-      goalsFor: 6,
-      goalsAgainst: 6,
-      goalDifference: 0,
-      points: 8,
-      form: ['D', 'L', 'W', 'D', 'W'],
-      status: 'playoff'
-    },
-    {
-      position: 24,
-      team: 'VfB Stuttgart',
-      logo: '⚪',
-      played: 6,
-      won: 2,
-      drawn: 2,
-      lost: 2,
-      goalsFor: 9,
-      goalsAgainst: 12,
-      goalDifference: -3,
-      points: 8,
-      form: ['L', 'D', 'W', 'D', 'W'],
-      status: 'playoff'
-    },
-    {
-      position: 25,
-      team: 'Shakhtar Donetsk',
-      logo: '🟠',
-      played: 6,
-      won: 1,
-      drawn: 1,
-      lost: 4,
-      goalsFor: 5,
-      goalsAgainst: 13,
-      goalDifference: -8,
-      points: 4,
-      form: ['L', 'L', 'D', 'L', 'W'],
-      status: 'eliminated'
-    },
-    {
-      position: 26,
-      team: 'Sparta Prague',
-      logo: '🔴',
-      played: 6,
-      won: 1,
-      drawn: 1,
-      lost: 4,
-      goalsFor: 7,
-      goalsAgainst: 18,
-      goalDifference: -11,
-      points: 4,
-      form: ['L', 'L', 'D', 'L', 'W'],
-      status: 'eliminated'
-    },
-    {
-      position: 27,
-      team: 'Sturm Graz',
-      logo: '⚫',
-      played: 6,
-      won: 1,
-      drawn: 0,
-      lost: 5,
-      goalsFor: 4,
-      goalsAgainst: 9,
-      goalDifference: -5,
-      points: 3,
-      form: ['L', 'L', 'L', 'L', 'W'],
-      status: 'eliminated'
-    },
-    {
-      position: 28,
-      team: 'Girona',
-      logo: '🔴',
-      played: 6,
-      won: 1,
-      drawn: 0,
-      lost: 5,
-      goalsFor: 4,
-      goalsAgainst: 10,
-      goalDifference: -6,
-      points: 3,
-      form: ['L', 'L', 'L', 'L', 'W'],
-      status: 'eliminated'
-    },
-    {
-      position: 29,
-      team: 'Red Bull Salzburg',
-      logo: '🔴',
-      played: 6,
-      won: 1,
-      drawn: 0,
-      lost: 5,
-      goalsFor: 3,
-      goalsAgainst: 18,
-      goalDifference: -15,
-      points: 3,
-      form: ['L', 'L', 'L', 'L', 'W'],
-      status: 'eliminated'
-    },
-    {
-      position: 30,
-      team: 'Bologna',
-      logo: '🔴',
-      played: 6,
-      won: 0,
-      drawn: 2,
-      lost: 4,
-      goalsFor: 1,
-      goalsAgainst: 7,
-      goalDifference: -6,
-      points: 2,
-      form: ['L', 'L', 'D', 'L', 'D'],
-      status: 'eliminated'
-    },
-    {
-      position: 31,
-      team: 'RB Leipzig',
-      logo: '🔴',
-      played: 6,
-      won: 0,
-      drawn: 0,
-      lost: 6,
-      goalsFor: 6,
-      goalsAgainst: 13,
-      goalDifference: -7,
-      points: 0,
-      form: ['L', 'L', 'L', 'L', 'L'],
-      status: 'eliminated'
-    },
-    {
-      position: 32,
-      team: 'Slovan Bratislava',
-      logo: '🔵',
-      played: 6,
-      won: 0,
-      drawn: 0,
-      lost: 6,
-      goalsFor: 5,
-      goalsAgainst: 21,
-      goalDifference: -16,
-      points: 0,
-      form: ['L', 'L', 'L', 'L', 'L'],
-      status: 'eliminated'
-    },
-  ]
+  // Fetch standings data from backend with timeout
+  const fetchStandings = async () => {
+    try {
+      const apiUrl = `${APP_CONFIG.API.BASE_URL}/teams/standings`
+      logger.info('[Standings] Fetching from:', apiUrl)
+      
+      const result = await fetchData(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      logger.info('[Standings] Response data:', result)
+
+      if (!result || !result.data) {
+        logger.warn('[Standings] Invalid response format')
+        setStandings([])
+        return
+      }
+
+      const { data } = result
+      const { season, table, updated } = data
+
+      if (!table || !Array.isArray(table)) {
+        logger.warn('[Standings] No table data in response')
+        setStandings([])
+        setSeasonInfo(season || null)
+        setLastUpdated(updated || new Date().toISOString())
+        return
+      }
+
+      // Map backend data to frontend format with safe mapping
+      const mappedStandings = (table || []).filter(Boolean).map((team) => ({
+        position: team?.position ?? 0,
+        team: team?.teamName || team?.shortName || 'Unknown Team',
+        teamId: team?.teamId ?? null,
+        logo: team?.crest || null,
+        country: team?.tla || '???',
+        countryFlag: '', // Can be mapped based on country
+        played: team?.played ?? 0,
+        won: team?.won ?? 0,
+        drawn: team?.draw ?? 0,
+        lost: team?.lost ?? 0,
+        goalsFor: team?.goalsFor ?? 0,
+        goalsAgainst: team?.goalsAgainst ?? 0,
+        goalDifference: team?.goalDifference ?? 0,
+        points: team?.points ?? 0,
+        form: Array.isArray(team?.form) ? team.form : [],
+        status: team?.status || 'eliminated',
+        change: 0,
+        nextMatch: '',
+        coefficient: 0
+      }))
+
+      logger.info('[Standings] Successfully mapped', mappedStandings.length, 'teams')
+
+      setStandings(mappedStandings)
+      setSeasonInfo(season)
+      setLastUpdated(updated || new Date().toISOString())
+
+    } catch (err) {
+      logger.error('[Standings] Error fetching standings:', err)
+      setStandings([])
+    }
+  }
+
+  // Load data on mount
+  useEffect(() => {
+    fetchStandings()
+  }, [])
+
+  // Retry handler
+  const handleRetry = () => {
+    fetchStandings()
+  }
+
+  // Season filter state
+  const [selectedSeason, setSelectedSeason] = useState('current')
+  const [seasons, setSeasons] = useState([])
+  
+  // Load seasons for filter
+  useEffect(() => {
+    let isMounted = true
+    const loadSeasons = async () => {
+      try {
+        const { default: SeasonService } = await import('../layers/application/services/SeasonService')
+        const data = await SeasonService.listSeasons()
+        if (isMounted) {
+          setSeasons(data || [])
+        }
+      } catch (err) {
+        logger.error('[Standings] Failed to load seasons:', err)
+      }
+    }
+    loadSeasons()
+    return () => { isMounted = false }
+  }, [])
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -534,14 +149,14 @@ const Standings = () => {
   }
 
   const getFormBadge = (result) => {
-    const baseClasses = "w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center text-white"
+    const baseClasses = "w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center"
     switch (result) {
       case 'W':
-        return <div className={`${baseClasses} bg-uefa-green`}>W</div>
+        return <div className={`${baseClasses} bg-[#059669] text-white`}>W</div>
       case 'D':
-        return <div className={`${baseClasses} bg-uefa-yellow text-uefa-black`}>D</div>
+        return <div className={`${baseClasses} bg-[#D97706] text-white`}>D</div>
       case 'L':
-        return <div className={`${baseClasses} bg-uefa-red`}>L</div>
+        return <div className={`${baseClasses} bg-[#DC2626] text-white`}>L</div>
       default:
         return null
     }
@@ -551,88 +166,248 @@ const Standings = () => {
     ? standings 
     : standings.filter(team => team.status === selectedGroup)
 
-  const stats = {
+  const stats = standings.length > 0 ? {
     totalTeams: standings.length,
-    totalMatches: standings.reduce((sum, team) => sum + team.played, 0) / 2,
-    totalGoals: standings.reduce((sum, team) => sum + team.goalsFor, 0),
-    averageGoals: (standings.reduce((sum, team) => sum + team.goalsFor, 0) / (standings.reduce((sum, team) => sum + team.played, 0) / 2)).toFixed(2)
+    totalMatches: Math.floor(standings.reduce((sum, team) => sum + (team?.played ?? 0), 0) / 2),
+    totalGoals: standings.reduce((sum, team) => sum + (team?.goalsFor ?? 0), 0),
+    averageGoals: standings.length > 0 
+      ? (standings.reduce((sum, team) => sum + (team?.goalsFor ?? 0), 0) / Math.max(1, standings.reduce((sum, team) => sum + (team?.played ?? 0), 0) / 2)).toFixed(2)
+      : '0.00'
+  } : {
+    totalTeams: 0,
+    totalMatches: 0,
+    totalGoals: 0,
+    averageGoals: '0.00'
+  }
+
+  // Loading State with Skeleton Table
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0a1929] via-[#1e293b] to-[#0f172a] py-8 px-4">
+        <div className="max-w-7xl mx-auto">
+          {/* Header Skeleton */}
+          <div className="mb-8">
+            <div className="h-10 w-80 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 animate-pulse rounded-lg mb-3"></div>
+            <div className="h-5 w-64 bg-white/10 animate-pulse rounded"></div>
+          </div>
+          
+          {/* Stats Cards Skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-xl">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="h-12 w-12 bg-gradient-to-br from-cyan-500/30 to-blue-500/30 animate-pulse rounded-xl"></div>
+                  <div className="h-8 w-16 bg-white/10 animate-pulse rounded"></div>
+                </div>
+                <div className="h-4 w-20 bg-white/10 animate-pulse rounded"></div>
+              </div>
+            ))}
+          </div>
+
+          {/* Table Skeleton with Glass Morphism */}
+          <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+            {/* Table Header */}
+            <div className="bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 p-6 border-b border-white/10">
+              <div className="flex items-center justify-center">
+                <div className="relative">
+                  <div className="h-8 w-8 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin"></div>
+                  <div className="absolute inset-0 h-8 w-8 border-4 border-purple-500/20 border-t-purple-400 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1s' }}></div>
+                </div>
+                <span className="ml-4 text-white/90 font-semibold text-lg">Đang tải bảng xếp hạng...</span>
+              </div>
+            </div>
+            
+            {/* Table Body */}
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gradient-to-r from-[#003B73]/50 to-[#00924A]/50 border-b border-white/10">
+                  <tr className="text-white/80 text-sm uppercase tracking-wider">
+                    <th className="p-4 text-center font-semibold">#</th>
+                    <th className="p-4 text-left font-semibold">Đội bóng</th>
+                    <th className="p-4 text-center font-semibold">P</th>
+                    <th className="p-4 text-center font-semibold">W</th>
+                    <th className="p-4 text-center font-semibold">D</th>
+                    <th className="p-4 text-center font-semibold">L</th>
+                    <th className="p-4 text-center font-semibold">GD</th>
+                    <th className="p-4 text-center font-semibold">Pts</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {[...Array(10)].map((_, i) => (
+                    <tr key={i} className="hover:bg-white/5 transition-colors">
+                      <td className="p-4 text-center">
+                        <div className="h-6 w-6 bg-gradient-to-br from-white/10 to-white/5 animate-pulse rounded mx-auto"></div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 animate-pulse rounded-lg"></div>
+                          <div className="h-5 w-40 bg-white/10 animate-pulse rounded"></div>
+                        </div>
+                      </td>
+                      <td className="p-4"><div className="h-5 w-8 bg-white/10 animate-pulse rounded mx-auto"></div></td>
+                      <td className="p-4"><div className="h-5 w-8 bg-white/10 animate-pulse rounded mx-auto"></div></td>
+                      <td className="p-4"><div className="h-5 w-8 bg-white/10 animate-pulse rounded mx-auto"></div></td>
+                      <td className="p-4"><div className="h-5 w-8 bg-white/10 animate-pulse rounded mx-auto"></div></td>
+                      <td className="p-4"><div className="h-5 w-10 bg-white/10 animate-pulse rounded mx-auto"></div></td>
+                      <td className="p-4"><div className="h-6 w-10 bg-gradient-to-r from-cyan-500/20 to-green-500/20 animate-pulse rounded-lg mx-auto"></div></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Error State
+  if (error) {
+    return (
+      <div className="uefa-container py-8">
+        <ErrorState
+          title="Không thể tải bảng xếp hạng"
+          message={error}
+          onRetry={handleRetry}
+          retrying={loading}
+        />
+      </div>
+    )
+  }
+
+  // Empty State
+  if (!standings || standings.length === 0) {
+    return (
+      <div className="uefa-container py-8">
+        <EmptyState
+          icon={Trophy}
+          title="Chưa có bảng xếp hạng"
+          message="Hiện chưa có dữ liệu bảng xếp hạng cho vòng đấu này. Vui lòng kiểm tra lại sau."
+          actionLabel="Tải lại"
+          onAction={handleRetry}
+        />
+      </div>
+    )
   }
 
   return (
-    <div className="uefa-container py-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a1929] via-[#1e293b] to-[#0f172a] py-8 px-4">
+      <div className="max-w-7xl mx-auto">
       {/* Breadcrumb */}
-      <nav className="uefa-breadcrumb">
-        <a href="#" className="uefa-breadcrumb-item hover:text-uefa-blue transition-colors">Home</a>
-        <span className="uefa-breadcrumb-separator">/</span>
-        <a href="#" className="uefa-breadcrumb-item hover:text-uefa-blue transition-colors">Champions League</a>
-        <span className="uefa-breadcrumb-separator">/</span>
-        <span className="text-uefa-dark font-semibold">Standings</span>
+      <nav className="flex items-center space-x-2 text-sm mb-6">
+        <a href="#" className="text-white/60 hover:text-cyan-400 transition-colors">Trang chủ</a>
+        <span className="text-white/40">/</span>
+        <a href="#" className="text-white/60 hover:text-cyan-400 transition-colors">Cúp C1 châu Âu</a>
+        <span className="text-white/40">/</span>
+        <span className="text-white font-semibold">Bảng xếp hạng</span>
       </nav>
 
       {/* Page Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="uefa-section-title flex items-center">
-              <Trophy className="mr-4 text-uefa-gold" size={36} />
-              UEFA Champions League Standings
+            <h1 className="text-3xl lg:text-4xl font-bold text-white flex items-center">
+              <Trophy className="mr-4 text-[#00d4ff]" size={36} />
+              Bảng xếp hạng Cúp C1 châu Âu
             </h1>
-            <p className="uefa-section-subtitle">
-              League phase standings for the 2024/25 season • Last updated: {new Date().toLocaleString('en-GB')}
+            <p className="text-white/70 mt-2">
+              Bảng xếp hạng vòng bảng mùa giải {seasonInfo?.label || '2024/25'} • Cập nhật lần cuối: {lastUpdated ? new Date(lastUpdated).toLocaleString('vi-VN') : new Date().toLocaleString('vi-VN')}
             </p>
           </div>
           <div className="flex space-x-3">
-            <button className="flex items-center space-x-2 uefa-btn-secondary">
-              <Download size={16} />
-              <span>Export</span>
+            <button 
+              onClick={handleRetry}
+              className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-cyan-500/20 text-white border border-white/20 hover:border-cyan-500/40 transition-all"
+            >
+              <RefreshCw size={16} />
+              <span>Làm mới</span>
             </button>
-            <button className="flex items-center space-x-2 uefa-btn-secondary">
+            <button className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-cyan-500/20 text-white border border-white/20 hover:border-cyan-500/40 transition-all">
+              <Download size={16} />
+              <span>Xuất dữ liệu</span>
+            </button>
+            <button className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-cyan-500/20 text-white border border-white/20 hover:border-cyan-500/40 transition-all">
               <Share2 size={16} />
-              <span>Share</span>
+              <span>Chia sẻ</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Statistics Cards */}
-      <div className="uefa-stats-grid mb-8">
-        <div className="uefa-stats-card">
-          <div className="uefa-stats-icon">
-            <Users size={24} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-xl hover:bg-white/10 transition-all hover:scale-105">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/30 to-blue-500/30 flex items-center justify-center">
+              <Users size={24} className="text-cyan-400" />
+            </div>
+            <div className="text-3xl font-bold text-white">{stats.totalTeams}</div>
           </div>
-          <div className="uefa-stats-number">{stats.totalTeams}</div>
-          <div className="uefa-stats-label">Teams</div>
+          <div className="text-white/70 text-sm font-medium">Đội bóng</div>
         </div>
         
-        <div className="uefa-stats-card">
-          <div className="uefa-stats-icon">
-            <Trophy size={24} />
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-xl hover:bg-white/10 transition-all hover:scale-105">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500/30 to-emerald-500/30 flex items-center justify-center">
+              <Trophy size={24} className="text-green-400" />
+            </div>
+            <div className="text-3xl font-bold text-white">{stats.totalMatches}</div>
           </div>
-          <div className="uefa-stats-number">{stats.totalMatches}</div>
-          <div className="uefa-stats-label">Matches Played</div>
+          <div className="text-white/70 text-sm font-medium">Trận đã đá</div>
         </div>
         
-        <div className="uefa-stats-card">
-          <div className="uefa-stats-icon">
-            <Target size={24} />
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-xl hover:bg-white/10 transition-all hover:scale-105">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/30 to-pink-500/30 flex items-center justify-center">
+              <Target size={24} className="text-purple-400" />
+            </div>
+            <div className="text-3xl font-bold text-white">{stats.totalGoals}</div>
           </div>
-          <div className="uefa-stats-number">{stats.totalGoals}</div>
-          <div className="uefa-stats-label">Total Goals</div>
+          <div className="text-white/70 text-sm font-medium">Tổng số bàn thắng</div>
         </div>
         
-        <div className="uefa-stats-card">
-          <div className="uefa-stats-icon">
-            <TrendingUp size={24} />
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-xl hover:bg-white/10 transition-all hover:scale-105">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/30 to-red-500/30 flex items-center justify-center">
+              <TrendingUp size={24} className="text-orange-400" />
+            </div>
+            <div className="text-3xl font-bold text-white">{stats.averageGoals}</div>
           </div>
-          <div className="uefa-stats-number">{stats.averageGoals}</div>
-          <div className="uefa-stats-label">Goals per Match</div>
+          <div className="text-white/70 text-sm font-medium">Bàn thắng/trận</div>
         </div>
       </div>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        {/* Season Filter - NEW */}
+        <div className="relative">
+          <label className="block text-sm font-semibold text-white/90 mb-2">
+            Mùa giải
+          </label>
+          <select
+            value={selectedSeason}
+            onChange={(e) => {
+              setSelectedSeason(e.target.value)
+              // Reload standings for selected season
+              fetchStandings()
+            }}
+            className="uefa-select pr-8 appearance-none w-48"
+          >
+            <option value="current">Mùa hiện tại</option>
+            {seasons.map((season) => (
+              <option key={season.id} value={season.id}>
+                {season.name}
+              </option>
+            ))}
+          </select>
+          <ChevronDown size={16} className="absolute right-2 bottom-3 text-uefa-gray pointer-events-none" />
+        </div>
+
         {/* Phase Filter */}
         <div className="relative">
+          <label className="block text-sm font-semibold text-white/90 mb-2">
+            Giai đoạn
+          </label>
           <select
             value={selectedPhase}
             onChange={(e) => setSelectedPhase(e.target.value)}
@@ -644,130 +419,145 @@ const Standings = () => {
               </option>
             ))}
           </select>
-          <ChevronDown size={16} className="absolute right-2 top-1/2 transform -translate-y-1/2 text-uefa-gray pointer-events-none" />
+          <ChevronDown size={16} className="absolute right-2 bottom-3 text-uefa-gray pointer-events-none" />
         </div>
 
         {/* Group Filter */}
-        <div className="uefa-filter-tabs">
-          {groups.map((group) => (
-            <button
-              key={group.id}
-              onClick={() => setSelectedGroup(group.id)}
-              className={`uefa-filter-tab ${selectedGroup === group.id ? 'active' : ''}`}
-            >
-              {group.name}
-            </button>
-          ))}
+        <div>
+          <label className="block text-sm font-semibold text-white/90 mb-2">
+            Trạng thái
+          </label>
+          <div className="flex gap-2 flex-wrap">
+            {groups.map((group) => (
+              <button
+                key={group.id}
+                onClick={() => setSelectedGroup(group.id)}
+                className={`px-5 py-2.5 rounded-full font-semibold text-sm transition-all duration-200 ${
+                  selectedGroup === group.id 
+                    ? 'bg-gradient-to-r from-[#003B73] to-[#00924A] text-white shadow-lg scale-105' 
+                    : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white border border-white/10'
+                }`}
+              >
+                {group.name}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Enhanced Standings Table */}
-      <div className="uefa-table-container">
-        <div className="bg-uefa-blue text-white p-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold">League Phase Standings</h2>
-          <div className="text-sm">
-            Last updated: {new Date().toLocaleString('en-GB', {
+      <div className="bg-transparent md:bg-[#0B1220]/80 backdrop-blur-sm border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+        <div className="bg-gradient-to-r from-[#003B73] to-[#00924A] text-white p-5 flex items-center justify-between">
+          <h2 className="text-xl font-bold">Bảng xếp hạng vòng phân hạng</h2>
+          <div className="text-sm font-medium opacity-90">
+            Cập nhật lúc: {lastUpdated ? new Date(lastUpdated).toLocaleString('vi-VN', {
               day: '2-digit',
               month: '2-digit', 
               year: 'numeric',
               hour: '2-digit',
               minute: '2-digit'
-            })}
+            }) : 'Vừa xong'}
           </div>
         </div>
         
-        <table className="uefa-table">
-          <thead className="uefa-table-header">
-            <tr>
-              <th className="text-center w-12">#</th>
-              <th className="text-center w-8"></th>
-              <th className="text-left min-w-[200px]">Team</th>
-              <th className="text-center w-12">P</th>
-              <th className="text-center w-12">W</th>
-              <th className="text-center w-12">D</th>
-              <th className="text-center w-12">L</th>
-              <th className="text-center w-16">GF</th>
-              <th className="text-center w-16">GA</th>
-              <th className="text-center w-16">GD</th>
-              <th className="text-center w-16">Pts</th>
-              <th className="text-center w-32 hidden lg:table-cell">Form</th>
-              <th className="text-center w-20 hidden xl:table-cell">Next</th>
-              <th className="text-center w-12">Status</th>
-            </tr>
-          </thead>
-          <tbody className="uefa-table-body">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gradient-to-r from-[#003B73]/80 to-[#00924A]/80 backdrop-blur-sm">
+              <tr className="text-white/90 text-xs uppercase tracking-wider">
+                <th className="p-4 text-center font-semibold">#</th>
+                <th className="p-4 text-center font-semibold"></th>
+                <th className="p-4 text-left min-w-[200px] font-semibold">Đội bóng</th>
+                <th className="p-4 text-center font-semibold">Đá</th>
+                <th className="p-4 text-center font-semibold">Thắng</th>
+                <th className="p-4 text-center font-semibold">Hòa</th>
+                <th className="p-4 text-center font-semibold">Thua</th>
+                <th className="p-4 text-center font-semibold">GF</th>
+                <th className="p-4 text-center font-semibold">GA</th>
+                <th className="p-4 text-center font-semibold">HS</th>
+                <th className="p-4 text-center font-semibold">Điểm</th>
+                <th className="p-4 text-center font-semibold hidden lg:table-cell">Phong độ</th>
+                <th className="p-4 text-center font-semibold hidden xl:table-cell">Tiếp theo</th>
+                <th className="p-4 text-center font-semibold">Trạng thái</th>
+              </tr>
+            </thead>
+          <tbody className="divide-y divide-white/5">
             {filteredStandings.map((team, index) => (
-              <tr key={team.position} className={`uefa-table-row cursor-pointer ${
-                team.position <= 8 ? 'bg-green-50 hover:bg-green-100' :
-                team.position <= 24 ? 'bg-yellow-50 hover:bg-yellow-100' :
-                'bg-red-50 hover:bg-red-100'
+              <tr key={team.position} className={`cursor-pointer transition-colors ${
+                team.position <= 8 ? 'bg-green-500/10 hover:bg-green-500/20 border-l-4 border-l-[#00C65A]' :
+                team.position <= 24 ? 'bg-yellow-500/10 hover:bg-yellow-500/20 border-l-4 border-l-[#F59E0B]' :
+                'bg-red-500/10 hover:bg-red-500/20 border-l-4 border-l-[#EF4444]'
               }`}>
-                <td className="uefa-table-cell text-center">
+                <td className="p-4 text-center">
                   <div className="flex items-center justify-center space-x-1">
-                    <span className="font-bold text-uefa-dark text-lg">{team.position}</span>
-                    {team.change > 0 && <TrendingUp size={12} className="text-uefa-green" />}
-                    {team.change < 0 && <TrendingDown size={12} className="text-uefa-red" />}
+                    <span className="font-bold text-white text-lg">{team.position}</span>
+                    {team.change > 0 && <TrendingUp size={12} className="text-[#059669]" />}
+                    {team.change < 0 && <TrendingDown size={12} className="text-[#DC2626]" />}
                     {team.change === 0 && <div className="w-3"></div>}
                   </div>
                 </td>
-                <td className="uefa-table-cell text-center">
-                  <span className="text-xs text-uefa-gray font-bold bg-uefa-light-gray px-1 py-0.5 rounded">
+                <td className="p-4 text-center">
+                  <span className="text-xs text-white font-bold bg-white/10 px-2 py-1 rounded border border-white/20">
                     {team.country}
                   </span>
                 </td>
                 <td className="uefa-table-cell">
                   <div className="flex items-center space-x-3">
                     <img 
-                      src={team.logo} 
+                      src={team.logo || `data:image/svg+xml;base64,${btoa(`<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#003399"/><text x="16" y="20" text-anchor="middle" fill="white" font-size="10" font-weight="bold">${(team.team || 'TM').substring(0, 3).toUpperCase()}</text></svg>`)}`} 
                       alt={team.team}
                       className="w-8 h-8 object-contain"
                       onError={(e) => {
-                        e.target.src = `data:image/svg+xml;base64,${btoa(`<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#003399"/><text x="16" y="20" text-anchor="middle" fill="white" font-size="10" font-weight="bold">${team.team.substring(0, 3).toUpperCase()}</text></svg>`)}`
+                        e.target.src = `data:image/svg+xml;base64,${btoa(`<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#003399"/><text x="16" y="20" text-anchor="middle" fill="white" font-size="10" font-weight="bold">${(team.team || 'TM').substring(0, 3).toUpperCase()}</text></svg>`)}`
                       }}
                     />
                     <div>
-                      <div className="uefa-team-name font-semibold text-uefa-dark hover:text-uefa-blue transition-colors">
+                      <div className="font-semibold text-white hover:text-cyan-400 transition-colors">
                         {team.team}
                       </div>
-                      <div className="text-xs text-uefa-gray">{team.countryFlag}</div>
+                      <div className="text-xs text-white/50">{team.countryFlag}</div>
                     </div>
                   </div>
                 </td>
-                <td className="uefa-table-cell text-center text-uefa-dark font-medium">{team.played}</td>
-                <td className="uefa-table-cell text-center text-uefa-green font-bold">{team.won}</td>
-                <td className="uefa-table-cell text-center text-uefa-yellow font-bold">{team.drawn}</td>
-                <td className="uefa-table-cell text-center text-uefa-red font-bold">{team.lost}</td>
-                <td className="uefa-table-cell text-center text-uefa-dark font-medium">{team.goalsFor}</td>
-                <td className="uefa-table-cell text-center text-uefa-dark font-medium">{team.goalsAgainst}</td>
-                <td className="uefa-table-cell text-center font-bold text-uefa-dark">
-                  <span className={team.goalDifference > 0 ? 'text-uefa-green' : team.goalDifference < 0 ? 'text-uefa-red' : 'text-uefa-gray'}>
+                <td className="p-4 text-center text-white/90 font-medium">{team.played}</td>
+                <td className="p-4 text-center text-green-400 font-bold">{team.won}</td>
+                <td className="p-4 text-center text-yellow-400 font-bold">{team.drawn}</td>
+                <td className="p-4 text-center text-red-400 font-bold">{team.lost}</td>
+                <td className="p-4 text-center text-white/90 font-medium">{team.goalsFor}</td>
+                <td className="p-4 text-center text-white/90 font-medium">{team.goalsAgainst}</td>
+                <td className="p-4 text-center font-bold">
+                  <span className={team.goalDifference > 0 ? 'text-green-400' : team.goalDifference < 0 ? 'text-red-400' : 'text-white/60'}>
                     {team.goalDifference > 0 ? '+' : ''}{team.goalDifference}
                   </span>
                 </td>
-                <td className="uefa-table-cell text-center font-bold text-xl text-uefa-blue">
+                <td className="p-4 text-center font-bold text-xl text-cyan-400">
                   {team.points}
                 </td>
-                <td className="uefa-table-cell text-center hidden lg:table-cell">
+                <td className="p-4 text-center hidden lg:table-cell">
                   <div className="flex items-center justify-center space-x-1">
-                    {team.form.map((result, formIndex) => (
-                      <div key={formIndex} title={`Match ${formIndex + 1}: ${result === 'W' ? 'Win' : result === 'D' ? 'Draw' : 'Loss'}`}>
-                        {getFormBadge(result)}
-                      </div>
-                    ))}
+                    {team.form && team.form.length > 0 ? (
+                      team.form.map((result, formIndex) => (
+                        <div key={formIndex} title={`Match ${formIndex + 1}: ${result === 'W' ? 'Win' : result === 'D' ? 'Draw' : 'Loss'}`}>
+                          {getFormBadge(result)}
+                        </div>
+                      ))
+                    ) : (
+                      <span className="text-xs text-white/50">N/A</span>
+                    )}
                   </div>
                 </td>
-                <td className="uefa-table-cell text-center hidden xl:table-cell">
-                  <div className="text-xs text-uefa-gray font-medium">
-                    {team.nextMatch}
+                <td className="p-4 text-center hidden xl:table-cell">
+                  <div className="text-xs text-white/70 font-medium">
+                    {team.nextMatch || '-'}
                   </div>
                 </td>
-                <td className="uefa-table-cell text-center">
+                <td className="p-4 text-center">
                   {getStatusBadge(team.status)}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Main Content Grid */}
@@ -777,54 +567,54 @@ const Standings = () => {
           <StandingsTable standings={filteredStandings} selectedGroup={selectedGroup} />
           
           {/* Legend */}
-          <div className="mt-6 p-6 bg-gradient-to-r from-uefa-light-gray to-uefa-medium-gray rounded-uefa-lg">
-            <h3 className="font-bold text-uefa-dark mb-4 flex items-center">
-              <Trophy size={20} className="mr-2 text-uefa-gold" />
-              Qualification Status
+          <div className="mt-6 p-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl">
+            <h3 className="font-bold text-white mb-4 flex items-center">
+              <Trophy size={20} className="mr-2 text-[#00d4ff]" />
+              Trạng thái vào vòng tiếp theo
             </h3>
             <div className="grid md:grid-cols-3 gap-4 text-sm">
-              <div className="flex items-center space-x-3 p-3 bg-white rounded-uefa">
+              <div className="flex items-center space-x-3 p-3 bg-white/10 backdrop-blur-lg border border-white/10 rounded-xl">
                 <div className="uefa-badge uefa-badge-qualified">Q</div>
                 <div>
-                  <div className="font-semibold text-uefa-dark">Qualified</div>
-                  <div className="text-uefa-gray">Round of 16 (1-8)</div>
+                  <div className="font-semibold text-white">Đã vào vòng</div>
+                  <div className="text-white/70">Vòng 1/16 (1-8)</div>
                 </div>
               </div>
-              <div className="flex items-center space-x-3 p-3 bg-white rounded-uefa">
+              <div className="flex items-center space-x-3 p-3 bg-white/10 backdrop-blur-lg border border-white/10 rounded-xl">
                 <div className="uefa-badge uefa-badge-playoff">P</div>
                 <div>
-                  <div className="font-semibold text-uefa-dark">Playoff</div>
-                  <div className="text-uefa-gray">Knockout Playoff (9-24)</div>
+                  <div className="font-semibold text-white">Phải đá play-off</div>
+                  <div className="text-white/70">Play-off loại trực tiếp (9-24)</div>
                 </div>
               </div>
-              <div className="flex items-center space-x-3 p-3 bg-white rounded-uefa">
+              <div className="flex items-center space-x-3 p-3 bg-white/10 backdrop-blur-lg border border-white/10 rounded-xl">
                 <div className="uefa-badge uefa-badge-eliminated">E</div>
                 <div>
-                  <div className="font-semibold text-uefa-dark">Eliminated</div>
-                  <div className="text-uefa-gray">Out of competition (25-36)</div>
+                  <div className="font-semibold text-white">Bị loại</div>
+                  <div className="text-white/70">Không vào tiếp (25-36)</div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Format Explanation */}
-          <div className="mt-6 p-6 bg-uefa-blue text-white rounded-uefa-lg">
-            <h3 className="font-bold mb-3">New Champions League Format</h3>
+          <div className="mt-6 p-6 bg-gradient-to-br from-[#003B73] to-[#00924A] text-white rounded-2xl shadow-xl border border-white/10">
+            <h3 className="font-bold mb-3">Cơ chế mới của Cúp C1 châu Âu</h3>
             <div className="grid md:grid-cols-2 gap-4 text-sm">
               <div>
-                <h4 className="font-semibold mb-2">League Phase</h4>
-                <ul className="space-y-1 text-uefa-light-gray">
-                  <li>• 36 teams in single league table</li>
-                  <li>• Each team plays 8 matches</li>
-                  <li>• Top 8 qualify directly to Round of 16</li>
+                <h4 className="font-semibold mb-2">Vòng bảng</h4>
+                <ul className="space-y-1 text-white/80">
+                  <li>• 36 đội thi đấu trên một bảng xếp hạng chung</li>
+                  <li>• Mỗi đội đá 8 trận</li>
+                  <li>• Top 8 vào thẳng vòng 1/16</li>
                 </ul>
               </div>
               <div>
-                <h4 className="font-semibold mb-2">Knockout Phase</h4>
-                <ul className="space-y-1 text-uefa-light-gray">
-                  <li>• Teams 9-24 enter playoff round</li>
-                  <li>• Teams 25-36 are eliminated</li>
-                  <li>• Playoff winners join top 8 in Round of 16</li>
+                <h4 className="font-semibold mb-2">Vòng loại trực tiếp</h4>
+                <ul className="space-y-1 text-white/80">
+                  <li>• Đội xếp thứ 9-24 phải đá play-off</li>
+                  <li>• Đội xếp thứ 25-36 bị loại</li>
+                  <li>• Chiến thắng ở play-off gặp top 8 ở vòng 1/16</li>
                 </ul>
               </div>
             </div>
@@ -837,46 +627,46 @@ const Standings = () => {
           <UpcomingMatches />
           
           {/* Quick Stats */}
-          <div className="uefa-card p-6">
-            <h3 className="font-bold text-uefa-dark mb-4">Quick Stats</h3>
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-6">
+            <h3 className="font-bold text-white mb-4">Thống kê nhanh</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-uefa-gray">Matches played:</span>
-                <span className="font-bold text-uefa-dark">108/144</span>
+                <span className="text-white/70">Trận đã đá:</span>
+                <span className="font-bold text-white">108/144</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-uefa-gray">Goals scored:</span>
-                <span className="font-bold text-uefa-dark">312</span>
+                <span className="text-white/70">Bàn thắng ghi được:</span>
+                <span className="font-bold text-white">312</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-uefa-gray">Average goals:</span>
-                <span className="font-bold text-uefa-dark">2.89</span>
+                <span className="text-white/70">Trung bình bàn thắng:</span>
+                <span className="font-bold text-white">2.89</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-uefa-gray">Clean sheets:</span>
-                <span className="font-bold text-uefa-dark">67</span>
+                <span className="text-white/70">Giữ sạch lưới:</span>
+                <span className="font-bold text-white">67</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-uefa-gray">Hat-tricks:</span>
-                <span className="font-bold text-uefa-dark">8</span>
+                <span className="text-white/70">Hat-trick:</span>
+                <span className="font-bold text-white">8</span>
               </div>
             </div>
           </div>
 
           {/* Next Matchday Countdown */}
-          <div className="uefa-card p-6 bg-gradient-to-br from-uefa-blue to-uefa-light-blue text-white">
-            <h3 className="font-bold mb-4">Next Matchday</h3>
+          <div className="p-6 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 backdrop-blur-xl border border-cyan-500/30 rounded-2xl shadow-xl text-white">
+            <h3 className="font-bold mb-4">Vòng đấu tiếp theo</h3>
             <div className="text-center">
-              <div className="text-3xl font-bold mb-2">Matchday 7</div>
-              <div className="text-sm opacity-90 mb-4">January 22, 2025</div>
+              <div className="text-3xl font-bold mb-2">Vòng 7</div>
+              <div className="text-sm opacity-90 mb-4">22 tháng 1, 2025</div>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <div className="text-2xl font-bold">16</div>
-                  <div className="opacity-75">Matches</div>
+                  <div className="opacity-75">Trận đấu</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold">32</div>
-                  <div className="opacity-75">Teams</div>
+                  <div className="opacity-75">Đội bóng</div>
                 </div>
               </div>
             </div>
@@ -888,60 +678,61 @@ const Standings = () => {
       {showLiveTicker && <LiveTicker />}
 
       {/* Additional Info */}
-      <div className="mt-12 pt-8 border-t border-uefa-medium-gray">
+      <div className="mt-12 pt-8 border-t border-white/10">
         <div className="grid md:grid-cols-2 gap-8">
           <div>
-            <h3 className="font-bold text-uefa-dark mb-4">Tournament Information</h3>
+            <h3 className="font-bold text-white mb-4">Thông tin giải đấu</h3>
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-uefa-gray">Season:</span>
-                <span className="text-uefa-dark font-medium">2024/25</span>
+              <div className="flex items-center justify-between">
+                <span className="text-white/70">Mùa giải:</span>
+                <span className="text-white font-medium">{seasonInfo?.label || '2024/25'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-uefa-gray">Format:</span>
-                <span className="text-uefa-dark font-medium">League Phase + Knockout</span>
+                <span className="text-white/70">Cơ chế:</span>
+                <span className="text-white font-medium">Vòng bảng + Loại trực tiếp</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-white/70">Số đội:</span>
+                <span className="text-white font-medium">{standings.length}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-uefa-gray">Teams:</span>
-                <span className="text-uefa-dark font-medium">36</span>
+                <span className="text-white/70">Trận/đội:</span>
+                <span className="text-white font-medium">8 (Vòng bảng)</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-uefa-gray">Matches per team:</span>
-                <span className="text-uefa-dark font-medium">8 (League Phase)</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-uefa-gray">Total matches:</span>
-                <span className="text-uefa-dark font-medium">189</span>
+                <span className="text-white/70">Tổng số trận:</span>
+                <span className="text-white font-medium">189</span>
               </div>
             </div>
           </div>
           
           <div>
-            <h3 className="font-bold text-uefa-dark mb-4">Key Dates</h3>
+            <h3 className="font-bold text-white mb-4">Các ngày quan trọng</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-uefa-gray">League Phase ends:</span>
-                <span className="text-uefa-dark font-medium">29 January 2025</span>
+                <span className="text-white/70">Kết thúc vòng bảng:</span>
+                <span className="text-white font-medium">29/01/2025</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-uefa-gray">Knockout draw:</span>
-                <span className="text-uefa-dark font-medium">31 January 2025</span>
+                <span className="text-white/70">Bốc thăm loại trực tiếp:</span>
+                <span className="text-white font-medium">31/01/2025</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-uefa-gray">Playoff round:</span>
-                <span className="text-uefa-dark font-medium">11/12 & 18/19 Feb 2025</span>
+                <span className="text-white/70">Vòng play-off:</span>
+                <span className="text-white font-medium">11/12 & 18/19/02/2025</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-uefa-gray">Round of 16:</span>
-                <span className="text-uefa-dark font-medium">4/5 & 11/12 Mar 2025</span>
+                <span className="text-white/70">Vòng 1/16:</span>
+                <span className="text-white font-medium">4/5 & 11/12/03/2025</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-uefa-gray">Final:</span>
-                <span className="text-uefa-dark font-medium">31 May 2025, Munich</span>
+                <span className="text-white/70">Chung kết:</span>
+                <span className="text-white font-medium">31/05/2025, Munich</span>
               </div>
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   )

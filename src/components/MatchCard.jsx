@@ -5,11 +5,11 @@ const MatchCard = ({ match }) => {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'live':
-        return <span className="uefa-live-badge animate-pulse">LIVE</span>
+        return <span className="uefa-live-badge animate-pulse">TRỰC TIẾP</span>
       case 'finished':
-        return <span className="bg-uefa-gray text-white px-2 py-1 rounded text-xs font-bold">FT</span>
+        return <span className="bg-uefa-gray text-white px-2 py-1 rounded text-xs font-bold">HẾT GIỞ</span>
       case 'upcoming':
-        return <span className="bg-uefa-blue text-white px-2 py-1 rounded text-xs font-bold">UPCOMING</span>
+        return <span className="bg-uefa-blue text-white px-2 py-1 rounded text-xs font-bold">SẮP DIỄN RA</span>
       default:
         return null
     }
@@ -65,7 +65,7 @@ const MatchCard = ({ match }) => {
               <div className="uefa-score text-3xl font-bold">
                 {match.score.home} - {match.score.away}
               </div>
-              <div className="text-xs text-uefa-gray">Full Time</div>
+              <div className="text-xs text-uefa-gray">Hết giờ</div>
             </div>
           ) : match.status === 'live' ? (
             <div className="text-center">
@@ -79,7 +79,7 @@ const MatchCard = ({ match }) => {
           ) : (
             <div className="text-center">
               <div className="text-uefa-blue font-bold text-lg">{formatTime(match.time)}</div>
-              <div className="text-xs text-uefa-gray">Kick-off</div>
+              <div className="text-xs text-uefa-gray">Giờ khai cuộc</div>
             </div>
           )}
         </div>
@@ -116,19 +116,19 @@ const MatchCard = ({ match }) => {
         
         {match.status === 'upcoming' && (
           <button className="text-uefa-blue hover:text-uefa-dark text-sm font-medium transition-colors">
-            Match Preview →
+            Xem trước →
           </button>
         )}
         
         {match.status === 'finished' && (
           <button className="text-uefa-blue hover:text-uefa-dark text-sm font-medium transition-colors">
-            Match Report →
+            Báo cáo trận đấu →
           </button>
         )}
         
         {match.status === 'live' && (
           <button className="text-uefa-red hover:text-uefa-dark text-sm font-medium transition-colors animate-pulse">
-            Watch Live →
+            Xem trực tiếp →
           </button>
         )}
       </div>

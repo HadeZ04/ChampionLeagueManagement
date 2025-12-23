@@ -105,7 +105,7 @@ const UserFormModal = ({ isOpen, onClose, onSave, user, roles, isSubmitting = fa
             type="password"
             value={formData.password}
             onChange={handleChange}
-            placeholder={isEditing ? 'Mật khẩu mới (để trống để giữ nguyên)' : 'Mật khẩu'}
+            placeholder={isEditing ? 'Mật khẩu mới (tùy chọn)' : 'Mật khẩu'}
             className="w-full p-2 border rounded"
             required={!isEditing}
           />

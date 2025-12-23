@@ -15,14 +15,15 @@ import {
   Loader2
 } from 'lucide-react'
 import MatchesService from '../../../layers/application/services/MatchesService'
+import logger from '../../../shared/utils/logger'
 
 const statusOptions = [
-  { id: 'all', name: 'All Matches' },
-  { id: 'SCHEDULED', name: 'Scheduled' },
-  { id: 'IN_PROGRESS', name: 'Live (In Progress)' },
-  { id: 'COMPLETED', name: 'Completed' },
-  { id: 'POSTPONED', name: 'Postponed' },
-  { id: 'CANCELLED', name: 'Cancelled' }
+  { id: 'all', name: 'Tất cả trận' },
+  { id: 'SCHEDULED', name: 'Đã lịch' },
+  { id: 'IN_PROGRESS', name: 'Đang diễn ra' },
+  { id: 'COMPLETED', name: 'Đã kết thúc' },
+  { id: 'POSTPONED', name: 'Hoãn lại' },
+  { id: 'CANCELLED', name: 'Đã hủy' }
 ]
 
 const statusIcon = (status) => {
@@ -51,18 +52,18 @@ const statusBadge = (status) => {
   switch (normalized) {
     case 'SCHEDULED':
     case 'TIMED':
-      return <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">Scheduled</span>
+      return <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">Đã lịch</span>
     case 'LIVE':
     case 'IN_PLAY':
     case 'IN_PROGRESS':
-      return <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium animate-pulse">Live</span>
+      return <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium animate-pulse">Đang diễn ra</span>
     case 'FINISHED':
     case 'COMPLETED':
-      return <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">Completed</span>
+      return <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">Kết thúc</span>
     case 'POSTPONED':
-      return <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">Postponed</span>
+      return <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">Hoãn</span>
     case 'CANCELLED':
-      return <span className="bg-gray-200 text-gray-600 px-2 py-1 rounded-full text-xs font-medium">Cancelled</span>
+      return <span className="bg-gray-200 text-gray-600 px-2 py-1 rounded-full text-xs font-medium">Hủy</span>
     default:
       return <span className="bg-gray-200 text-gray-600 px-2 py-1 rounded-full text-xs font-medium">{status}</span>
   }
@@ -119,9 +120,9 @@ const MatchesManagement = () => {
           total: response.total
         }))
       } catch (err) {
-        console.error('Failed to load matches', err)
+        logger.error('Failed to load matches', err)
         if (isMounted) {
-          setError('Unable to load matches from the server.')
+          setError('Không thể tải trận đấu từ máy chủ.')
         }
       } finally {
         if (isMounted) {
@@ -162,7 +163,7 @@ const MatchesManagement = () => {
       // Show success message
       if (result?.data?.results?.matches) {
         const { totalMatches, syncedMatches, skippedMatches } = result.data.results.matches
-        alert(`✅ Successfully synced ${totalMatches || syncedMatches} matches from Football-Data.org API!\n\n${skippedMatches ? `⚠️ Skipped ${skippedMatches} matches with incomplete data.` : ''}`)
+        alert(`✅ Đồng bộ thành công ${totalMatches || syncedMatches} trận đấu từ Football-Data.org API!\n\n${skippedMatches ? `⚠️ Đã bỏ qua ${skippedMatches} trận không đủ dữ liệu.` : ''}`)
       }
 
       // Force reload matches
@@ -180,23 +181,23 @@ const MatchesManagement = () => {
         total: response.total
       }))
     } catch (err) {
-      console.error('Failed to sync matches', err)
-      alert('Unable to sync match data from upstream API.')
+      logger.error('Failed to sync matches', err)
+      alert('Không thể đồng bộ dữ liệu trận đấu từ API.')
     } finally {
       setSyncing(false)
     }
   }
 
   const handleDelete = async (matchId) => {
-    if (!window.confirm('Are you sure you want to remove this match from the local schedule?')) {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa trận này khỏi lịch thi đấu?')) {
       return
     }
     try {
       await MatchesService.deleteMatch(matchId)
       setMatches(prev => prev.filter(match => match.id !== matchId))
     } catch (err) {
-      console.error('Failed to delete match', err)
-      alert('Could not delete match. Please try again.')
+      logger.error('Failed to delete match', err)
+      alert('Không thể xóa trận đấu. Vui lòng thử lại.')
     }
   }
 
@@ -306,7 +307,7 @@ const MatchesManagement = () => {
             </button>
             <button className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
               <Download size={16} />
-              <span>Export Schedule</span>
+              <span>Xuất lịch thi đấu</span>
             </button>
             <a
               href="/admin/schedule"

@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ChevronDown, Search, Globe, ShoppingCart, Bell, LogOut } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import uefaPrimaryMark from '@/assets/images/UEFA_Champions_League_logo.svg.png';
 import { useAuth } from '../../../layers/application/context/AuthContext';
+import LanguageSwitcher from '../../../components/LanguageSwitcher';
 import { hasAdminPortalAccess } from '../../admin/utils/accessControl';
 import { toRoleLabel } from '../../../shared/utils/vi';
+import LiveMatchTicker from './LiveMatchTicker';
 
 const PublicHeader = () => {
+  const { t } = useTranslation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isCompetitionDropdownOpen, setIsCompetitionDropdownOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
@@ -39,23 +42,12 @@ const PublicHeader = () => {
   }, []);
 
   const navigationItems = [
-    { name: 'Bảng xếp hạng', path: '/standings' },
-    { name: 'Trận đấu', path: '/matches' },
-    { name: 'Đội bóng', path: '/teams' },
-    { name: 'Thống kê', path: '/stats' },
-    { name: 'Tin tức', path: '/news' },
-    { name: 'Video', path: '/video' },
-    { name: 'Trò chơi', path: '/gaming' },
-  ];
-
-  const competitions = [
-    { name: 'Cúp C1', path: '/champions-league', active: true },
-    { name: 'Cúp C2', path: '/europa-league' },
-    { name: 'Cúp C3', path: '/conference-league' },
-    { name: 'Siêu cúp', path: '/super-cup' },
-    { name: 'Giải trẻ', path: '/youth-league' },
-    { name: 'Cúp C1 nữ', path: '/womens-champions-league' },
-    { name: 'Cúp C1 futsal', path: '/futsal-champions-league' },
+    { name: t('nav.standings'), path: '/standings' },
+    { name: t('nav.matches'), path: '/matches' },
+    { name: t('nav.teams'), path: '/teams' },
+    { name: t('nav.stats'), path: '/stats' },
+    { name: t('nav.news'), path: '/news' },
+    { name: t('nav.videos'), path: '/video' },
   ];
 
   return (
@@ -67,24 +59,11 @@ const PublicHeader = () => {
             <div className="flex items-center gap-6">
               <span className="text-white/70 font-medium hidden md:flex items-center gap-2">
                 <Globe size={13} />
-                Trang chính thức của UEFA
+                Trang chính thức của UEFA Champions League
               </span>
-              <div className="hidden lg:flex items-center gap-4 text-white/60">
-                <a href="#" className="hover:text-white transition-colors">Cửa hàng</a>
-                <span className="text-white/30">•</span>
-                <a href="#" className="hover:text-white transition-colors">Vé</a>
-                <span className="text-white/30">•</span>
-                <a href="#" className="hover:text-white transition-colors">Bóng đá ảo</a>
-                <span className="text-white/30">•</span>
-                <a href="#" className="hover:text-white transition-colors">Trò chơi</a>
-              </div>
             </div>
             <div className="flex items-center gap-3">
-              <button className="flex items-center gap-1 text-white/70 hover:text-white transition-colors">
-                <Globe size={13} />
-                <span className="hidden sm:inline">Tiếng Việt</span>
-                <ChevronDown size={12} />
-              </button>
+              <LanguageSwitcher />
               <span className="text-white/30 hidden md:inline">|</span>
               {isAuthenticated ? (
                 <div className="hidden md:flex items-center gap-3">
@@ -159,46 +138,12 @@ const PublicHeader = () => {
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center">
-              {/* Competition Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => setIsCompetitionDropdownOpen(!isCompetitionDropdownOpen)}
-                  onMouseEnter={() => setIsCompetitionDropdownOpen(true)}
-                  onMouseLeave={() => setIsCompetitionDropdownOpen(false)}
-                  className="flex items-center gap-1 px-4 py-2 text-white/80 hover:text-white font-medium transition-colors"
-                >
-                  <span>Giải đấu</span>
-                  <ChevronDown size={16} className={`transition-transform ${isCompetitionDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-
-                {isCompetitionDropdownOpen && (
-                  <div
-                    className="absolute top-full left-0 mt-1 w-64 bg-[#0a1929] border border-white/10 rounded-lg shadow-2xl overflow-hidden"
-                    onMouseEnter={() => setIsCompetitionDropdownOpen(true)}
-                    onMouseLeave={() => setIsCompetitionDropdownOpen(false)}
-                  >
-                    <div className="px-4 py-3 border-b border-white/10">
-                      <p className="text-xs font-semibold text-white/60 uppercase tracking-wider">Các giải đấu UEFA</p>
-                    </div>
-                    {competitions.map((competition) => (
-                      <Link
-                        key={competition.name}
-                        to={competition.path}
-                        className={`flex items-center justify-between px-4 py-2.5 text-sm transition-colors ${
-                          competition.active
-                            ? 'text-[#00d4ff] font-semibold bg-white/5'
-                            : 'text-white/80 hover:text-white hover:bg-white/5'
-                        }`}
-                        onClick={() => setIsCompetitionDropdownOpen(false)}
-                      >
-                        <span>{competition.name}</span>
-                        {competition.active && (
-                          <span className="w-1.5 h-1.5 bg-[#00d4ff] rounded-full"></span>
-                        )}
-                      </Link>
-                    ))}
-                  </div>
-                )}
+              {/* Competition Label - Static (only one competition) */}
+              <div className="px-4 py-2">
+                <span className="text-[#00d4ff] font-semibold text-sm flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-[#00d4ff] rounded-full"></span>
+                  Cúp C1 châu Âu
+                </span>
               </div>
 
               {/* Main Navigation Items */}
@@ -268,56 +213,14 @@ const PublicHeader = () => {
         </div>
       </div>
 
-      {/* Live Match Ticker */}
-      <div className="bg-gradient-to-r from-[#003B73] via-[#004EA8] to-[#00C65A] overflow-hidden">
-        <div className="max-w-[1400px] mx-auto px-4">
-          <div className="flex items-center h-8 text-xs text-white font-medium overflow-hidden">
-            <span className="bg-white text-red-600 px-2 py-0.5 rounded text-[10px] font-bold mr-3 flex-shrink-0">
-              TRỰC TIẾP
-            </span>
-            <div className="flex items-center gap-6 animate-scroll whitespace-nowrap">
-              <span>Manchester City 1-0 PSG • 82'</span>
-              <span className="text-white/60">•</span>
-              <span>Barcelona 3-2 Inter Milan • Hết giờ</span>
-              <span className="text-white/60">•</span>
-              <span>Real Madrid 2-1 Bayern Munich • 78'</span>
-              <span className="text-white/60">•</span>
-              <span>Liverpool 2-2 Juventus • 65'</span>
-              <span className="text-white/60">•</span>
-              <span>Manchester City 1-0 PSG • 82'</span>
-              <span className="text-white/60">•</span>
-              <span>Barcelona 3-2 Inter Milan • Hết giờ</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Live Match Ticker - API Integration */}
+      <LiveMatchTicker />
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="lg:hidden bg-[#0a1929] border-t border-white/5">
           <div className="max-w-[1400px] mx-auto px-4 py-6">
             <div className="space-y-6">
-              {/* Competitions */}
-              <div>
-                <div className="text-white/60 text-xs font-semibold uppercase tracking-wide mb-3">
-                  Giải đấu
-                </div>
-                {competitions.map((competition) => (
-                  <Link
-                    key={competition.name}
-                    to={competition.path}
-                    className={`block px-4 py-2.5 rounded-lg text-sm transition-colors ${
-                      competition.active
-                        ? 'text-[#00d4ff] font-semibold bg-white/5'
-                        : 'text-white/80 hover:text-white hover:bg-white/5'
-                    }`}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    {competition.name}
-                  </Link>
-                ))}
-              </div>
-
               {/* Navigation */}
               <div>
                 <div className="text-white/60 text-xs font-semibold uppercase tracking-wide mb-3">
@@ -428,21 +331,6 @@ const PublicHeader = () => {
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        @keyframes scroll {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
-        }
-
-        .animate-scroll {
-          animation: scroll 30s linear infinite;
-        }
-      `}</style>
     </header>
   );
 };

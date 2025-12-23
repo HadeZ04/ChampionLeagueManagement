@@ -20,10 +20,10 @@ import UserService from '../../../layers/application/services/UserService'
 import RoleService from '../../../layers/application/services/RoleService'
 
 const statuses = [
-  { id: 'all', name: 'All status' },
-  { id: 'active', name: 'Active' },
-  { id: 'inactive', name: 'Inactive' },
-  { id: 'suspended', name: 'Suspended' }
+  { id: 'all', name: 'Tất cả trạng thái' },
+  { id: 'active', name: 'Đang hoạt động' },
+  { id: 'inactive', name: 'Không hoạt động' },
+  { id: 'suspended', name: 'Bị đình chỉ' }
 ]
 
 const statusStyleMap = {
@@ -91,7 +91,7 @@ const UsersManagement = () => {
       setAllUsers(enriched)
     } catch (error) {
       console.error(error)
-      toast.error('Unable to load users from the server.')
+      toast.error('Không thể tải danh sách người dùng từ máy chủ.')
       setAllUsers([])
     } finally {
       setIsLoading(false)
@@ -105,7 +105,7 @@ const UsersManagement = () => {
       setRoles(result)
     } catch (error) {
       console.error(error)
-      toast.error('Unable to load role catalog.')
+      toast.error('Không thể tải danh mục vai trò.')
       setRoles([])
     } finally {
       setRolesLoading(false)
@@ -125,7 +125,7 @@ const UsersManagement = () => {
   }, [allUsers])
 
   const roleFilterOptions = useMemo(() => {
-    const base = [{ id: 'all', name: 'All roles' }]
+    const base = [{ id: 'all', name: 'Tất cả vai trò' }]
     const dynamic = roles.map((role) => ({
       id: role.code,
       name: role.name,
@@ -298,7 +298,7 @@ const UsersManagement = () => {
   }
 
   const handleExport = () => {
-    toast.success('Export job queued. A zip file will be delivered to your email.')
+    toast.success('Yêu cầu xuất dữ liệu đã được xếp hàng. File zip sẽ được gửi qua email của bạn.')
   }
 
   const handleSyncDirectory = async () => {

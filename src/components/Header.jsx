@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Menu, X, ChevronDown, Search, Globe, User, ShoppingCart, Bell } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import LanguageSwitcher from './LanguageSwitcher'
 
 const Header = () => {
+  const { t } = useTranslation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isCompetitionDropdownOpen, setIsCompetitionDropdownOpen] = useState(false)
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false)
@@ -18,32 +21,32 @@ const Header = () => {
   }, [])
 
   const navigationItems = [
-    { name: 'Standings', path: '/standings' },
-    { name: 'Matches', path: '/matches' },
-    { name: 'Teams', path: '/teams' },
-    { name: 'Players', path: '/player-lookup' },
-    { name: 'Stats', path: '/stats' },
-    { name: 'News', path: '/news' },
-    { name: 'Video', path: '/video' },
-    { name: 'Gaming', path: '/gaming' },
+    { name: t('nav.standings'), path: '/standings' },
+    { name: t('nav.matches'), path: '/matches' },
+    { name: t('nav.teams'), path: '/teams' },
+    { name: 'Cầu thủ', path: '/player-lookup' },
+    { name: t('nav.stats'), path: '/stats' },
+    { name: t('nav.news'), path: '/news' },
+    { name: t('nav.videos'), path: '/video' },
+    { name: 'Game', path: '/gaming' },
   ]
 
   const competitions = [
-    { name: 'Champions League', path: '/champions-league', active: true },
-    { name: 'Europa League', path: '/europa-league' },
-    { name: 'Conference League', path: '/conference-league' },
-    { name: 'Super Cup', path: '/super-cup' },
-    { name: 'Youth League', path: '/youth-league' },
-    { name: 'Women\'s Champions League', path: '/womens-champions-league' },
-    { name: 'Futsal Champions League', path: '/futsal-champions-league' },
+    { name: 'Cúp C1 châu Âu', path: '/champions-league', active: true },
+    { name: 'Cúp C2 châu Âu', path: '/europa-league' },
+    { name: 'Cúp Conference', path: '/conference-league' },
+    { name: 'Siêu cúp châu Âu', path: '/super-cup' },
+    { name: 'Giải trẻ', path: '/youth-league' },
+    { name: 'Cúp C1 nữ', path: '/womens-champions-league' },
+    { name: 'Cúp C1 Futsal', path: '/futsal-champions-league' },
   ]
 
   const userMenuItems = [
-    { name: 'My Profile', path: '/profile' },
-    { name: 'My Tickets', path: '/tickets' },
-    { name: 'Fantasy Football', path: '/fantasy' },
-    { name: 'Predictions', path: '/predictions' },
-    { name: 'Settings', path: '/settings' },
+    { name: 'Hồ sơ của tôi', path: '/profile' },
+    { name: 'Vé của tôi', path: '/tickets' },
+    { name: 'Đội hình ảo', path: '/fantasy' },
+    { name: 'Dự đoán', path: '/predictions' },
+    { name: 'Cài đặt', path: '/settings' },
   ]
 
   return (
@@ -53,24 +56,21 @@ const Header = () => {
         <div className="uefa-container">
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center space-x-6">
-              <span className="font-medium">Official UEFA Website</span>
+              <span className="font-medium">Trang web chính thức của UEFA</span>
               <div className="hidden md:flex items-center space-x-4">
-                <a href="#" className="hover:text-uefa-gold transition-colors flex items-center">
-                  <Globe size={16} className="mr-1" />
-                  English
-                </a>
+                <LanguageSwitcher />
                 <span className="text-uefa-gray">|</span>
                 <a href="#" className="hover:text-uefa-gold transition-colors">
                   <Bell size={16} className="inline mr-1" />
-                  Notifications
+                  Thông báo
                 </a>
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <a href="#" className="hover:text-uefa-gold transition-colors">Store</a>
-              <a href="#" className="hover:text-uefa-gold transition-colors">Tickets</a>
-              <a href="#" className="hover:text-uefa-gold transition-colors">Fantasy</a>
-              <a href="#" className="hover:text-uefa-gold transition-colors">Gaming</a>
+              <a href="#" className="hover:text-uefa-gold transition-colors">Cửa hàng</a>
+              <a href="#" className="hover:text-uefa-gold transition-colors">Vé</a>
+              <a href="#" className="hover:text-uefa-gold transition-colors">Đội hình ảo</a>
+              <a href="#" className="hover:text-uefa-gold transition-colors">Game</a>
               <span className="text-uefa-gray hidden md:inline">|</span>
               <div className="relative hidden md:block">
                 <button
@@ -78,15 +78,15 @@ const Header = () => {
                   className="flex items-center space-x-1 hover:text-uefa-gold transition-colors"
                 >
                   <User size={16} />
-                  <span>Sign In</span>
+                  <span>{t('nav.login')}</span>
                   <ChevronDown size={14} className={`transform transition-transform ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 
                 {isUserDropdownOpen && (
                   <div className="uefa-dropdown right-0">
                     <div className="px-4 py-3 border-b border-gray-200">
-                      <p className="text-sm font-medium text-uefa-dark">Welcome back!</p>
-                      <p className="text-xs text-uefa-gray">Access your UEFA account</p>
+                      <p className="text-sm font-medium text-uefa-dark">Chào mừng trở lại!</p>
+                      <p className="text-xs text-uefa-gray">Truy cập tài khoản UEFA của bạn</p>
                     </div>
                     {userMenuItems.map((item) => (
                       <Link
@@ -100,7 +100,7 @@ const Header = () => {
                     ))}
                     <div className="border-t border-gray-200 px-4 py-2">
                       <button className="text-sm text-uefa-red hover:text-uefa-dark transition-colors">
-                        Sign Out
+                        Đăng xuất
                       </button>
                     </div>
                   </div>
@@ -124,7 +124,7 @@ const Header = () => {
               </div>
               <div className="hidden md:block">
                 <div className="text-uefa-blue font-bold text-xl">UEFA</div>
-                <div className="text-uefa-gray text-sm font-medium">Champions League</div>
+                <div className="text-uefa-gray text-sm font-medium">Cúp C1 châu Âu</div>
               </div>
             </Link>
 
@@ -136,14 +136,14 @@ const Header = () => {
                   onClick={() => setIsCompetitionDropdownOpen(!isCompetitionDropdownOpen)}
                   className="flex items-center space-x-1 text-uefa-dark-gray hover:text-uefa-blue font-medium transition-colors py-2"
                 >
-                  <span>Competitions</span>
+                  <span>Giải đấu</span>
                   <ChevronDown size={16} className={`transform transition-transform ${isCompetitionDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 
                 {isCompetitionDropdownOpen && (
                   <div className="uefa-dropdown w-64">
                     <div className="px-4 py-3 border-b border-gray-200">
-                      <p className="text-sm font-semibold text-uefa-dark">UEFA Competitions</p>
+                      <p className="text-sm font-semibold text-uefa-dark">Giải đấu UEFA</p>
                     </div>
                     {competitions.map((competition) => (
                       <Link
@@ -180,7 +180,7 @@ const Header = () => {
                 <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-uefa-gray" />
                 <input
                   type="text"
-                  placeholder="Search teams, players, matches..."
+                  placeholder="Tìm kiếm đội bóng, cầu thủ, trận đấu..."
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-uefa-blue focus:border-transparent w-80 transition-all duration-300"
                 />
               </div>
@@ -220,7 +220,7 @@ const Header = () => {
               {/* Competition Section */}
               <div>
                 <div className="text-uefa-gray text-sm font-semibold uppercase tracking-wide mb-2">
-                  Competitions
+                  Giải đấu
                 </div>
                 {competitions.map((competition) => (
                   <Link
@@ -237,7 +237,7 @@ const Header = () => {
               {/* Navigation Section */}
               <div>
                 <div className="text-uefa-gray text-sm font-semibold uppercase tracking-wide mb-2">
-                  Navigation
+                  Điều hướng
                 </div>
                 {navigationItems.map((item) => (
                   <Link

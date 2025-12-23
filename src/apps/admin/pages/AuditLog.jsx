@@ -154,7 +154,7 @@ const AuditLog = () => {
 
 
   const handleExport = () => {
-    toast.success('Export requested. The report will be emailed to you.')
+    toast.success('Yêu cầu xuất đã được gửi. Báo cáo sẽ được gửi qua email cho bạn.')
   }
 
   const renderSeverityIcon = (severity) => {

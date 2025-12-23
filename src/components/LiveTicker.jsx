@@ -46,12 +46,12 @@ const LiveTicker = () => {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-40">
+    <div className="fixed bottom-4 right-4 w-80 bg-[#020617]/90 backdrop-blur-xl rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] border border-white/10 z-40">
       {/* Header */}
-      <div className="bg-uefa-blue text-white p-4 rounded-t-lg">
+      <div className="bg-gradient-to-r from-[#1E3A8A] to-[#4C1D95] text-white p-4 rounded-t-2xl">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-uefa-red rounded-full animate-pulse"></div>
+            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]"></div>
             <span className="font-bold">LIVE TICKER</span>
           </div>
           <div className="text-sm font-mono">

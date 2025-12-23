@@ -13,6 +13,10 @@ import {
 } from "lucide-react";
 import RegistrationStatusBadge from "../components/RegistrationStatusBadge";
 import RejectReasonView from "../components/RejectReasonView";
+import ApiService from '../../../layers/application/services/ApiService';
+import APP_CONFIG from '../../../config/app.config';
+import toast, { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 
 const SeasonPlayerApprovalPage = () => {
     const [list, setList] = useState([]);
@@ -28,25 +32,13 @@ const SeasonPlayerApprovalPage = () => {
     const [showApproveAllConfirm, setShowApproveAllConfirm] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
-    const token = localStorage.getItem("auth_token");
-
     // =========================
     // Load pending registrations
     // =========================
     const fetchPending = async () => {
         setLoading(true);
         try {
-            const res = await fetch("/api/season-players/pending", {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (!res.ok) {
-                throw new Error("Fetch failed");
-            }
-
-            const data = await res.json();
+            const data = await ApiService.get(APP_CONFIG.API.ENDPOINTS.SEASON_PLAYERS.PENDING);
             // Standardize data
             const safeData = (data || []).map(item => ({
                 ...item,
@@ -56,7 +48,7 @@ const SeasonPlayerApprovalPage = () => {
 
             setList(safeData);
         } catch (err) {
-            alert("Không thể tải danh sách hồ sơ chờ duyệt");
+            toast.error("Không thể tải danh sách hồ sơ chờ duyệt");
         } finally {
             setLoading(false);
         }
@@ -98,22 +90,14 @@ const SeasonPlayerApprovalPage = () => {
     const confirmApproveSingle = async () => {
         setSubmitting(true);
         try {
-            const res = await fetch(`/api/season-players/${approveId}/approve`, {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (!res.ok) {
-                throw new Error("Approve failed");
-            }
-
-            // alert("Duyệt hồ sơ thành công");
+            const endpoint = APP_CONFIG.API.ENDPOINTS.SEASON_PLAYERS.APPROVE.replace(':id', approveId);
+            await ApiService.post(endpoint);
+            
+            toast.success("Duyệt hồ sơ thành công");
             setApproveId(null);
             fetchPending();
         } catch (err) {
-            alert("Duyệt hồ sơ thất bại");
+            toast.error(err?.message || "Duyệt hồ sơ thất bại");
         } finally {
             setSubmitting(false);
         }
@@ -124,36 +108,21 @@ const SeasonPlayerApprovalPage = () => {
     // =========================
     const submitReject = async () => {
         if (!rejectReason.trim()) {
-            alert("Vui lòng nhập lý do từ chối");
+            toast.error("Vui lòng nhập lý do từ chối");
             return;
         }
 
         setSubmitting(true);
         try {
-            const res = await fetch(
-                `/api/season-players/${rejectId}/reject`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({
-                        reason: rejectReason,
-                    }),
-                }
-            );
-
-            if (!res.ok) {
-                throw new Error("Reject failed");
-            }
-
-            // alert("Từ chối hồ sơ thành công");
+            const endpoint = APP_CONFIG.API.ENDPOINTS.SEASON_PLAYERS.REJECT.replace(':id', rejectId);
+            await ApiService.post(endpoint, { reason: rejectReason });
+            
+            toast.success("Từ chối hồ sơ thành công");
             setRejectId(null);
             setRejectReason("");
             fetchPending();
         } catch (err) {
-            alert("Từ chối hồ sơ thất bại");
+            toast.error(err?.message || "Từ chối hồ sơ thất bại");
         } finally {
             setSubmitting(false);
         }
@@ -169,22 +138,13 @@ const SeasonPlayerApprovalPage = () => {
     const confirmApproveAll = async () => {
         setSubmitting(true);
         try {
-            const res = await fetch("/api/season-players/approve-all", {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (!res.ok) {
-                throw new Error("Approve all failed");
-            }
-
-            alert("Đã duyệt tất cả hồ sơ");
+            await ApiService.post(APP_CONFIG.API.ENDPOINTS.SEASON_PLAYERS.APPROVE_ALL);
+            
+            toast.success("Đã duyệt tất cả hồ sơ");
             setShowApproveAllConfirm(false);
             fetchPending();
         } catch (err) {
-            alert("Duyệt tất cả thất bại");
+            toast.error(err?.message || "Duyệt tất cả thất bại");
         } finally {
             setSubmitting(false);
         }
@@ -209,6 +169,7 @@ const SeasonPlayerApprovalPage = () => {
     // =========================
     return (
         <div className="p-6">
+            <Toaster position="top-right" />
             {/* Header */}
             <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>

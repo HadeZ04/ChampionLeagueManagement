@@ -119,6 +119,13 @@ export const APP_CONFIG = {
         DELETE: '/seasons/:id',
         METADATA: '/seasons/metadata'
       },
+      SEASON_PLAYERS: {
+        LIST: '/season-players',
+        PENDING: '/season-players/pending',
+        APPROVE: '/season-players/:id/approve',
+        APPROVE_ALL: '/season-players/approve-all',
+        REJECT: '/season-players/:id/reject'
+      },
       LEADERBOARD: {
         LIST: '/leaderboard',
         DETAIL: '/leaderboard/:id',

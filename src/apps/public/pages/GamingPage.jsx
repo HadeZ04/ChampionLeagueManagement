@@ -3,7 +3,7 @@ import React from 'react';
 
 const GameCard = ({ title, description, buttonText, imageUrl }) => (
     <div className="relative rounded-lg overflow-hidden shadow-2xl group">
-        <img src={imageUrl} className="w-full h-80 object-cover transform group-hover:scale-110 transition-transform duration-500" />
+        <img src={imageUrl} className="w-full h-80 object-cover transform group-hover:scale-110 transition-transform duration-500" loading="lazy" />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent"></div>
         <div className="absolute bottom-0 left-0 p-8 text-white">
             <h2 className="text-4xl font-black mb-2">{title}</h2>

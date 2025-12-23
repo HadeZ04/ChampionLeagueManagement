@@ -4,49 +4,49 @@ import { Facebook, Twitter, Instagram, Youtube, Linkedin, Mail, Phone, MapPin } 
 const Footer = () => {
   const footerSections = [
     {
-      title: 'Competitions',
+      title: 'Giải đấu',
       links: [
-        'Champions League',
-        'Europa League',
-        'Conference League',
-        'Super Cup',
-        'Youth League',
-        'Women\'s Champions League',
-        'Futsal Champions League'
+        'Cúp C1 châu Âu',
+        'Cúp C2 châu Âu',
+        'Cúp Conference',
+        'Siêu cúp châu Âu',
+        'Giải trẻ',
+        'Cúp C1 nữ',
+        'Cúp C1 Futsal'
       ]
     },
     {
-      title: 'National Teams',
+      title: 'Đội tuyển quốc gia',
       links: [
-        'European Championship',
-        'Nations League',
-        'World Cup Qualifiers',
-        'Youth Championships',
-        'Women\'s Euro',
-        'Futsal Euro'
+        'Vô địch châu Âu',
+        'UEFA Nations League',
+        'Vòng loại World Cup',
+        'Giải trẻ châu Âu',
+        'Euro nữ',
+        'Futsal châu Âu'
       ]
     },
     {
-      title: 'About UEFA',
+      title: 'Về UEFA',
       links: [
-        'Inside UEFA',
-        'UEFA Foundation',
+        'Giới thiệu UEFA',
+        'Qũy UEFA',
         'HatTrick',
-        'Sustainability',
-        'Integrity',
-        'Development',
-        'Technical'
+        'Phát triển bền vững',
+        'Liêm chính',
+        'Phát triển',
+        'Kỹ thuật'
       ]
     },
     {
-      title: 'Services',
+      title: 'Dịch vụ',
       links: [
-        'Store',
-        'Tickets',
-        'Fantasy Football',
-        'Gaming',
-        'Mobile Apps',
-        'Newsletter',
+        'Cửa hàng',
+        'Vé',
+        'Đội hình ảo',
+        'Game',
+        'Ứng dụng di động',
+        'Bản tin',
         'RSS Feeds'
       ]
     }
@@ -75,11 +75,11 @@ const Footer = () => {
               </div>
               <div>
                 <div className="text-white font-bold text-xl">UEFA</div>
-                <div className="text-uefa-gray text-sm">Union of European Football Associations</div>
+                <div className="text-uefa-gray text-sm">Liên đoàn bóng đá châu Âu</div>
               </div>
             </div>
             <p className="text-uefa-gray text-sm leading-relaxed mb-6">
-              UEFA is the governing body of European football and organizes some of the most famous and prestigious football competitions on the European continent.
+              UEFA là cơ quan quản lý bóng đá châu Âu và tổ chức một số giải đấu bóng đá nổi tiếng và danh giá nhất châu lục châu Âu.
             </p>
             
             {/* Contact Info */}
@@ -124,7 +124,7 @@ const Footer = () => {
           <div className="flex flex-col lg:flex-row items-center justify-between space-y-6 lg:space-y-0">
             {/* Social Media */}
             <div className="flex items-center space-x-4">
-              <span className="text-white font-medium">Follow UEFA:</span>
+              <span className="text-white font-medium">Theo dõi UEFA:</span>
               {socialLinks.map((social, index) => (
                 <a
                   key={index}
@@ -139,15 +139,15 @@ const Footer = () => {
 
             {/* Newsletter Signup */}
             <div className="flex items-center space-x-4">
-              <span className="text-white font-medium">Stay Updated:</span>
+              <span className="text-white font-medium">Cập nhật thường xuyên:</span>
               <div className="flex">
                 <input
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder="Nhập email của bạn"
                   className="px-4 py-2 bg-uefa-gray/20 border border-uefa-gray/30 rounded-l-md text-white placeholder-uefa-gray focus:outline-none focus:ring-2 focus:ring-uefa-blue"
                 />
                 <button className="px-6 py-2 bg-uefa-blue hover  :bg-uefa-dark text-white rounded-r-md font-medium transition-colors">
-                  Subscribe
+                  Đăng ký
                 </button>
               </div>
             </div>
@@ -160,14 +160,14 @@ const Footer = () => {
         <div className="uefa-container py-6">
           <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
             <div className="flex flex-wrap items-center space-x-6 text-sm text-uefa-gray">
-              <span>© 2025 UEFA. All rights reserved.</span>
-              <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms of Use</a>
-              <a href="#" className="hover:text-white transition-colors">Cookie Policy</a>
-              <a href="#" className="hover:text-white transition-colors">Accessibility</a>
+              <span>© 2025 UEFA. Bản quyền được bảo lưu.</span>
+              <a href="#" className="hover:text-white transition-colors">Chính sách bảo mật</a>
+              <a href="#" className="hover:text-white transition-colors">Điều khoản sử dụng</a>
+              <a href="#" className="hover:text-white transition-colors">Chính sách Cookie</a>
+              <a href="#" className="hover:text-white transition-colors">Khả năng tiếp cận</a>
             </div>
             <div className="flex items-center space-x-4 text-sm text-uefa-gray">
-              <span>Available on:</span>
+              <span>Có sẵn trên:</span>
               <div className="flex space-x-2">
                 <div className="w-8 h-8 bg-uefa-gray/20 rounded flex items-center justify-center">
                   <span className="text-xs">📱</span>

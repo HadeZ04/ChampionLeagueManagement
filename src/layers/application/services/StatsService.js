@@ -1,5 +1,6 @@
 import ApiService from './ApiService'
 import APP_CONFIG from '../../../config/app.config'
+import logger from '../../../shared/utils/logger'
 
 const STATS_ENDPOINTS = APP_CONFIG.API.ENDPOINTS.STATS
 
@@ -245,7 +246,7 @@ class StatsService {
       const payload = response?.data ?? response
       return normalizeOverview(payload ?? {})
     } catch (error) {
-      console.error('Failed to load overview stats', error)
+      logger.error('Failed to load overview stats', error)
       return DEFAULT_OVERVIEW
     }
   }
@@ -257,7 +258,7 @@ class StatsService {
       const hasData = Object.values(normalized).some((items) => items.length > 0)
       return hasData ? normalized : FALLBACK_STATS
     } catch (error) {
-      console.error('Failed to load player stats', error)
+      logger.error('Failed to load player stats', error)
       return FALLBACK_STATS
     }
   }
@@ -295,7 +296,7 @@ class StatsService {
       const payload = response?.data ?? response
       return payload ? normalizeEntry(payload) : null
     } catch (error) {
-      console.error('Failed to load player stat detail', error)
+      logger.error('Failed to load player stat detail', error)
       const fallback = Object.values(FALLBACK_STATS).flat().find((item) => item.id === id)
       return fallback ? normalizeEntry(fallback) : null
     }

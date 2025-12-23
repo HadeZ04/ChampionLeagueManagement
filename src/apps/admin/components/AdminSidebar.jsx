@@ -23,50 +23,50 @@ import {
 
 const MENU_SECTIONS = [
   {
-    title: 'Overview',
+    title: 'Tổng quan',
     items: [
-      { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
-      { name: 'Reports', path: '/admin/reports', icon: BarChart3 }
+      { name: 'Bảng điều khiển', path: '/admin/dashboard', icon: LayoutDashboard },
+      { name: 'Báo cáo', path: '/admin/reports', icon: BarChart3 }
     ]
   },
   {
-    title: 'Tournament Management',
+    title: 'Quản lý giải đấu',
     items: [
-      { name: 'Seasons', path: '/admin/seasons', icon: Swords, permission: 'manage_teams' },
-      { name: 'Teams', path: '/admin/teams', icon: Users, permission: 'manage_teams' },
-      { name: 'Matches', path: '/admin/matches', icon: Calendar, permission: 'manage_matches' },
+      { name: 'Mùa giải', path: '/admin/seasons', icon: Swords, permission: 'manage_teams' },
+      { name: 'Đội bóng', path: '/admin/teams', icon: Users, permission: 'manage_teams' },
+      { name: 'Trận đấu', path: '/admin/matches', icon: Calendar, permission: 'manage_matches' },
       // 2. Thêm link mới vào đây
-      { name: 'Match Day', path: '/admin/matches-today', icon: PlayCircle, permission: 'manage_matches' },
-      { name: 'Players', path: '/admin/players', icon: UserCheck, permission: 'manage_teams' },
-      { name: 'Player Lookup', path: '/admin/season-players', icon: Users, permission: 'manage_teams' },
+      { name: 'Trận trong ngày', path: '/admin/matches-today', icon: PlayCircle, permission: 'manage_matches' },
+      { name: 'Cầu thủ', path: '/admin/players', icon: UserCheck, permission: 'manage_teams' },
+      { name: 'Tra cứu cầu thủ', path: '/admin/season-players', icon: Users, permission: 'manage_teams' },
       {
-        name: 'Player Registration Approval',
+        name: 'Duyệt đăng ký cầu thủ',
         path: '/admin/season-player-approvals',
         icon: ScrollText,
         permission: 'manage_teams'
       },
 
-      { name: 'Leaderboard', path: '/admin/leaderboard', icon: Trophy, permission: 'manage_matches' },
-      { name: 'Player Stats', path: '/admin/player-stats', icon: Target, permission: 'manage_matches' },
-      { name: 'Standings', path: '/admin/standings', icon: Trophy, permission: 'manage_matches' }
+      { name: 'Bảng xếp hạng', path: '/admin/leaderboard', icon: Trophy, permission: 'manage_matches' },
+      { name: 'Thống kê cầu thủ', path: '/admin/player-stats', icon: Target, permission: 'manage_matches' },
+      { name: 'Bảng đứng', path: '/admin/standings', icon: Trophy, permission: 'manage_matches' }
     ]
   },
   {
-    title: 'Content Management',
+    title: 'Quản lý nội dung',
     items: [
-      { name: 'News & Articles', path: '/admin/news', icon: FileText, permission: 'manage_content' },
-      { name: 'Media Library', path: '/admin/media', icon: Target, permission: 'manage_content' },
-      { name: 'Website Content', path: '/admin/content', icon: Globe, permission: 'manage_content' }
+      { name: 'Tin tức & Bài viết', path: '/admin/news', icon: FileText, permission: 'manage_content' },
+      { name: 'Thư viện Media', path: '/admin/media', icon: Target, permission: 'manage_content' },
+      { name: 'Nội dung Website', path: '/admin/content', icon: Globe, permission: 'manage_content' }
     ]
   },
   {
-    title: 'System',
+    title: 'Hệ thống',
     items: [
-      { name: 'User Management', path: '/admin/users', icon: Shield, permission: 'manage_users' },
-      { name: 'Role Permissions', path: '/admin/roles', icon: KeyRound, permission: 'manage_users' },
-      { name: 'Ruleset Governance', path: '/admin/rulesets', icon: ScrollText, permission: 'manage_rulesets' },
-      { name: 'Audit Trail', path: '/admin/audit-log', icon: History, permission: 'view_audit_logs' },
-      { name: 'Settings', path: '/admin/settings', icon: Settings, permission: 'manage_users' }
+      { name: 'Quản lý người dùng', path: '/admin/users', icon: Shield, permission: 'manage_users' },
+      { name: 'Vai trò & Quyền', path: '/admin/roles', icon: KeyRound, permission: 'manage_users' },
+      { name: 'Quản trị Quy tắc', path: '/admin/rulesets', icon: ScrollText, permission: 'manage_rulesets' },
+      { name: 'Lịch sử Kiểm toán', path: '/admin/audit-log', icon: History, permission: 'view_audit_logs' },
+      { name: 'Cài đặt', path: '/admin/settings', icon: Settings, permission: 'manage_users' }
     ]
   }
 ]
@@ -94,8 +94,8 @@ const AdminSidebar = ({ currentUser }) => {
             </svg>
           </div>
           <div>
-            <div className="font-bold text-lg">UEFA Admin</div>
-            <div className="text-gray-400 text-sm">Management Portal</div>
+            <div className="font-bold text-lg">Quản trị UEFA</div>
+            <div className="text-gray-400 text-sm">Cổng quản lý</div>
           </div>
         </div>
       </div>

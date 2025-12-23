@@ -173,10 +173,11 @@ const LoginPage = () => {
                 </Link>
               </div>
 
+              {/* Consistent button spacing with admin login (py-3.5) */}
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 text-white font-semibold shadow-md hover:from-blue-700 hover:to-blue-800 transition disabled:opacity-60"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3.5 text-white font-semibold shadow-md hover:from-blue-700 hover:to-blue-800 transition disabled:opacity-60"
               >
                 {isLoading ? (
                   <>

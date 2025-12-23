@@ -37,7 +37,7 @@ const NewsCard = ({ article, featured = false }) => {
           <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 35% 25%, rgba(250,204,21,0.4), transparent 55%)' }} />
           <div className="absolute top-4 left-4">
             <span className="bg-white/20 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-[0.3em]">
-              Featured
+              Nổi bật
             </span>
           </div>
           <div className="absolute top-4 right-4 flex space-x-2">

@@ -142,55 +142,55 @@ const ProfilePage = () => {
   const isAuthenticating = status === 'authenticating'
 
   return (
-    <div className="bg-slate-50 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a1929] via-[#1e293b] to-[#0f172a] py-12">
       <Toaster position="top-right" />
       <div className="uefa-container max-w-5xl">
         <div className="mb-8 text-center">
-          <p className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-700">
+          <p className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#00d4ff]/20 to-[#0055FF]/20 border border-[#00d4ff]/30 px-4 py-2 text-xs font-bold uppercase tracking-[0.3em] text-[#00d4ff]">
             <ShieldCheck size={14} />
             Tài khoản an toàn
           </p>
-          <h1 className="mt-3 text-3xl font-bold text-gray-900">Hồ sơ UEFA của bạn</h1>
-          <p className="text-gray-600">
+          <h1 className="mt-4 text-4xl font-bold bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">Hồ sơ UEFA của bạn</h1>
+          <p className="mt-2 text-white/70">
             Quản lý thông tin liên hệ, email liên kết và mật khẩu để sử dụng các tính năng công khai.
           </p>
         </div>
 
         {isProfileLoaded ? (
           <div className="grid gap-6 lg:grid-cols-3">
-            <aside className="rounded-2xl border border-gray-200 bg-white p-6">
+            <aside className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-2xl shadow-2xl">
               <div className="flex items-center gap-3">
-                <div className="rounded-full bg-blue-600/10 p-3 text-blue-600">
+                <div className="rounded-2xl bg-gradient-to-br from-[#00d4ff]/20 to-[#0055FF]/20 p-3 text-[#00d4ff]">
                   <User size={20} />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Đăng nhập với</p>
-                  <p className="text-lg font-semibold text-gray-900">{profile.username}</p>
+                  <p className="text-sm text-white/60">Đăng nhập với</p>
+                  <p className="text-lg font-semibold text-white">{profile.username}</p>
                 </div>
               </div>
-              <dl className="mt-6 space-y-3 text-sm text-gray-600">
+              <dl className="mt-6 space-y-3 text-sm text-white/80">
                 <div>
-                  <dt className="uppercase tracking-wide text-xs text-gray-400">Thư điện tử</dt>
-                  <dd className="font-medium">{profile.email}</dd>
+                  <dt className="uppercase tracking-wide text-xs text-white/40">Thư điện tử</dt>
+                  <dd className="font-medium text-white">{profile.email}</dd>
                 </div>
                 <div>
-                  <dt className="uppercase tracking-wide text-xs text-gray-400">Trạng thái</dt>
-                  <dd className="font-medium">{toUserStatusLabel(profile.status)}</dd>
+                  <dt className="uppercase tracking-wide text-xs text-white/40">Trạng thái</dt>
+                  <dd className="font-medium text-white">{toUserStatusLabel(profile.status)}</dd>
                 </div>
                 <div>
-                  <dt className="uppercase tracking-wide text-xs text-gray-400">Vai trò</dt>
+                  <dt className="uppercase tracking-wide text-xs text-white/40">Vai trò</dt>
                   <dd className="mt-1 flex flex-wrap gap-2">
                     {profile.roles?.length > 0 ? (
                       profile.roles.map((role) => (
                         <span
                           key={role}
-                          className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600"
+                          className="rounded-full border border-[#00d4ff]/30 bg-[#00d4ff]/10 px-3 py-1 text-xs font-semibold text-[#00d4ff]"
                         >
                           {toRoleLabel(role)}
                         </span>
                       ))
                     ) : (
-                      <span className="text-gray-500">{toRoleLabel('viewer')}</span>
+                      <span className="text-white/60">{toRoleLabel('viewer')}</span>
                     )}
                   </dd>
                 </div>
@@ -200,7 +200,7 @@ const ProfilePage = () => {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#00d4ff] to-[#0055FF] px-4 py-3 text-sm font-bold text-[#0a1929] hover:shadow-lg hover:shadow-blue-500/50 transition-all"
                 >
                   <LogOut size={16} />
                   Đăng xuất
@@ -209,7 +209,7 @@ const ProfilePage = () => {
                   type="button"
                   onClick={bootstrapProfile}
                   disabled={isLoadingProfile}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-semibold text-white hover:bg-white/10 disabled:opacity-60 transition-all"
                 >
                   <RefreshCw size={16} className={isLoadingProfile ? 'animate-spin' : ''} />
                   Làm mới dữ liệu
@@ -217,14 +217,14 @@ const ProfilePage = () => {
               </div>
             </aside>
 
-            <form onSubmit={handleProfileSubmit} className="lg:col-span-2 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <form onSubmit={handleProfileSubmit} className="lg:col-span-2 rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-2xl shadow-2xl">
               <div className="mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Thông tin cá nhân</h2>
-                <p className="text-sm text-gray-500">Cập nhật thông tin liên hệ cơ bản dùng cho trải nghiệm người hâm mộ.</p>
+                <h2 className="text-2xl font-bold text-white">Thông tin cá nhân</h2>
+                <p className="text-sm text-white/60">Cập nhật thông tin liên hệ cơ bản dùng cho trải nghiệm người hâm mộ.</p>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                <label className="flex flex-col gap-1 text-sm font-medium text-white/80">
                   Tên
                   <div className="relative">
                     <input
@@ -232,13 +232,13 @@ const ProfilePage = () => {
                       name="firstName"
                       value={profileForm.firstName}
                       onChange={handleProfileChange}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 pl-10 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      className="w-full rounded-xl border border-white/20 bg-white/10 px-3 py-3 pl-10 text-white placeholder:text-white/40 focus:border-[#00d4ff]/50 focus:bg-white/15 focus:outline-none transition-all"
                       required
                     />
-                    <User size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <User size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/50" />
                   </div>
                 </label>
-                <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                <label className="flex flex-col gap-1 text-sm font-medium text-white/80">
                   Họ
                   <div className="relative">
                     <input
@@ -246,15 +246,15 @@ const ProfilePage = () => {
                       name="lastName"
                       value={profileForm.lastName}
                       onChange={handleProfileChange}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 pl-10 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      className="w-full rounded-xl border border-white/20 bg-white/10 px-3 py-3 pl-10 text-white placeholder:text-white/40 focus:border-[#00d4ff]/50 focus:bg-white/15 focus:outline-none transition-all"
                       required
                     />
-                    <User size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <User size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/50" />
                   </div>
                 </label>
               </div>
 
-              <label className="mt-4 flex flex-col gap-1 text-sm font-medium text-gray-700">
+              <label className="mt-4 flex flex-col gap-1 text-sm font-medium text-white/80">
                 Địa chỉ email
                 <div className="relative">
                   <input
@@ -262,19 +262,19 @@ const ProfilePage = () => {
                     name="email"
                     value={profileForm.email}
                     onChange={handleProfileChange}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 pl-10 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full rounded-xl border border-white/20 bg-white/10 px-3 py-3 pl-10 text-white placeholder:text-white/40 focus:border-[#00d4ff]/50 focus:bg-white/15 focus:outline-none transition-all"
                     required
                   />
-                  <Mail size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Mail size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/50" />
                 </div>
               </label>
 
-              <div className="mt-8 border-t border-gray-100 pt-6">
-                <h3 className="text-lg font-semibold text-gray-900">Mật khẩu</h3>
-                <p className="text-sm text-gray-500">Để trống nếu bạn không muốn đổi mật khẩu.</p>
+              <div className="mt-8 border-t border-white/10 pt-6">
+                <h3 className="text-lg font-semibold text-white">Mật khẩu</h3>
+                <p className="text-sm text-white/60">Để trống nếu bạn không muốn đổi mật khẩu.</p>
 
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
-                  <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                  <label className="flex flex-col gap-1 text-sm font-medium text-white/80">
                     Mật khẩu mới
                     <div className="relative">
                       <input
@@ -283,12 +283,12 @@ const ProfilePage = () => {
                         value={profileForm.password}
                         onChange={handleProfileChange}
                         minLength={8}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 pl-10 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        className="w-full rounded-xl border border-white/20 bg-white/10 px-3 py-3 pl-10 text-white placeholder:text-white/40 focus:border-[#00d4ff]/50 focus:bg-white/15 focus:outline-none transition-all"
                       />
-                      <Lock size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <Lock size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/50" />
                     </div>
                   </label>
-                  <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                  <label className="flex flex-col gap-1 text-sm font-medium text-white/80">
                     Xác nhận mật khẩu
                     <div className="relative">
                       <input
@@ -297,7 +297,7 @@ const ProfilePage = () => {
                         value={profileForm.confirmPassword}
                         onChange={handleProfileChange}
                         minLength={8}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 pl-10 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        className="w-full rounded-xl border border-white/20 bg-white/10 px-3 py-3 pl-10 text-white placeholder:text-white/40 focus:border-[#00d4ff]/50 focus:bg-white/15 focus:outline-none transition-all"
                       />
                       <Lock size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     </div>
@@ -309,7 +309,7 @@ const ProfilePage = () => {
                 <button
                   type="submit"
                   disabled={isUpdating}
-                  className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700 disabled:opacity-60"
+                  className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#00d4ff] to-[#0055FF] px-6 py-3 text-sm font-bold text-[#0a1929] shadow-lg hover:shadow-blue-500/50 disabled:opacity-60 transition-all"
                 >
                   {isUpdating ? (
                     <>
@@ -324,7 +324,7 @@ const ProfilePage = () => {
                   type="button"
                   onClick={bootstrapProfile}
                   disabled={isLoadingProfile}
-                  className="flex items-center justify-center gap-2 rounded-lg border border-gray-200 px-5 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                  className="flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10 disabled:opacity-60 transition-all"
                 >
                   Làm mới
                 </button>
@@ -333,13 +333,13 @@ const ProfilePage = () => {
           </div>
         ) : (
           <div className="grid gap-6 lg:grid-cols-5">
-            <form onSubmit={handleLoginSubmit} className="lg:col-span-3 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="text-xl font-semibold text-gray-900">Đăng nhập để tiếp tục</h2>
-              <p className="text-sm text-gray-500">
+            <form onSubmit={handleLoginSubmit} className="lg:col-span-3 rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-2xl shadow-2xl">
+              <h2 className="text-2xl font-bold text-white">Đăng nhập để tiếp tục</h2>
+              <p className="text-sm text-white/60">
                 Dùng tài khoản bạn đã tạo khi đăng ký để truy cập trang người xem.
               </p>
 
-              <label className="mt-6 flex flex-col gap-1 text-sm font-medium text-gray-700">
+              <label className="mt-6 flex flex-col gap-1 text-sm font-medium text-white/80">
                 Tên đăng nhập
                 <div className="relative">
                   <input
@@ -349,13 +349,13 @@ const ProfilePage = () => {
                     onChange={handleLoginChange}
                     autoComplete="username"
                     required
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 pl-10 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full rounded-xl border border-white/20 bg-white/10 px-3 py-3 pl-10 text-white placeholder:text-white/40 focus:border-[#00d4ff]/50 focus:bg-white/15 focus:outline-none transition-all"
                   />
-                  <User size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <User size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/50" />
                 </div>
               </label>
 
-              <label className="mt-4 flex flex-col gap-1 text-sm font-medium text-gray-700">
+              <label className="mt-4 flex flex-col gap-1 text-sm font-medium text-white/80">
                 Mật khẩu
                 <div className="relative">
                   <input
@@ -366,48 +366,50 @@ const ProfilePage = () => {
                     autoComplete="current-password"
                     minLength={6}
                     required
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 pl-10 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full rounded-xl border border-white/20 bg-white/10 px-3 py-3 pl-10 text-white placeholder:text-white/40 focus:border-[#00d4ff]/50 focus:bg-white/15 focus:outline-none transition-all"
                   />
-                  <Lock size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Lock size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/50" />
                 </div>
               </label>
 
               <button
                 type="submit"
                 disabled={isAuthenticating}
-                className="mt-6 w-full rounded-lg bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                className="mt-6 w-full rounded-xl bg-gradient-to-r from-[#00d4ff] to-[#0055FF] py-3.5 text-sm font-bold text-[#0a1929] hover:shadow-lg hover:shadow-blue-500/50 disabled:opacity-60 transition-all"
               >
                 {isAuthenticating ? 'Đang đăng nhập...' : 'Đăng nhập'}
               </button>
 
-              <p className="mt-4 text-xs text-gray-500">
+              <p className="mt-4 text-xs text-white/50">
                 Tài khoản người xem dùng chung dịch vụ xác thực với quản trị viên nhưng chỉ nhận vai trò `viewer`, nên chỉ truy cập được các API công khai.
               </p>
             </form>
 
-            <div className="lg:col-span-2 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-600 to-blue-800 p-6 text-white">
-              <h3 className="text-xl font-semibold">Vì sao nên hoàn thiện hồ sơ?</h3>
-              <ul className="mt-4 space-y-3 text-sm">
-                <li className="flex items-start gap-3">
-                  <ShieldCheck size={16} className="mt-1" />
-                  Truy cập an toàn cho các tính năng bóng đá ảo, trò chơi và vé.
-                </li>
-                <li className="flex items-start gap-3">
-                  <ShieldCheck size={16} className="mt-1" />
-                  Cập nhật thông tin liên hệ dùng cho thông báo.
-                </li>
-                <li className="flex items-start gap-3">
-                  <ShieldCheck size={16} className="mt-1" />
-                  Dễ dàng nâng vai trò cao hơn khi được quản trị viên mời.
-                </li>
-              </ul>
-              <p className="mt-4 text-xs text-blue-100">
-                Chưa có tài khoản?{' '}
-                <a href="/register" className="font-semibold text-white underline">
-                  Tạo tại đây
-                </a>
-                .
-              </p>
+            <div className="lg:col-span-2 rounded-3xl overflow-hidden border border-white/10 bg-gradient-to-br from-[#003B73] via-[#004EA8] to-[#00C65A] p-1 shadow-2xl">
+              <div className="h-full rounded-[22px] bg-gradient-to-br from-[#0a1929]/95 via-[#1e293b]/95 to-[#0f172a]/95 backdrop-blur-xl p-6">
+                <h3 className="text-xl font-bold text-white">Vì sao nên hoàn thiện hồ sơ?</h3>
+                <ul className="mt-4 space-y-3 text-sm text-white/80">
+                  <li className="flex items-start gap-3">
+                    <ShieldCheck size={16} className="mt-1 text-[#00d4ff]" />
+                    Truy cập an toàn cho các tính năng bóng đá ảo, trò chơi và vé.
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <ShieldCheck size={16} className="mt-1 text-[#00d4ff]" />
+                    Cập nhật thông tin liên hệ dùng cho thông báo.
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <ShieldCheck size={16} className="mt-1 text-[#00d4ff]" />
+                    Dễ dàng nâng vai trò cao hơn khi được quản trị viên mời.
+                  </li>
+                </ul>
+                <p className="mt-4 text-xs text-white/70">
+                  Chưa có tài khoản?{' '}
+                  <a href="/register" className="font-semibold text-[#00d4ff] underline hover:text-white transition-colors">
+                    Tạo tại đây
+                  </a>
+                  .
+                </p>
+              </div>
             </div>
           </div>
         )}

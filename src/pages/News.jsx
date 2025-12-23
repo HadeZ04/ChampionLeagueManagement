@@ -1,17 +1,19 @@
 import React, { useState } from 'react'
 import { Calendar, Clock, Tag, ArrowRight, Search } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const News = () => {
+  const { t } = useTranslation()
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
 
   const categories = [
-    { id: 'all', name: 'All News' },
-    { id: 'matches', name: 'Matches' },
-    { id: 'teams', name: 'Teams' },
-    { id: 'players', name: 'Players' },
-    { id: 'draws', name: 'Draws' },
-    { id: 'awards', name: 'Awards' }
+    { id: 'all', name: t('news.allCategories') },
+    { id: 'matches', name: t('news.matches') },
+    { id: 'teams', name: t('news.teams') },
+    { id: 'players', name: t('news.players') },
+    { id: 'draws', name: t('news.draws') },
+    { id: 'awards', name: t('news.awards') }
   ]
 
   const news = [
@@ -129,18 +131,18 @@ const News = () => {
     <div className="uefa-container py-8">
       {/* Breadcrumb */}
       <nav className="uefa-breadcrumb">
-        <a href="#" className="uefa-breadcrumb-item">Home</a>
+        <a href="#" className="uefa-breadcrumb-item">Trang chủ</a>
         <span className="uefa-breadcrumb-separator">/</span>
         <a href="#" className="uefa-breadcrumb-item">Champions League</a>
         <span className="uefa-breadcrumb-separator">/</span>
-        <span className="text-uefa-dark">News</span>
+        <span className="text-uefa-dark">Tin tức</span>
       </nav>
 
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="uefa-section-title">UEFA Champions League News</h1>
+        <h1 className="uefa-section-title">Tin tức UEFA Champions League</h1>
         <p className="uefa-section-subtitle">
-          Latest news, match reports, and updates from the Champions League
+          Tin tức mới nhất, báo cáo trận đấu và cập nhật từ Champions League
         </p>
       </div>
 
@@ -162,7 +164,7 @@ const News = () => {
           <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-uefa-gray" />
           <input
             type="text"
-            placeholder="Search news..."
+            placeholder="Tìm kiếm tin tức..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="uefa-input pl-10"

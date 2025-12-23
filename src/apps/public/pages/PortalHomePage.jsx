@@ -126,81 +126,101 @@ const PortalHomePage = () => {
   }
 
   return (
-    <div className="py-10">
-      <div className="mb-8 flex flex-col gap-4 rounded-2xl bg-gradient-to-r from-blue-800 to-blue-600 p-6 text-white shadow-lg md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/15 text-lg font-bold uppercase">
-            {initials}
-          </div>
-          <div>
-            <p className="text-sm text-blue-100">Đã đăng nhập</p>
-            <h1 className="text-2xl font-semibold leading-tight">Xin chào, {name}</h1>
-            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs uppercase tracking-wide">
-              {roles.map((role) => (
-                <span key={role} className="rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold">
-                  {toRoleLabel(role)}
-                </span>
-              ))}
+    <div className="min-h-screen bg-gradient-to-br from-[#0a1929] via-[#1e293b] to-[#0f172a] py-10">
+      {/* Hero Header with UEFA Style */}
+      <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-[#003B73] via-[#004EA8] to-[#00C65A] p-1 shadow-2xl">
+        <div className="flex flex-col gap-6 rounded-[22px] bg-gradient-to-br from-[#0a1929]/95 via-[#1e293b]/95 to-[#0f172a]/95 p-8 backdrop-blur-xl md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-5">
+            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-[#00d4ff] to-[#0055FF] text-2xl font-bold uppercase shadow-lg shadow-blue-500/50">
+              {initials}
+            </div>
+            <div>
+              <p className="mb-1 text-xs uppercase tracking-[0.3em] text-[#00d4ff]">Cổng người dùng • UEFA Champions League</p>
+              <h1 className="text-3xl font-bold leading-tight text-white">Xin chào, {name}</h1>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {roles.map((role) => (
+                  <span key={role} className="rounded-full border border-[#00d4ff]/30 bg-[#00d4ff]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#00d4ff]">
+                    <ShieldCheck size={10} className="mr-1 inline" />
+                    {toRoleLabel(role)}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-3">
-          <Link
-            to="/profile"
-            className="inline-flex items-center gap-2 rounded-lg bg-white/15 px-4 py-2 text-sm font-semibold text-white hover:bg-white/25 transition"
-          >
-            <UserRound size={16} />
-            Hồ sơ
-          </Link>
-          <button
-            onClick={handleLogout}
-            className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50 transition"
-          >
-            <LogOut size={16} />
-            Đăng xuất
-          </button>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/profile"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:border-[#00d4ff]/50 hover:bg-white/10 hover:shadow-lg hover:shadow-[#00d4ff]/20"
+            >
+              <UserRound size={16} />
+              Hồ sơ
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#00d4ff] to-[#0055FF] px-5 py-3 text-sm font-bold text-[#0a1929] transition-all hover:shadow-lg hover:shadow-blue-500/50"
+            >
+              <LogOut size={16} />
+              Đăng xuất
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="mb-4 flex items-center gap-3 text-gray-700">
-        <ShieldCheck size={18} className="text-blue-600" />
-        <p className="text-sm">
+      {/* Info Banner */}
+      <div className="mb-6 flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 text-white/80 backdrop-blur-xl">
+        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-[#00d4ff]/10">
+          <ShieldCheck size={20} className="text-[#00d4ff]" />
+        </div>
+        <p className="text-sm leading-relaxed">
           Quyền truy cập được giới hạn theo vai trò. Các mục dưới đây thể hiện những gì bạn có thể làm hôm nay.
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      {/* Modules Grid with Glass Cards */}
+      <div className="grid gap-6 md:grid-cols-2">
         {modules.map((module) => (
-          <div key={module.key} className="rounded-2xl border border-gray-200 bg-white/90 p-5 shadow-sm backdrop-blur">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-                  {module.key === 'team_registrar' && <ClipboardList size={18} />}
-                  {module.key === 'referee' && <BadgeCheck size={18} />}
-                  {module.key === 'supervisor' && <FileText size={18} />}
-                  {module.key === 'viewer' && <UserRound size={18} />}
-                  {module.key === 'profile' && <UserRound size={18} />}
+          <div 
+            key={module.key} 
+            className="group relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/10 to-white/5 p-6 shadow-2xl backdrop-blur-2xl transition-all hover:border-[#00d4ff]/50 hover:shadow-[#00d4ff]/20"
+          >
+            {/* Gradient Overlay on Hover */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#00d4ff]/0 to-[#0055FF]/0 opacity-0 transition-opacity group-hover:opacity-10"></div>
+            
+            <div className="relative z-10">
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#00d4ff]/20 to-[#0055FF]/20 text-[#00d4ff] shadow-lg">
+                    {module.key === 'team_registrar' && <ClipboardList size={24} />}
+                    {module.key === 'referee' && <BadgeCheck size={24} />}
+                    {module.key === 'supervisor' && <FileText size={24} />}
+                    {module.key === 'viewer' && <UserRound size={24} />}
+                    {module.key === 'profile' && <UserRound size={24} />}
+                  </div>
+                  <div>
+                    <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.3em] text-white/60">{module.badge}</p>
+                    <h3 className="text-xl font-bold text-white">{module.title}</h3>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm uppercase tracking-wide text-gray-500">{module.badge}</p>
-                  <h3 className="text-lg font-semibold text-gray-900">{module.title}</h3>
-                </div>
+                <span className="rounded-full border border-[#00d4ff]/30 bg-[#00d4ff]/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[#00d4ff]">
+                  {module.badge}
+                </span>
               </div>
-              <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">{module.badge}</span>
-            </div>
-            <p className="mt-3 text-sm text-gray-600">{module.description}</p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {module.actions?.map((action) => (
-                <Link
-                  key={action.label}
-                  to={action.path}
-                  className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-800 hover:border-blue-500 hover:text-blue-700 transition"
-                >
-                  <ArrowRight size={14} />
-                  {action.label}
-                </Link>
-              ))}
+              
+              <p className="mb-5 text-sm leading-relaxed text-white/70">{module.description}</p>
+              
+              <div className="flex flex-wrap gap-3">
+                {module.actions?.map((action) => (
+                  <Link
+                    key={action.label}
+                    to={action.path}
+                    className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:border-[#00d4ff]/50 hover:bg-[#00d4ff]/10 hover:text-[#00d4ff]"
+                  >
+                    <ArrowRight size={14} />
+                    {action.label}
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         ))}

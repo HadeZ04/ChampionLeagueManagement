@@ -1,10 +1,23 @@
-import React from 'react'
+import React, { lazy, Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import PublicApp from './apps/public/PublicApp'
-import AdminApp from './apps/admin/AdminApp'
-import LoginPage from './apps/admin/pages/LoginPage'
 import { hasAdminPortalAccess } from './apps/admin/utils/accessControl'
 import { useAuth } from './layers/application/context/AuthContext'
+import OfflineDetector from './shared/components/OfflineDetector'
+
+// Lazy load apps for better performance
+const PublicApp = lazy(() => import('./apps/public/PublicApp'))
+const AdminApp = lazy(() => import('./apps/admin/AdminApp'))
+const LoginPage = lazy(() => import('./apps/admin/pages/LoginPage'))
+
+// Loading component
+const AppLoading = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+    <div className="text-center">
+      <div className="inline-block animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
+      <p className="text-white text-lg font-semibold">Đang tải...</p>
+    </div>
+  </div>
+)
 
 const AdminRoute = ({ children }) => {
   const location = useLocation()
@@ -63,34 +76,44 @@ function App() {
   }
 
   if (status === 'checking') {
-    return null
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+        <div className="text-center">
+          <div className="inline-block animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
+          <p className="text-white text-lg font-semibold">Đang khôi phục phiên đăng nhập...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
     <Router>
       <div className="min-h-screen">
-        <Routes>
-          {/* Public Portal Routes */}
-          <Route path="/*" element={<PublicApp />} />
-          
-          {/* Admin Dashboard Routes */}
-          <Route 
-            path="/admin/login" 
-            element={
-              <AdminLoginRoute>
-                <LoginPage onLogin={handleAdminLogin} isAuthenticated={isAdminAuthenticated} />
-              </AdminLoginRoute>
-            } 
-          />
-          <Route 
-            path="/admin/*" 
-            element={
-              <AdminRoute>
-                <AdminApp onLogout={handleAdminLogout} currentUser={user} />
-              </AdminRoute>
-            } 
-          />
-        </Routes>
+        <OfflineDetector />
+        <Suspense fallback={<AppLoading />}>
+          <Routes>
+            {/* Public Portal Routes */}
+            <Route path="/*" element={<PublicApp />} />
+            
+            {/* Admin Dashboard Routes */}
+            <Route 
+              path="/admin/login" 
+              element={
+                <AdminLoginRoute>
+                  <LoginPage onLogin={handleAdminLogin} isAuthenticated={isAdminAuthenticated} />
+                </AdminLoginRoute>
+              } 
+            />
+            <Route 
+              path="/admin/*" 
+              element={
+                <AdminRoute>
+                  <AdminApp onLogout={handleAdminLogout} currentUser={user} />
+                </AdminRoute>
+              } 
+            />
+          </Routes>
+        </Suspense>
       </div>
     </Router>
   )

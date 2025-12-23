@@ -5,6 +5,7 @@ import WeatherWidget from '../components/WeatherWidget';
 import MatchPreview from '../components/MatchPreview';
 import matchService from '../../../layers/application/services/MatchesService';
 import { downloadICS } from '../../../utils/icsGenerator';
+import logger from '../../../shared/utils/logger';
 
 const FAKE_SCHEDULE_FROM_DB = [
   {
@@ -115,7 +116,7 @@ const MatchesPage = () => {
         setMatches(allMatches);
         setError(null);
       } catch (err) {
-        console.error('Error fetching matches:', err);
+        logger.error('Error fetching matches:', err);
         setError(err.message || 'Failed to load matches');
       } finally {
         setIsLoading(false);
@@ -158,33 +159,33 @@ const MatchesPage = () => {
 
   return (
     <div className="space-y-10 py-6">
-      <section className="rounded-3xl border border-slate-100 bg-white p-8 shadow-xl shadow-indigo-100/40 relative overflow-hidden">
-        <div className="absolute -right-12 -top-24 h-56 w-56 rounded-full bg-gradient-to-br from-[#0055FF]/15 to-[#8454FF]/15 blur-3xl" />
+      <section className="rounded-2xl bg-[#020617]/85 border border-white/10 backdrop-blur shadow-[0px_0px_40px_rgba(0,0,0,0.6)] p-8 relative overflow-hidden">
+        <div className="absolute -right-12 -top-24 h-56 w-56 rounded-full bg-gradient-to-br from-[#2563EB]/10 to-[#06B6D4]/10 blur-3xl" />
         <div className="relative flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Lịch thi đấu</p>
-            <h1 className="text-4xl font-display text-slate-900">Lịch trận đấu</h1>
-            <p className="text-slate-500 max-w-xl">
+            <p className="text-xs uppercase tracking-[0.35em] text-cyan-400/80">Lịch thi đấu</p>
+            <h1 className="text-4xl font-display text-white">Lịch trận đấu</h1>
+            <p className="text-slate-300 max-w-xl">
               Lên kế hoạch theo dõi các trận đấu với bộ lọc nhanh, hiệu ứng trực quan và thẻ trận sẵn sàng cho dữ liệu trực tiếp.
             </p>
           </div>
           <div className="flex gap-3">
             <button
               onClick={() => downloadICS(matches)}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors text-sm font-semibold shadow-sm"
-              title="Export to Calendar (.ics)"
+              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full text-white transition-colors text-sm font-semibold"
+              title="Xuất ra lịch (.ics)"
             >
               <Download size={18} />
-              <span className="hidden sm:inline">Export Calendar</span>
+              <span className="hidden sm:inline">Xuất lịch</span>
             </button>
 
-            <label className="flex items-center gap-2 text-sm font-semibold text-slate-500 bg-white px-3 py-2 border border-slate-200 rounded-lg shadow-sm">
+            <label className="flex items-center gap-2 text-sm font-semibold text-slate-200 bg-[#020617]/80 px-3 py-2 border border-white/20 rounded-full hover:bg-white/10 transition-colors cursor-pointer">
               <Calendar size={18} />
               <input
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="uefa-input max-w-[130px] border-none p-0 focus:ring-0 text-slate-700"
+                className="bg-transparent border-none p-0 focus:ring-0 text-white max-w-[130px] cursor-pointer"
               />
             </label>
           </div>
@@ -204,9 +205,17 @@ const MatchesPage = () => {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
-          <strong className="font-bold">Error! </strong>
-          <span className="block sm:inline">{error}</span>
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg relative flex items-center justify-between" role="alert">
+          <div>
+            <strong className="font-bold">Lỗi! </strong>
+            <span className="block sm:inline">{error}</span>
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            className="ml-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-semibold"
+          >
+            Thử lại
+          </button>
         </div>
       )}
 

@@ -40,7 +40,7 @@ export default {
         'uefa-blue': '#00C65A',
         'uefa-light-blue': '#E3F2FF',
         'uefa-dark': '#003B73',
-        'uefa-gray': '#6B7280',
+        'uefa-gray': '#475569', // Changed from #6B7280 for better contrast (WCAG AAA)
         'uefa-gold': '#FACC15',
         'uefa-silver': '#E2E8F0',
         'uefa-bronze': '#FF9F1C',

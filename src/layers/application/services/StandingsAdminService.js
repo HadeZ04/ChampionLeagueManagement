@@ -1,4 +1,5 @@
 import ApiService from './ApiService';
+import logger from '../../../shared/utils/logger';
 
 /**
  * Admin service for managing standings
@@ -13,7 +14,7 @@ class StandingsAdminService {
       const response = await ApiService.get(`/admin/standings/season/${seasonId}`);
       return response;
     } catch (error) {
-      console.error('Failed to get standings by season:', error);
+      logger.error('Failed to get standings by season:', error);
       throw new Error(error.message || 'Failed to get standings');
     }
   }
@@ -27,7 +28,7 @@ class StandingsAdminService {
       const response = await ApiService.get(`/admin/standings/team/${seasonTeamId}`);
       return response;
     } catch (error) {
-      console.error('Failed to get team standings:', error);
+      logger.error('Failed to get team standings:', error);
       throw new Error(error.message || 'Failed to get team standings');
     }
   }
@@ -41,7 +42,7 @@ class StandingsAdminService {
       const response = await ApiService.post(`/admin/standings/season/${seasonId}/initialize`);
       return response;
     } catch (error) {
-      console.error('Failed to initialize standings:', error);
+      logger.error('Failed to initialize standings:', error);
       throw new Error(error.message || 'Failed to initialize standings');
     }
   }
@@ -55,7 +56,7 @@ class StandingsAdminService {
       const response = await ApiService.post(`/admin/standings/season/${seasonId}/calculate`);
       return response;
     } catch (error) {
-      console.error('Failed to calculate standings:', error);
+      logger.error('Failed to calculate standings:', error);
       throw new Error(error.message || 'Failed to calculate standings');
     }
   }
@@ -70,7 +71,7 @@ class StandingsAdminService {
       const response = await ApiService.patch(`/admin/standings/team/${seasonTeamId}`, updates);
       return response;
     } catch (error) {
-      console.error('Failed to update team standings:', error);
+      logger.error('Failed to update team standings:', error);
       throw new Error(error.message || 'Failed to update team standings');
     }
   }
@@ -84,7 +85,7 @@ class StandingsAdminService {
       const response = await ApiService.delete(`/admin/standings/team/${seasonTeamId}`);
       return response;
     } catch (error) {
-      console.error('Failed to reset team standings:', error);
+      logger.error('Failed to reset team standings:', error);
       throw new Error(error.message || 'Failed to reset team standings');
     }
   }
@@ -97,11 +98,12 @@ class StandingsAdminService {
       const response = await ApiService.get('/teams/seasons');
       return response;
     } catch (error) {
-      console.error('Failed to get seasons:', error);
+      logger.error('Failed to get seasons:', error);
       throw new Error(error.message || 'Failed to get seasons');
     }
   }
 }
 
 export default new StandingsAdminService();
+
 

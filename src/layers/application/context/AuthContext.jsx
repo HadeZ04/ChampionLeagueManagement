@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import AuthService from '../services/AuthService'
+import logger from '../../../shared/utils/logger'
 
 const AuthContext = createContext(null)
 
@@ -23,7 +24,7 @@ export const AuthProvider = ({ children }) => {
       setUser(profile)
       setStatus('authenticated')
     } catch (err) {
-      console.error('Failed to restore session', err)
+      logger.error('Failed to restore session', err)
       setUser(null)
       setStatus('anonymous')
       setError(err?.message ?? 'Session expired')
@@ -34,20 +35,11 @@ export const AuthProvider = ({ children }) => {
     bootstrap()
   }, [bootstrap])
 
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return undefined
-    }
-
-    const handleAuthChanged = (event) => {
-      const nextUser = event?.detail?.user ?? AuthService.getUser()
-      const isAuthenticated = event?.detail?.isAuthenticated ?? AuthService.isAuthenticated()
-      setUser(nextUser)
-      setStatus(isAuthenticated ? 'authenticated' : 'anonymous')
-    }
-
-    window.addEventListener('auth:changed', handleAuthChanged)
-    return () => window.removeEventListener('auth:changed', handleAuthChanged)
+  // Define logout BEFORE useEffect that uses it (fix hoisting issue)
+  const logout = useCallback(async () => {
+    await AuthService.logout()
+    setUser(null)
+    setStatus('anonymous')
   }, [])
 
   const login = useCallback(async (credentials) => {
@@ -67,11 +59,41 @@ export const AuthProvider = ({ children }) => {
     }
   }, [])
 
-  const logout = useCallback(async () => {
-    await AuthService.logout()
-    setUser(null)
-    setStatus('anonymous')
-  }, [])
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined
+    }
+
+    const handleAuthChanged = (event) => {
+      const nextUser = event?.detail?.user ?? AuthService.getUser()
+      const isAuthenticated = event?.detail?.isAuthenticated ?? AuthService.isAuthenticated()
+      setUser(nextUser)
+      setStatus(isAuthenticated ? 'authenticated' : 'anonymous')
+    }
+
+    const handleUnauthorized = async () => {
+      // Auto logout when 401 received
+      await logout()
+      setError('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.')
+    }
+
+    const handleTokenExpired = async (event) => {
+      // Auto logout when token expired (from AuthService.getToken check)
+      await logout()
+      const message = event?.detail?.message || 'Phiên đăng nhập đã hết hạn'
+      setError(message)
+    }
+
+    window.addEventListener('auth:changed', handleAuthChanged)
+    window.addEventListener('auth:unauthorized', handleUnauthorized)
+    window.addEventListener('auth:token-expired', handleTokenExpired)
+    
+    return () => {
+      window.removeEventListener('auth:changed', handleAuthChanged)
+      window.removeEventListener('auth:unauthorized', handleUnauthorized)
+      window.removeEventListener('auth:token-expired', handleTokenExpired)
+    }
+  }, [logout])
 
   const refreshProfile = useCallback(async () => {
     const profile = await AuthService.getCurrentUser()

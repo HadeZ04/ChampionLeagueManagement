@@ -18,8 +18,8 @@ const NewsCard = ({ article, featured = false }) => {
 
   if (featured) {
     return (
-      <article className="glass-card overflow-hidden group">
-        <div className="h-48 bg-gradient-to-br from-[#0055FF]/15 via-[#00E5FF]/10 to-[#8454FF]/15 relative">
+      <article className="glass-card overflow-hidden group min-h-[400px] flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+        <div className="h-48 bg-gradient-to-br from-[#0055FF]/15 via-[#00E5FF]/10 to-[#8454FF]/15 relative flex-shrink-0">
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent" />
           <div className="absolute bottom-4 left-4 space-y-2 text-white">
             <p className="flex items-center gap-3 text-sm">
@@ -35,11 +35,11 @@ const NewsCard = ({ article, featured = false }) => {
             <span className="text-xs uppercase tracking-[0.35em] text-white/70">{toNewsCategoryLabel(article.category)}</span>
           </div>
         </div>
-        <div className="p-6 space-y-4">
-          <h3 className="text-2xl font-semibold text-slate-900 group-hover:text-[#0055FF] transition-colors">
+        <div className="p-6 space-y-4 flex-1 flex flex-col">
+          <h3 className="text-2xl font-semibold text-slate-900 group-hover:text-[#0055FF] transition-colors line-clamp-2">
             {article.title}
           </h3>
-          <p className="text-slate-600">{article.summary}</p>
+          <p className="text-slate-600 line-clamp-3 flex-1">{article.summary}</p>
             <div className="flex items-center justify-between">
               <div className="flex flex-wrap gap-2 text-xs text-slate-500">
                 {article.tags.map(tag => (
@@ -58,9 +58,9 @@ const NewsCard = ({ article, featured = false }) => {
   }
 
   return (
-    <article className="glass-card p-6 space-y-3 group">
-      <div className="flex items-center gap-3 text-xs text-slate-500">
-        <span className={`px-3 py-1 rounded-full ${categoryColors[article.category] || 'bg-slate-100 text-slate-500'}`}>
+    <article className="glass-card p-6 space-y-3 group min-h-[280px] flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+      <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
+        <span className={`px-3 py-1 rounded-full font-medium ${categoryColors[article.category] || 'bg-slate-100 text-slate-500'}`}>
           {toNewsCategoryLabel(article.category)}
         </span>
         <span className="flex items-center gap-1">
@@ -72,8 +72,8 @@ const NewsCard = ({ article, featured = false }) => {
           {article.time}
         </span>
       </div>
-      <h3 className="text-xl font-semibold text-slate-900 group-hover:text-[#0055FF] transition-colors">{article.title}</h3>
-      <p className="text-slate-500 text-sm">{article.summary}</p>
+      <h3 className="text-xl font-semibold text-slate-900 group-hover:text-[#0055FF] transition-colors line-clamp-2">{article.title}</h3>
+      <p className="text-slate-500 text-sm line-clamp-2 flex-1">{article.summary}</p>
       <button className="flex items-center gap-2 text-[#0055FF] text-xs uppercase tracking-[0.3em]">
         Xem thêm <ArrowRight size={12} />
       </button>

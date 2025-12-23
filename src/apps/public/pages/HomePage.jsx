@@ -22,20 +22,14 @@ const quickTiles = [
     title: 'Lịch thi đấu',
     description: 'Lọc theo vòng đấu, ngày hoặc CLB với thẻ timeline trực quan.',
     to: '/matches',
-    accent: 'from-[#0066FF] via-[#0099FF] to-[#00CCFF]',
-    background: 'linear-gradient(150deg, rgba(0, 102, 255, 0.95), rgba(0, 153, 255, 0.9), rgba(0, 204, 255, 0.85))',
-    borderColor: 'rgba(0, 153, 255, 0.6)',
-    ctaColor: '#00CCFF',
+    gradient: 'from-[#0A1F4A] via-[#1E3A8A] to-[#3B82F6]',
     icon: CalendarDays
   },
   {
     title: 'Bảng xếp hạng',
     description: 'Bảng điểm trực tiếp với khu vực giành vé, play-off và bị loại.',
     to: '/standings',
-    accent: 'from-[#00AA44] via-[#00CC55] to-[#00EE66]',
-    background: 'linear-gradient(150deg, rgba(0, 170, 68, 0.95), rgba(0, 204, 85, 0.9), rgba(0, 238, 102, 0.85))',
-    borderColor: 'rgba(0, 204, 85, 0.6)',
-    ctaColor: '#00EE66',
+    gradient: 'from-[#0A1F4A] via-[#102B6A] to-[#0B7C9E]',
     icon: Trophy
   }
 ];
@@ -70,16 +64,19 @@ const HomePage = () => {
   const [searching, setSearching] = useState(false);
   const [playerResults, setPlayerResults] = useState([]);
   const [matchResults, setMatchResults] = useState([]);
+  const [searchError, setSearchError] = useState(null);
 
   useEffect(() => {
     if (searchTerm.trim().length < 2) {
       setPlayerResults([]);
       setMatchResults([]);
       setSearching(false);
+      setSearchError(null);
       return;
     }
 
     setSearching(true);
+    setSearchError(null);
     const delay = setTimeout(async () => {
       try {
         const [playersResponse, matchesResponse] = await Promise.all([
@@ -87,12 +84,14 @@ const HomePage = () => {
           MatchesService.getAllMatches({ search: searchTerm, limit: 5 })
         ]);
 
-        setPlayerResults(playersResponse.players || []);
-        setMatchResults((matchesResponse.matches || []).slice(0, 5));
+        setPlayerResults(playersResponse?.players || []);
+        setMatchResults((matchesResponse?.matches || []).slice(0, 5));
+        setSearchError(null);
       } catch (error) {
         console.error('Tìm kiếm thất bại', error);
         setPlayerResults([]);
         setMatchResults([]);
+        setSearchError(error?.message || 'Không thể tìm kiếm. Vui lòng thử lại.');
       } finally {
         setSearching(false);
       }
@@ -370,19 +369,18 @@ const HomePage = () => {
               <Link
                 key={tile.title}
                 to={tile.to}
-                className="rounded-[32px] p-6 hover:shadow-[0_30px_70px rgba(0,153,255,0.4)] transition-all hover:scale-110 text-white relative overflow-hidden group backdrop-blur-sm border border-white/10 hover:border-cyan-400/30"
-                style={{ background: tile.background }}
+                className={`rounded-2xl p-6 bg-gradient-to-br ${tile.gradient} border border-white/10 text-white hover:scale-[1.01] transition-all hover:shadow-[0_20px_60px_rgba(0,0,0,0.5)] relative overflow-hidden group backdrop-blur-sm`}
               >
                 {/* Animated icon */}
                 <div className="absolute top-6 right-6 opacity-20 group-hover:opacity-40 transition-opacity">
-                  <TileIcon size={80} className="text-white" />
+                  <TileIcon size={80} className="text-cyan-400" />
                 </div>
                 
                 <div className="relative mt-4">
-                  <p className="text-xs uppercase tracking-[0.35em] text-white/90 mb-3 font-semibold">Khám phá</p>
+                  <p className="text-xs uppercase tracking-[0.35em] text-cyan-400/90 mb-3 font-semibold">Khám phá</p>
                   <p className="text-2xl font-bold mb-2 text-white drop-shadow-lg">{tile.title}</p>
-                  <p className="text-sm text-white/95 mb-6 font-medium">{tile.description}</p>
-                  <div className="inline-flex items-center gap-2 text-sm font-bold text-white group-hover:gap-3 transition-all">
+                  <p className="text-sm text-white/80 mb-6 font-medium">{tile.description}</p>
+                  <div className="inline-flex items-center gap-2 text-sm font-bold text-cyan-400 group-hover:gap-3 transition-all">
                     Xem ngay <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                   </div>
                 </div>

@@ -11,33 +11,40 @@ const LeagueTable = () => {
   })
 
   const [selectedTeam, setSelectedTeam] = useState(null)
-
-  const teams = [
-    { 
-      pos: 1, name: 'Manchester City', played: 28, won: 22, drawn: 4, lost: 2, gf: 68, ga: 18, gd: 50, points: 70,
-      logo: '🏆', trend: 'up', form: ['W', 'W', 'W', 'D', 'W'], color: 'from-sky-500 to-blue-600'
-    },
-    { 
-      pos: 2, name: 'Arsenal', played: 28, won: 20, drawn: 5, lost: 3, gf: 62, ga: 25, gd: 37, points: 65,
-      logo: '🔴', trend: 'up', form: ['W', 'W', 'L', 'W', 'W'], color: 'from-red-500 to-red-600'
-    },
-    { 
-      pos: 3, name: 'Liverpool', played: 28, won: 19, drawn: 6, lost: 3, gf: 58, ga: 28, gd: 30, points: 63,
-      logo: '🔴', trend: 'same', form: ['D', 'W', 'W', 'D', 'W'], color: 'from-red-600 to-red-700'
-    },
-    { 
-      pos: 4, name: 'Newcastle', played: 28, won: 16, drawn: 8, lost: 4, gf: 48, ga: 25, gd: 23, points: 56,
-      logo: '⚫', trend: 'up', form: ['W', 'D', 'W', 'W', 'L'], color: 'from-gray-700 to-black'
-    },
-    { 
-      pos: 5, name: 'Manchester United', played: 28, won: 15, drawn: 6, lost: 7, gf: 45, ga: 35, gd: 10, points: 51,
-      logo: '🔴', trend: 'down', form: ['L', 'W', 'D', 'L', 'W'], color: 'from-red-500 to-red-800'
-    },
-    { 
-      pos: 6, name: 'Tottenham', played: 28, won: 14, drawn: 5, lost: 9, gf: 52, ga: 38, gd: 14, points: 47,
-      logo: '⚪', trend: 'down', form: ['L', 'L', 'W', 'D', 'L'], color: 'from-blue-100 to-blue-300'
+  const [teams, setTeams] = useState([])
+  const [loading, setLoading] = useState(true)
+  
+  // Load teams from API instead of hardcoded data
+  React.useEffect(() => {
+    const loadTeams = async () => {
+      try {
+        const { default: TeamsService } = await import('../layers/application/services/TeamsService')
+        const response = await TeamsService.getAllTeams({ limit: 20 })
+        const mapped = (response.teams || []).map((team, idx) => ({
+          pos: idx + 1,
+          name: team.name,
+          played: 0,
+          won: 0,
+          drawn: 0,
+          lost: 0,
+          gf: 0,
+          ga: 0,
+          gd: 0,
+          points: 0,
+          logo: team.crest || '⚽',
+          trend: 'same',
+          form: [],
+          color: 'from-gray-500 to-gray-600'
+        }))
+        setTeams(mapped)
+      } catch (err) {
+        setTeams([])
+      } finally {
+        setLoading(false)
+      }
     }
-  ]
+    loadTeams()
+  }, [])
 
   const getTrendIcon = (trend) => {
     switch(trend) {

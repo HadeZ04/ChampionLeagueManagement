@@ -1,5 +1,6 @@
 import ApiService from './ApiService'
 import APP_CONFIG from '../../../config/app.config'
+import logger from '../../../shared/utils/logger'
 
 class MatchesService {
   // Get all matches
@@ -54,7 +55,7 @@ class MatchesService {
         total: response?.total || 0
       }
     } catch (error) {
-      console.error('Failed to fetch matches:', error)
+      logger.error('Failed to fetch matches:', error)
       throw error
     }
   }
@@ -65,7 +66,7 @@ class MatchesService {
       const response = await ApiService.get(APP_CONFIG.API.ENDPOINTS.MATCHES.LIVE)
       return response?.data || []
     } catch (error) {
-      console.error('Failed to fetch live matches:', error)
+      logger.error('Failed to fetch live matches:', error)
       throw error
     }
   }
@@ -81,7 +82,7 @@ class MatchesService {
       }
       return match
     } catch (error) {
-      console.error('Failed to fetch match:', error)
+      logger.error('Failed to fetch match:', error)
       throw error
     }
   }
@@ -100,7 +101,7 @@ class MatchesService {
       const response = await ApiService.post(APP_CONFIG.API.ENDPOINTS.MATCHES.CREATE, payload)
       return response?.data
     } catch (error) {
-      console.error('Failed to create match:', error)
+      logger.error('Failed to create match:', error)
       throw error
     }
   }
@@ -137,7 +138,7 @@ class MatchesService {
       }
       return response?.data
     } catch (error) {
-      console.error('Failed to update match:', error)
+      logger.error('Failed to update match:', error)
       throw error
     }
   }
@@ -149,7 +150,7 @@ class MatchesService {
       const response = await ApiService.post(endpoint, resultData)
       return response?.data
     } catch (error) {
-      console.error('Failed to update match result:', error)
+      logger.error('Failed to update match result:', error)
       throw error
     }
   }
@@ -161,7 +162,7 @@ class MatchesService {
       await ApiService.delete(endpoint)
       return true
     } catch (error) {
-      console.error('Failed to delete match:', error)
+      logger.error('Failed to delete match:', error)
       throw error
     }
   }
@@ -218,7 +219,7 @@ class MatchesService {
         total: response?.total || 0
       }
     } catch (error) {
-      console.error('Failed to fetch external matches:', error)
+      logger.error('Failed to fetch external matches:', error)
       throw error
     }
   }
@@ -238,7 +239,7 @@ class MatchesService {
       const response = await ApiService.post('/matches/bulk', { matches })
       return response?.count
     } catch (error) {
-      console.error('Failed to create bulk matches:', error)
+      logger.error('Failed to create bulk matches:', error)
       throw error
     }
   }
@@ -254,7 +255,7 @@ class MatchesService {
       const response = await ApiService.post('/matches/generate/round-robin', payload)
       return response?.data || []
     } catch (error) {
-      console.error('Failed to generate round robin schedule:', error)
+      logger.error('Failed to generate round robin schedule:', error)
       throw error
     }
   }
@@ -266,7 +267,7 @@ class MatchesService {
       const response = await ApiService.delete('/matches/bulk', params)
       return response?.count
     } catch (error) {
-      console.error('Failed to delete all matches:', error)
+      logger.error('Failed to delete all matches:', error)
       throw error
     }
   }
@@ -278,7 +279,7 @@ class MatchesService {
       const response = await ApiService.get(`/matches/${matchId}/events`)
       return response?.data?.data || []
     } catch (error) {
-      console.error('Failed to fetch match events:', error)
+      logger.error('Failed to fetch match events:', error)
       return []
     }
   }
@@ -288,7 +289,7 @@ class MatchesService {
       const response = await ApiService.post(`/matches/${matchId}/events`, eventData)
       return response?.data
     } catch (error) {
-      console.error('Failed to create match event:', error)
+      logger.error('Failed to create match event:', error)
       throw error
     }
   }
@@ -298,7 +299,7 @@ class MatchesService {
       await ApiService.delete(`/matches/events/${eventId}`)
       return true
     } catch (error) {
-      console.error('Failed to delete match event:', error)
+      logger.error('Failed to delete match event:', error)
       throw error
     }
   }
@@ -308,7 +309,7 @@ class MatchesService {
       const response = await ApiService.get(`/matches/${matchId}/lineups`)
       return response?.data?.data || []
     } catch (error) {
-      console.error('Failed to fetch match lineups:', error)
+      logger.error('Failed to fetch match lineups:', error)
       return []
     }
   }
@@ -318,7 +319,7 @@ class MatchesService {
       const response = await ApiService.post(`/matches/${matchId}/lineups`, lineups)
       return response?.data
     } catch (error) {
-      console.error('Failed to update match lineups:', error)
+      logger.error('Failed to update match lineups:', error)
       throw error
     }
   }
@@ -329,3 +330,4 @@ class MatchesService {
 }
 
 export default new MatchesService()
+

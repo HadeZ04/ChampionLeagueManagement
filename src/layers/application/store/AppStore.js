@@ -5,6 +5,7 @@ import React, { createContext, useContext, useReducer, useEffect } from 'react'
 import TeamsService from '../services/TeamsService'
 import MatchesService from '../services/MatchesService'
 import AuthService from '../services/AuthService'
+import logger from '../../../shared/utils/logger'
 
 // Initial state
 const initialState = {
@@ -263,7 +264,7 @@ export function AppProvider({ children }) {
         dispatch({ type: ActionTypes.SET_LIVE_MATCHES, payload: liveMatches })
         return liveMatches
       } catch (error) {
-        console.error('Failed to fetch live matches:', error)
+        logger.error('Failed to fetch live matches:', error)
       }
     },
 
@@ -309,3 +310,4 @@ export function useApp() {
 }
 
 export default AppContext
+

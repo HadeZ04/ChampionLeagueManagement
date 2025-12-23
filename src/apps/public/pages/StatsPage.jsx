@@ -13,24 +13,43 @@ const statsService = {
 // --- Hết giả lập ---
 
 const TopScorersList = ({ data }) => {
+    if (!data || data.length === 0) {
+        return (
+            <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-12 text-center">
+                <p className="text-slate-300">Chưa có dữ liệu thống kê</p>
+            </div>
+        );
+    }
     return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-[#020617]/80 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.4)]">
             <table className="w-full">
-                <thead className="bg-gray-50">
+                <thead className="bg-gradient-to-r from-[#1E3A8A] to-[#4C1D95]">
                     <tr>
-                        <th className="p-4 text-center text-xs font-medium text-gray-500 uppercase">Hạng</th>
-                        <th className="p-4 text-left text-xs font-medium text-gray-500 uppercase">Cầu thủ</th>
-                        <th className="p-4 text-left text-xs font-medium text-gray-500 uppercase">Đội</th>
-                        <th className="p-4 text-center text-xs font-medium text-gray-500 uppercase">Bàn thắng</th>
+                        <th className="p-4 text-center text-xs font-semibold text-white uppercase tracking-wider">Hạng</th>
+                        <th className="p-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Cầu thủ</th>
+                        <th className="p-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Đội</th>
+                        <th className="p-4 text-center text-xs font-semibold text-white uppercase tracking-wider">Bàn thắng</th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
-                    {data.map(player => (
-                        <tr key={player.rank} className="hover:bg-gray-50">
-                            <td className="p-4 text-center font-bold text-lg">{player.rank}</td>
-                            <td className="p-4 font-semibold">{player.playerName}</td>
-                            <td className="p-4 text-gray-600">{player.team}</td>
-                            <td className="p-4 text-center font-bold text-xl text-blue-700">{player.goals}</td>
+                <tbody className="divide-y divide-white/5">
+                    {data.map((player, idx) => (
+                        <tr key={player.rank} className={`transition-colors hover:bg-white/10 ${
+                            idx === 0 ? 'bg-yellow-500/10' : ''
+                        }`}>
+                            <td className="p-4 text-center">
+                                <span className={`font-bold text-lg ${
+                                    player.rank === 1 ? 'text-yellow-400' : player.rank === 2 ? 'text-slate-300' : player.rank === 3 ? 'text-orange-400' : 'text-slate-400'
+                                }`}>{player.rank}</span>
+                            </td>
+                            <td className="p-4">
+                                <span className="font-semibold text-white">{player.playerName}</span>
+                            </td>
+                            <td className="p-4">
+                                <span className="text-slate-300">{player.team}</span>
+                            </td>
+                            <td className="p-4 text-center">
+                                <span className="font-bold text-xl text-cyan-400">{player.goals}</span>
+                            </td>
                         </tr>
                     ))}
                 </tbody>
@@ -65,20 +84,25 @@ const StatsPage = () => {
 
     return (
         <div className="uefa-container py-8">
-            <h1 className="uefa-section-title mb-6">Thống kê cầu thủ & đội bóng</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-white mb-6">Thống kê cầu thủ & đội bóng</h1>
             
-            <div className="border-b border-gray-200 mb-6">
-                <nav className="-mb-px flex space-x-6">
+            <div className="overflow-x-auto no-scrollbar mb-6">
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/5 p-1 border border-white/10">
                     {tabs.map(tab => (
                         <button 
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm ${activeTab === tab.id ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+                            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all duration-200 whitespace-nowrap ${
+                                activeTab === tab.id 
+                                    ? 'bg-gradient-to-r from-[#2563EB] to-[#22C55E] text-white shadow-sm' 
+                                    : 'text-slate-200/80 hover:text-white hover:bg-white/10'
+                            }`}
                         >
-                            <tab.icon size={16} /> {tab.name}
+                            <tab.icon size={18} className={activeTab === tab.id ? 'text-white' : 'text-slate-300'} />
+                            {tab.name}
                         </button>
                     ))}
-                </nav>
+                </div>
             </div>
 
             <div>

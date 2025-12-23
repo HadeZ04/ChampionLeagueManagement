@@ -135,7 +135,28 @@ class AuthService {
     }
   }
 
-  // Token management
+  /**
+   * Token management
+   * 
+   * SECURITY TODO: Migrate to httpOnly cookies for enhanced security
+   * 
+   * Current implementation stores JWT tokens in localStorage, which is vulnerable to XSS attacks.
+   * 
+   * Recommended migration plan:
+   * 1. Backend: Set JWT as httpOnly cookie in Set-Cookie header (response from /login)
+   * 2. Frontend: Remove localStorage.setItem calls - cookies managed automatically by browser
+   * 3. Backend: Read token from cookie in auth middleware (req.cookies.auth_token)
+   * 4. Configure CORS with credentials: true + allowed origins
+   * 5. Add CSRF protection using double-submit cookie pattern or SameSite=Strict
+   * 
+   * Benefits after migration:
+   * - XSS protection: JavaScript cannot access httpOnly cookies
+   * - Automatic cookie management (expiry, secure flags)
+   * - Better security posture for production deployment
+   * 
+   * Migration complexity: MEDIUM (requires backend team coordination)
+   * Priority: LOW (current implementation acceptable for MVP, plan for v2.0)
+   */
   setTokens(token, refreshToken) {
     if (token) {
       localStorage.setItem(this.tokenKey, token)
@@ -151,7 +172,34 @@ class AuthService {
   }
 
   getToken() {
-    return localStorage.getItem(this.tokenKey)
+    const token = localStorage.getItem(this.tokenKey)
+    if (!token) {
+      return null
+    }
+    
+    // Check token expiry
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      const expiryTime = payload.exp * 1000 // Convert to milliseconds
+      const now = Date.now()
+      
+      if (expiryTime < now) {
+        // Token expired - auto logout
+        this.logout()
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('auth:token-expired', { 
+            detail: { message: 'Phiên đăng nhập đã hết hạn' } 
+          }))
+        }
+        return null
+      }
+      
+      return token
+    } catch (err) {
+      // Invalid token format
+      this.logout()
+      return null
+    }
   }
 
   getRefreshToken() {

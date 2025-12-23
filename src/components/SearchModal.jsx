@@ -40,22 +40,22 @@ const SearchModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-20">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl mx-4">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-start justify-center pt-20">
+      <div className="bg-[#020617]/95 backdrop-blur-xl rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] border border-white/10 w-full max-w-2xl mx-4">
         {/* Search Header */}
-        <div className="flex items-center p-6 border-b border-gray-200">
-          <Search size={20} className="text-uefa-gray mr-3" />
+        <div className="flex items-center p-6 border-b border-white/10">
+          <Search size={20} className="text-slate-400 mr-3" />
           <input
             type="text"
-            placeholder="Search teams, players, matches, news..."
+            placeholder="Tìm kiếm đội, cầu thủ, trận đấu, tin tức..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 text-lg outline-none"
+            className="flex-1 text-lg outline-none bg-transparent text-white placeholder:text-slate-400"
             autoFocus
           />
           <button
             onClick={onClose}
-            className="p-2 text-uefa-gray hover:text-uefa-dark transition-colors"
+            className="p-2 text-slate-400 hover:text-white transition-colors"
           >
             <X size={20} />
           </button>
@@ -66,7 +66,7 @@ const SearchModal = ({ isOpen, onClose }) => {
           {searchTerm.length > 2 ? (
             /* Search Results */
             <div className="p-6">
-              <h3 className="font-semibold text-uefa-dark mb-4">Search Results</h3>
+              <h3 className="font-semibold text-uefa-dark mb-4">Kết quả tìm kiếm</h3>
               {searchResults.length > 0 ? (
                 <div className="space-y-3">
                   {searchResults.map((result, index) => (
@@ -89,7 +89,7 @@ const SearchModal = ({ isOpen, onClose }) => {
               ) : (
                 <div className="text-center py-8 text-uefa-gray">
                   <Search size={32} className="mx-auto mb-2 opacity-50" />
-                  <p>No results found for "{searchTerm}"</p>
+                  <p>Không tìm thấy kết quả cho "{searchTerm}"</p>
                 </div>
               )}
             </div>
@@ -100,7 +100,7 @@ const SearchModal = ({ isOpen, onClose }) => {
               <div>
                 <div className="flex items-center space-x-2 mb-3">
                   <Clock size={16} className="text-uefa-gray" />
-                  <h3 className="font-semibold text-uefa-dark">Recent Searches</h3>
+                  <h3 className="font-semibold text-uefa-dark">Tìm kiếm gần đây</h3>
                 </div>
                 <div className="space-y-2">
                   {recentSearches.map((search, index) => (
@@ -119,7 +119,7 @@ const SearchModal = ({ isOpen, onClose }) => {
               <div>
                 <div className="flex items-center space-x-2 mb-3">
                   <TrendingUp size={16} className="text-uefa-gray" />
-                  <h3 className="font-semibold text-uefa-dark">Popular Searches</h3>
+                  <h3 className="font-semibold text-uefa-dark">Tìm kiếm phổ biến</h3>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {popularSearches.map((search, index) => (

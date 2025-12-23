@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Globe, MapPin, Search, Shield, Users } from 'lucide-react';
 import TeamsService from '../../../layers/application/services/TeamsService';
+import logger from '../../../shared/utils/logger';
 
 const TeamsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -23,7 +24,7 @@ const TeamsPage = () => {
           setSelectedSeason(String(seasons[0].year));
         }
       } catch (err) {
-        console.error('Failed to load seasons', err);
+        logger.error('Failed to load seasons', err);
         setSeasonOptions([]);
       } finally {
         setIsSeasonsLoading(false);
@@ -35,22 +36,27 @@ const TeamsPage = () => {
 
   useEffect(() => {
     if (!selectedSeason) return;
-    const loadTeams = async () => {
+    
+    // Debounce search to avoid excessive API calls
+    const timeoutId = setTimeout(async () => {
       setIsLoading(true);
       try {
-        const response = await TeamsService.getAllTeams({ season: selectedSeason });
+        const response = await TeamsService.getAllTeams({ 
+          season: selectedSeason,
+          search: searchTerm
+        });
         setTeams(response.teams ?? []);
         setError(null);
       } catch (err) {
-        console.error('Failed to load teams', err);
+        logger.error('Failed to load teams', err);
         setError('Không thể tải danh sách đội bóng ngay bây giờ. Vui lòng thử lại sau.');
       } finally {
         setIsLoading(false);
       }
-    };
+    }, 300); // 300ms debounce
 
-    loadTeams();
-  }, [selectedSeason]);
+    return () => clearTimeout(timeoutId);
+  }, [selectedSeason, searchTerm]);
 
   const countryFilters = useMemo(() => {
     const uniqueCountries = new Map();
@@ -130,66 +136,77 @@ const TeamsPage = () => {
 
   return (
     <div className="uefa-container py-8">
-        <nav className="uefa-breadcrumb">
-          <Link to="/" className="uefa-breadcrumb-item">
+        <nav className="flex items-center gap-2 text-sm mb-6">
+          <Link to="/" className="text-cyan-400 hover:text-cyan-300 transition-colors">
           Trang chủ
           </Link>
-          <span className="uefa-breadcrumb-separator">/</span>
-          <span className="uefa-breadcrumb-item">Cúp C1</span>
-          <span className="uefa-breadcrumb-separator">/</span>
-          <span className="text-uefa-dark font-semibold">Đội bóng & đội hình</span>
+          <span className="text-white/40">/</span>
+          <span className="text-slate-300">Cúp C1</span>
+          <span className="text-white/40">/</span>
+          <span className="text-white font-semibold">Đội bóng & đội hình</span>
         </nav>
 
       <header className="mb-8">
-        <p className="text-xs uppercase tracking-[0.4em] text-white/60">Dữ liệu chính thức • Football-Data.org</p>
-        <h1 className="uefa-section-title mt-2">Các câu lạc bộ Cúp C1 châu Âu</h1>
-        <p className="uefa-section-subtitle">
-          Theo dõi 36 câu lạc bộ và danh sách cầu thủ chính thức của Cúp C1 châu Âu (mã: CL).
+        <p className="text-xs uppercase tracking-[0.4em] text-cyan-400/80">Dữ liệu chính thức • Football-Data.org</p>
+        <h1 className="text-4xl font-bold text-white mt-2">Các câu lạc bộ của giải Vô địch Châu Âu</h1>
+        <p className="text-slate-300 text-lg mt-3">
+          Theo dõi 36 câu lạc bộ và danh sách cầu thủ chính thức của giải vô địch châu Âu .
         </p>
         {selectedSeason && (
-          <p className="text-white/60 text-sm mt-2">
+          <p className="text-slate-400 text-sm mt-2">
             Mùa giải: {selectedSeason}/{Number(selectedSeason) + 1}
           </p>
         )}
       </header>
 
-      <div className="flex flex-col xl:flex-row gap-4 mb-8">
+      <div className="px-4 sm:px-0 flex flex-col sm:flex-row gap-3 mb-8">
         <div className="relative flex-1">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-uefa-gray" />
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             placeholder="Tìm theo tên đội hoặc mã (VD: FCB, MCI)"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            className="uefa-input pl-12"
+            className="w-full h-11 pl-12 pr-4 rounded-full bg-[#020617]/85 border border-white/15 text-slate-50 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-400/70 focus:border-cyan-400/70 transition"
           />
         </div>
-        <div className="flex gap-4 flex-col sm:flex-row">
+        <div className="flex gap-3 flex-col sm:flex-row">
           <select
-            className="uefa-select sm:w-56"
+            className="h-11 px-4 rounded-full bg-[#020617]/85 border border-white/15 text-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-400/70 focus:border-cyan-400/70 transition sm:w-56 appearance-none cursor-pointer"
             value={selectedCountry}
             onChange={(event) => setSelectedCountry(event.target.value)}
+            style={{backgroundImage: "url('data:image/svg+xml;utf8,<svg fill=\'%23cbd5e1\' height=\'24\' viewBox=\'0 0 24 24\' width=\'24\' xmlns=\'http://www.w3.org/2000/svg\'><path d=\'M7 10l5 5 5-5z\'/></svg>')", backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '20px'}}
           >
             {countryFilters.map((country) => (
-              <option key={country.id} value={country.id}>
+              <option key={country.id} value={country.id} className="bg-[#0a1929] text-white">
                 {country.name}
               </option>
             ))}
           </select>
-          <select
-            className="uefa-select sm:w-48"
-            value={selectedSeason}
-            onChange={(event) => setSelectedSeason(event.target.value)}
-            disabled={isSeasonsLoading || seasonOptions.length === 0}
-          >
-            {isSeasonsLoading && <option>Đang tải mùa giải...</option>}
-            {!isSeasonsLoading &&
-              seasonOptions.map((season) => (
-                <option key={season.id} value={season.year}>
-                  {season.year}/{season.year + 1}
-                </option>
-              ))}
-          </select>
+          <div className="relative sm:w-48">
+            <select
+              className={`h-11 px-4 w-full rounded-full bg-[#020617]/85 border border-white/15 focus:outline-none focus:ring-2 focus:ring-cyan-400/70 focus:border-cyan-400/70 transition appearance-none ${
+                isSeasonsLoading ? 'cursor-wait opacity-75 text-slate-300' : 'cursor-pointer text-slate-50'
+              }`}
+              value={selectedSeason}
+              onChange={(event) => setSelectedSeason(event.target.value)}
+              disabled={isSeasonsLoading || seasonOptions.length === 0}
+              style={{backgroundImage: "url('data:image/svg+xml;utf8,<svg fill=\'%23cbd5e1\' height=\'24\' viewBox=\'0 0 24 24\' width=\'24\' xmlns=\'http://www.w3.org/2000/svg\'><path d=\'M7 10l5 5 5-5z\'/></svg>')", backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '20px'}}
+            >
+              {isSeasonsLoading && <option className="bg-[#0a1929] text-slate-300">Đang tải mùa giải...</option>}
+              {!isSeasonsLoading &&
+                seasonOptions.map((season) => (
+                  <option key={season.id} value={season.year} className="bg-[#0a1929] text-white">
+                    {season.year}/{season.year + 1}
+                  </option>
+                ))}
+            </select>
+            {isSeasonsLoading && (
+              <div className="absolute right-12 top-1/2 -translate-y-1/2">
+                <div className="w-4 h-4 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin"></div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -201,8 +218,16 @@ const TeamsPage = () => {
       )}
 
       {error && (
-        <div className="bg-uefa-red/10 border border-uefa-red/40 text-uefa-red rounded-2xl p-6 mb-6">
-          {error}
+        <div className="bg-uefa-red/10 border border-uefa-red/40 text-uefa-red rounded-2xl p-6 flex items-center justify-between">
+          <div className="flex-1">
+            {error}
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            className="ml-4 px-4 py-2 bg-uefa-red hover:bg-red-700 text-white rounded-lg transition-colors font-semibold"
+          >
+            Thử lại
+          </button>
         </div>
       )}
 

@@ -21,6 +21,7 @@ import {
   toMatchStatusLabel,
   toPlayerPositionLabel
 } from '../shared/utils/vi'
+import logger from '../shared/utils/logger'
 
 const PlayerLookup = () => {
   const [ref, inView] = useInView({
@@ -35,6 +36,10 @@ const PlayerLookup = () => {
   const [syncing, setSyncing] = useState(false)
   const [error, setError] = useState(null)
   const [recentMatches, setRecentMatches] = useState([])
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pagination, setPagination] = useState({ page: 1, limit: 20, totalPages: 1, total: 0 })
 
   useEffect(() => {
     let cancelled = false
@@ -43,16 +48,18 @@ const PlayerLookup = () => {
         setLoading(true)
         setError(null)
         const response = await PlayersService.listPlayers({
-          limit: 400,
+          limit: pagination.limit,
+          page: currentPage,
           season: '',
-          page: 1
+          search: searchTerm
         })
         if (!cancelled) {
           setPlayers(response.players || [])
+          setPagination(response.pagination || pagination)
         }
       } catch (err) {
         if (!cancelled) {
-          console.error('Không thể tải danh sách cầu thủ', err)
+          logger.error('Không thể tải danh sách cầu thủ', err)
           setError('Không thể tải danh sách cầu thủ từ máy chủ.')
         }
       } finally {
@@ -65,7 +72,7 @@ const PlayerLookup = () => {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [currentPage])
 
   const handleSync = async () => {
     try {
@@ -74,7 +81,7 @@ const PlayerLookup = () => {
       const response = await PlayersService.listPlayers({ limit: 400 })
       setPlayers(response.players || [])
     } catch (err) {
-      console.error('Không thể đồng bộ dữ liệu cầu thủ', err)
+      logger.error('Không thể đồng bộ dữ liệu cầu thủ', err)
       setError('Đồng bộ thất bại. Vui lòng thử lại sau.')
     } finally {
       setSyncing(false)
@@ -222,7 +229,7 @@ const PlayerLookup = () => {
             transition={{ duration: 0.8 }}
             className="text-center mb-16 section-title-container"
           >
-            <h1 className="text-5xl font-bold text-white mb-6">PLAYER LOOKUP</h1>
+            <h1 className="text-5xl font-bold text-white mb-6">TRA CỨU CẦU THỦ</h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
               Xem nhanh thông tin và đội hình thực tế của UEFA Champions League
             </p>
@@ -266,6 +273,29 @@ const PlayerLookup = () => {
                 </div>
 
                 {renderPlayerList()}
+                
+                {/* Pagination Controls */}
+                {!loading && !error && pagination.totalPages > 1 && (
+                  <div className="mt-4 flex items-center justify-between text-sm">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-2 bg-white/10 text-white rounded-lg disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/20 transition-colors"
+                    >
+                      Trang trước
+                    </button>
+                    <span className="text-white/60">
+                      Trang {currentPage} / {pagination.totalPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
+                      disabled={currentPage >= pagination.totalPages}
+                      className="px-3 py-2 bg-white/10 text-white rounded-lg disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/20 transition-colors"
+                    >
+                      Trang sau
+                    </button>
+                  </div>
+                )}
               </div>
             </motion.div>
 

@@ -37,19 +37,19 @@ const NewsManagement = () => {
   const [saving, setSaving] = useState(false)
 
   const categories = [
-    { id: 'all', name: 'All Categories' },
-    { id: 'matches', name: 'Matches' },
-    { id: 'teams', name: 'Teams' },
-    { id: 'players', name: 'Players' },
-    { id: 'draws', name: 'Draws' },
-    { id: 'awards', name: 'Awards' }
+    { id: 'all', name: 'Tất cả danh mục' },
+    { id: 'matches', name: 'Trận đấu' },
+    { id: 'teams', name: 'Đội bóng' },
+    { id: 'players', name: 'Cầu thủ' },
+    { id: 'draws', name: 'Bốc thăm' },
+    { id: 'awards', name: 'Giải thưởng' }
   ]
 
   const statuses = [
-    { id: 'all', name: 'All Status' },
-    { id: 'draft', name: 'Draft' },
-    { id: 'published', name: 'Published' },
-    { id: 'archived', name: 'Archived' }
+    { id: 'all', name: 'Tất cả trạng thái' },
+    { id: 'draft', name: 'Bản nháp' },
+    { id: 'published', name: 'Đã xuất bản' },
+    { id: 'archived', name: 'Đã lưu trữ' }
   ]
 
   const loadArticles = useCallback(async () => {
@@ -66,7 +66,7 @@ const NewsManagement = () => {
       setArticles(response.data ?? [])
     } catch (err) {
       console.error(err)
-      setError(err?.message ?? 'Unable to load news articles.')
+      setError(err?.message ?? 'Không thể tải bài viết tin tức.')
       setArticles([])
     } finally {
       setLoading(false)
@@ -80,16 +80,17 @@ const NewsManagement = () => {
     return () => clearTimeout(handle)
   }, [loadArticles])
 
-  const filteredNews = useMemo(() => articles, [articles])
+  // No filtering applied - useMemo removed for clarity
+  const filteredNews = articles
 
   const getStatusBadge = (status) => {
     switch (status) {
       case 'published':
-        return <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">Published</span>
+        return <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">Đã xuất bản</span>
       case 'draft':
-        return <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">Draft</span>
+        return <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">Bản nháp</span>
       case 'archived':
-        return <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">Archived</span>
+        return <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">Đã lưu trữ</span>
       default:
         return null
     }

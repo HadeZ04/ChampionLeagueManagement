@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { useInView } from 'react-intersection-observer'
 import { Mail, Phone, MapPin, Send, Github, Linkedin, Twitter } from 'lucide-react'
 import Tilt from 'react-parallax-tilt'
+import logger from '../shared/utils/logger'
 
 const Contact = () => {
   const [ref, inView] = useInView({
@@ -19,7 +20,7 @@ const Contact = () => {
   const handleSubmit = (e) => {
     e.preventDefault()
     // Handle form submission
-    console.log('Form submitted:', formData)
+    logger.log('Form submitted:', formData)
   }
 
   const handleChange = (e) => {
@@ -226,3 +227,4 @@ const Contact = () => {
 }
 
 export default Contact
+
