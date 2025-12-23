@@ -16,7 +16,7 @@ import RejectReasonView from "../components/RejectReasonView";
 import ApiService from '../../../layers/application/services/ApiService';
 import APP_CONFIG from '../../../config/app.config';
 import toast, { Toaster } from 'react-hot-toast';
-import toast, { Toaster } from 'react-hot-toast';
+
 
 const SeasonPlayerApprovalPage = () => {
     const [list, setList] = useState([]);
