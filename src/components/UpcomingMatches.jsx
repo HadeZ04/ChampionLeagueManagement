@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { Calendar, Clock, MapPin, Tv, AlertCircle } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Calendar, Clock, MapPin, Play, AlertCircle, RefreshCw, Shield, ChevronRight } from 'lucide-react'
 import MatchesService from '../layers/application/services/MatchesService'
 import logger from '../shared/utils/logger'
 
@@ -12,7 +13,7 @@ const UpcomingMatches = () => {
     try {
       setLoading(true)
       setError(null)
-      const response = await MatchesService.getAllMatches({
+      const response = await MatchesService.getExternalMatches({
         status: 'SCHEDULED',
         limit: 4
       })
@@ -21,14 +22,17 @@ const UpcomingMatches = () => {
         date: new Date(match.utcDate),
         homeTeam: {
           name: match.homeTeamName,
-          shortName: match.homeTeamTla || match.homeTeamName.slice(0, 3).toUpperCase()
+          shortName: match.homeTeamTla || match.homeTeamName?.slice(0, 3).toUpperCase(),
+          logo: match.homeTeamLogo
         },
         awayTeam: {
           name: match.awayTeamName,
-          shortName: match.awayTeamTla || match.awayTeamName.slice(0, 3).toUpperCase()
+          shortName: match.awayTeamTla || match.awayTeamName?.slice(0, 3).toUpperCase(),
+          logo: match.awayTeamLogo
         },
         venue: match.venue || 'Chưa xác định',
-        group: match.groupName || match.stage || 'Vòng phân hạng'
+        group: match.groupName || match.stage || 'Vòng phân hạng',
+        matchday: match.matchday
       }))
       setUpcomingMatches(mapped)
     } catch (err) {
@@ -44,7 +48,6 @@ const UpcomingMatches = () => {
     let isMounted = true
     fetchMatches().then(() => {
       if (!isMounted) {
-        // Reset state if unmounted during fetch
         setUpcomingMatches([])
         setError(null)
         setLoading(false)
@@ -54,26 +57,6 @@ const UpcomingMatches = () => {
       isMounted = false
     }
   }, [])
-
-  const getImportanceAccent = (importance) => {
-    switch (importance) {
-      case 'high':
-        return {
-          glow: '0 25px 55px rgba(0, 198, 90, 0.45)',
-          bar: 'linear-gradient(180deg, #00C65A, #00924A)'
-        }
-      case 'medium':
-        return {
-          glow: '0 25px 55px rgba(250, 204, 21, 0.45)',
-          bar: 'linear-gradient(180deg, #FACC15, #FF9F1C)'
-        }
-      default:
-        return {
-          glow: '0 25px 55px rgba(0, 116, 240, 0.35)',
-          bar: 'linear-gradient(180deg, #E3F2FF, #0074F0)'
-        }
-    }
-  }
 
   const formatTime = (date) => {
     return date.toLocaleTimeString('vi-VN', {
@@ -101,124 +84,128 @@ const UpcomingMatches = () => {
   }
 
   return (
-    <div className="rounded-[32px] border border-white/15 bg-gradient-to-br from-[#003B73] via-[#00924A] to-[#00C65A] p-6 text-white shadow-[0_35px_90px_rgba(0,59,115,0.45)]">
+    <div className="rounded-2xl backdrop-blur-md bg-white/[0.05] border border-white/[0.1] p-6">
       <div className="flex items-center space-x-3 mb-6">
-        <Calendar className="text-white" size={24} />
-        <h2 className="text-2xl font-bold">Trận sắp diễn ra</h2>
+        <Calendar className="text-cyan-400" size={24} />
+        <h2 className="text-xl font-bold text-white">Trận sắp diễn ra</h2>
         <div className="flex-1" />
-        {error && (
-          <button
-            onClick={fetchMatches}
-            className="inline-flex items-center gap-2 rounded-full border border-white/30 px-4 py-2 text-xs uppercase tracking-[0.3em] text-white/80 transition-colors hover:bg-white/10"
-            disabled={loading}
-          >
-            Thử lại
-          </button>
-        )}
-        <a
-          href="/matches"
-          className="inline-flex items-center gap-2 rounded-full border border-white/30 px-4 py-2 text-xs uppercase tracking-[0.3em] text-white/80 transition-colors hover:bg-white/10"
+        <Link
+          to="/match-center"
+          className="text-cyan-400 hover:text-cyan-300 text-sm font-medium transition-colors"
         >
-          Xem lịch thi đấu
-        </a>
+          Xem tất cả →
+        </Link>
       </div>
 
       {/* Error State */}
       {error && !loading && (
-        <div className="text-center py-8 bg-red-500/10 rounded-lg border border-red-500/30 mb-4">
-          <AlertCircle className="mx-auto mb-2 text-red-200" size={32} />
-          <p className="text-sm text-white/90 mb-2">{error}</p>
+        <div className="text-center py-6 bg-rose-500/10 rounded-xl border border-rose-500/30 mb-4">
+          <AlertCircle className="mx-auto mb-2 text-rose-400" size={28} />
+          <p className="text-sm text-white/80 mb-2">{error}</p>
           <button
             onClick={fetchMatches}
-            className="text-xs text-white/70 hover:text-white underline"
+            className="text-xs text-cyan-400 hover:text-cyan-300 underline"
           >
-            Nhấn để thử lại
+            Thử lại
           </button>
         </div>
       )}
 
-      <div className="space-y-4">
-        {loading && (
-          <div className="text-white/80 text-sm">Đang tải lịch thi đấu sắp tới...</div>
-        )}
-        {!loading && upcomingMatches.length === 0 && (
-          <div className="text-white/80 text-sm">
-            Không có trận đã lên lịch trong khoảng thời gian đã chọn.
-          </div>
-        )}
-        {upcomingMatches.map((match) => {
-          const accent = getImportanceAccent('high')
-          return (
-            <div
+      {/* Loading State */}
+      {loading && (
+        <div className="flex items-center justify-center py-8">
+          <RefreshCw className="w-6 h-6 text-cyan-400 animate-spin" />
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && !error && upcomingMatches.length === 0 && (
+        <div className="text-center py-8">
+          <Calendar className="w-12 h-12 text-white/20 mx-auto mb-3" />
+          <p className="text-white/60">Không có trận đã lên lịch</p>
+        </div>
+      )}
+
+      {/* Matches List */}
+      {!loading && upcomingMatches.length > 0 && (
+        <div className="space-y-3">
+          {upcomingMatches.map((match) => (
+            <Link
               key={match.id}
-              className="relative overflow-hidden rounded-2xl border border-white/20 bg-white/5 p-4 pl-6 backdrop-blur-sm transition-all duration-300 group"
-              style={{ boxShadow: accent.glow }}
+              to="/match-center"
+              className="block p-4 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.08] hover:border-cyan-400/30 transition-all group"
             >
-              <span
-                className="absolute inset-y-4 left-0 w-1 rounded-full"
-                style={{ background: accent.bar }}
-              />
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-2 text-white/70 text-sm">
-                    <Calendar size={14} />
-                    <span className="font-medium">{formatDate(match.date)}</span>
-                    <Clock size={14} />
-                    <span className="font-medium">{formatTime(match.date)}</span>
-                  </div>
+              {/* Date & Time */}
+              <div className="flex items-center justify-between mb-3 text-xs text-white/50">
+                <div className="flex items-center gap-2">
+                  <Calendar size={12} />
+                  <span>{formatDate(match.date)}</span>
+                  <Clock size={12} />
+                  <span>{formatTime(match.date)}</span>
                 </div>
-                <div className="flex items-center space-x-2 text-white/70 text-sm">
-                  <Tv size={14} />
-                  <span>Đối tác phát sóng</span>
+                <span className="px-2 py-0.5 rounded-full bg-white/10 text-white/60">
+                  MD {match.matchday || '-'}
+                </span>
+              </div>
+
+              {/* Teams */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+                    {match.homeTeam.logo ? (
+                      <img src={match.homeTeam.logo} alt="" className="w-5 h-5 object-contain" />
+                    ) : (
+                      <Shield size={16} className="text-white/40" />
+                    )}
+                  </div>
+                  <span className="text-white font-medium truncate text-sm">
+                    {match.homeTeam.name}
+                  </span>
+                </div>
+
+                <div className="px-3 py-1 rounded-lg bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-400/20 mx-2">
+                  <span className="text-cyan-400 font-bold text-xs">VS</span>
+                </div>
+
+                <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
+                  <span className="text-white font-medium truncate text-sm text-right">
+                    {match.awayTeam.name}
+                  </span>
+                  <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+                    {match.awayTeam.logo ? (
+                      <img src={match.awayTeam.logo} alt="" className="w-5 h-5 object-contain" />
+                    ) : (
+                      <Shield size={16} className="text-white/40" />
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-3 flex-1">
-                  <div>
-                    <div className="font-semibold text-white">{match.homeTeam.name}</div>
-                    <div className="text-white/70 text-sm">{match.homeTeam.shortName}</div>
-                  </div>
+              {/* Venue */}
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5 text-xs text-white/50">
+                <div className="flex items-center gap-1">
+                  <MapPin size={12} />
+                  <span className="truncate max-w-[180px]">{match.venue}</span>
                 </div>
-
-                <div className="px-4 text-transparent bg-clip-text bg-gradient-to-r from-[#FACC15] to-[#00C65A] font-bold">
-                  VS
-                </div>
-
-                <div className="flex items-center space-x-3 flex-1 justify-end">
-                  <div className="text-right">
-                    <div className="font-semibold text-white">{match.awayTeam.name}</div>
-                    <div className="text-white/70 text-sm">{match.awayTeam.shortName}</div>
-                  </div>
-                </div>
+                <ChevronRight size={14} className="text-white/30 group-hover:text-cyan-400 transition-colors" />
               </div>
+            </Link>
+          ))}
+        </div>
+      )}
 
-              <div className="flex items-center justify-between pt-3 border-t border-white/10 text-sm text-white/80">
-                <div className="flex items-center space-x-2">
-                  <MapPin size={14} />
-                  <span>{match.venue} • {match.group}</span>
-                </div>
-                <div className="flex space-x-3">
-                  <a href="/match-center" className="text-white/80 hover:text-white">Nhận định</a>
-                  <a href="/tickets" className="text-white/80 hover:text-white">Vé</a>
-                </div>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      <div className="mt-6 text-center">
-        <a
-          href="/matches"
-          className="inline-flex items-center justify-center rounded-full border border-white/30 px-6 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-white transition-colors hover:bg-white/10"
+      {/* View All Button */}
+      <div className="mt-6 pt-4 border-t border-white/10">
+        <Link
+          to="/match-center"
+          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white font-medium text-sm transition-all"
         >
-          Danh sách lịch thi đấu
-        </a>
+          <Play size={16} />
+          <span>Xem trung tâm trận đấu</span>
+        </Link>
       </div>
     </div>
   )
 }
 
 export default UpcomingMatches
-

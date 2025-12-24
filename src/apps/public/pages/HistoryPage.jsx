@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Trophy, Calendar, Users, Star, Award, ArrowLeft, Crown, Target, Globe, Sparkles, Play, X } from 'lucide-react';
+import { Trophy, Calendar, Users, Star, Award, ArrowLeft, Crown, Target, Globe, Sparkles, Play, X, Zap } from 'lucide-react';
 
 // Import images
 import trophyImage from '@/assets/images/cup.avif';
+import cupBackground from '@/assets/images/cup_background.avif';
 import istanbulImage from '@/assets/images/istalbul.jpg';
 import campNouImage from '@/assets/images/Đêm kỳ diệu Camp Nou.webp';
 import barcelonaPepImage from '@/assets/images/Barcelona của Pep.jpg';
@@ -210,6 +211,112 @@ const HistoryPage = () => {
               <p className="text-3xl font-black text-white mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>15,000+</p>
               <p className="text-xs uppercase tracking-wider text-white/50">Bàn thắng</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* The Ultimate Prize - Epic Banner */}
+      <section className="relative overflow-hidden my-16">
+        {/* Background Image */}
+        <div className="relative h-[500px] md:h-[600px]">
+          <img 
+            src={cupBackground} 
+            alt="UEFA Champions League Trophy" 
+            className="w-full h-full object-cover"
+          />
+          
+          {/* Animated Light Rays */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div 
+              className="absolute top-0 left-1/4 w-[2px] h-full bg-gradient-to-b from-cyan-400/60 via-transparent to-purple-500/60 blur-sm"
+              style={{ animation: 'pulse 3s ease-in-out infinite' }}
+            />
+            <div 
+              className="absolute top-0 right-1/3 w-[2px] h-full bg-gradient-to-b from-pink-400/60 via-transparent to-cyan-500/60 blur-sm"
+              style={{ animation: 'pulse 3s ease-in-out infinite', animationDelay: '1s' }}
+            />
+            <div 
+              className="absolute top-0 right-1/4 w-[2px] h-full bg-gradient-to-b from-purple-400/60 via-transparent to-pink-500/60 blur-sm"
+              style={{ animation: 'pulse 3s ease-in-out infinite', animationDelay: '2s' }}
+            />
+          </div>
+
+          {/* Gradient Overlays */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a1a] via-transparent to-[#0a0a1a]/80" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a1a]/70 via-transparent to-[#0a0a1a]/70" />
+          
+          {/* Glow Effect around trophy */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-[400px] h-[400px] rounded-full bg-cyan-500/10 blur-[100px] animate-pulse" />
+          </div>
+
+          {/* Content */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
+            {/* Badge */}
+            <div className="flex items-center gap-2 px-6 py-2 rounded-full bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-white/20 backdrop-blur-sm mb-6">
+              <Zap size={16} className="text-cyan-400" />
+              <span className="text-white text-xs uppercase tracking-[0.25em] font-bold">Đỉnh cao bóng đá</span>
+              <Zap size={16} className="text-purple-400" />
+            </div>
+
+            {/* Title */}
+            <h2 className="text-4xl md:text-6xl lg:text-7xl font-black mb-4" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-white to-purple-300">
+                THE ULTIMATE
+              </span>
+              <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500">
+                PRIZE
+              </span>
+            </h2>
+
+            {/* Description */}
+            <p className="text-white/80 text-lg md:text-xl max-w-2xl leading-relaxed mb-8">
+              7.5kg bạc nguyên chất, 74cm chiều cao — biểu tượng của vinh quang tột đỉnh. 
+              Chiếc cúp mà mọi cầu thủ đều mơ được <span className="text-cyan-400 font-semibold">nâng cao</span>.
+            </p>
+
+            {/* Trophy Stats */}
+            <div className="flex flex-wrap justify-center gap-6">
+              <div className="px-6 py-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+                <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                  7.5 KG
+                </p>
+                <p className="text-white/60 text-xs uppercase tracking-wider">Trọng lượng</p>
+              </div>
+              <div className="px-6 py-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+                <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                  74 CM
+                </p>
+                <p className="text-white/60 text-xs uppercase tracking-wider">Chiều cao</p>
+              </div>
+              <div className="px-6 py-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+                <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-400" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                  €20M
+                </p>
+                <p className="text-white/60 text-xs uppercase tracking-wider">Giá trị</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Animated particles */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {[...Array(30)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute rounded-full"
+                style={{
+                  width: `${2 + Math.random() * 4}px`,
+                  height: `${2 + Math.random() * 4}px`,
+                  background: ['#22d3ee', '#a855f7', '#ec4899', '#fbbf24'][Math.floor(Math.random() * 4)],
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                  opacity: Math.random() * 0.6 + 0.2,
+                  animation: `float-particle ${10 + Math.random() * 10}s ease-in-out infinite`,
+                  animationDelay: `${Math.random() * 5}s`
+                }}
+              />
+            ))}
           </div>
         </div>
       </section>

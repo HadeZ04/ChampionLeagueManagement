@@ -1,154 +1,340 @@
-import React, { useState, useEffect } from 'react';
-import { Clock, Activity, Users, Shield } from 'lucide-react';
-
-const HOME_TEAM_NAME = 'Đội nhà';
-const AWAY_TEAM_NAME = 'Đội khách';
-
-const timeline = [
-  { minute: 23, team: 'home', type: 'goal', player: 'Haaland' },
-  { minute: 45, team: 'away', type: 'goal', player: 'Vinicius' },
-  { minute: 67, team: 'home', type: 'goal', player: 'De Bruyne' }
-];
-
-const stats = [
-  { label: 'Kiểm soát bóng', home: 58, away: 42 },
-  { label: 'Sút trúng đích', home: 7, away: 4 },
-  { label: 'Tỉ lệ chuyền chính xác', home: 88, away: 81 }
-];
+import React, { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { Clock, Activity, Users, Shield, Calendar, Trophy, Play, ChevronRight, Filter, RefreshCw, Star, Zap } from 'lucide-react';
+import MatchesService from '../../../layers/application/services/MatchesService';
+import { toMatchStatusLabel, toCompetitionStageLabel } from '../../../shared/utils/vi';
+import bannerC1 from '@/assets/images/banner_c1.jpg';
 
 const MatchCenterPage = () => {
-  const [activeTab, setActiveTab] = useState('timeline');
-  const [scores, setScores] = useState({ home: 2, away: 1 });
+  const [matches, setMatches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all'); // all, live, upcoming, finished
+  const [selectedMatch, setSelectedMatch] = useState(null);
 
+  // Fetch matches
   useEffect(() => {
-    const timer = setInterval(() => {
-      setScores(prev => ({ ...prev, home: prev.home + 1 }));
-    }, 120000);
-    return () => clearInterval(timer);
+    const fetchMatches = async () => {
+      try {
+        setLoading(true);
+        const response = await MatchesService.getExternalMatches({ limit: 50 });
+        setMatches(response?.matches || []);
+      } catch (error) {
+        console.error('Failed to fetch matches:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMatches();
   }, []);
 
-  const renderStatBar = (homeValue, awayValue) => {
-    const total = homeValue + awayValue;
-    const homePercent = total ? (homeValue / total) * 100 : 0;
+  // Filter matches
+  const filteredMatches = useMemo(() => {
+    if (filter === 'all') return matches;
+    if (filter === 'live') return matches.filter(m => ['IN_PLAY', 'PAUSED', 'HALFTIME'].includes(m.status));
+    if (filter === 'upcoming') return matches.filter(m => ['SCHEDULED', 'TIMED'].includes(m.status));
+    if (filter === 'finished') return matches.filter(m => m.status === 'FINISHED');
+    return matches;
+  }, [matches, filter]);
 
-    return (
-      <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
-        <div className="h-full rounded-full bg-gradient-to-r from-[#0055FF] to-[#00E5FF]" style={{ width: `${homePercent}%` }} />
-      </div>
-    );
+  // Group by status
+  const liveMatches = useMemo(() => 
+    matches.filter(m => ['IN_PLAY', 'PAUSED', 'HALFTIME'].includes(m.status)), 
+    [matches]
+  );
+
+  const formatMatchTime = (utcDate) => {
+    if (!utcDate) return '--:--';
+    const date = new Date(utcDate);
+    return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatMatchDate = (utcDate) => {
+    if (!utcDate) return '';
+    const date = new Date(utcDate);
+    return date.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit' });
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'IN_PLAY':
+      case 'PAUSED':
+      case 'HALFTIME':
+        return 'bg-red-500 text-white';
+      case 'FINISHED':
+        return 'bg-white/20 text-white/80';
+      default:
+        return 'bg-cyan-500/80 text-white';
+    }
   };
 
   return (
-    <div className="space-y-10 py-6">
-      <section className="glass-card p-8 space-y-6">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
-          <div className="text-center lg:text-left">
-            <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Trung tâm trận đấu</p>
-            <h1 className="text-4xl font-display text-slate-900">{HOME_TEAM_NAME} gặp {AWAY_TEAM_NAME}</h1>
-            <p className="text-slate-500">Sân Etihad - Vòng 6</p>
-          </div>
-          <div className="flex items-center gap-6 text-4xl font-display text-slate-900">
-            <div className="text-center">
-              <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Chủ nhà</p>
-              <p className="score-flip score-flip-enter">{scores.home}</p>
+    <div className="min-h-screen">
+      {/* Epic Hero Banner */}
+      <section className="relative h-[500px] md:h-[600px] overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <img 
+            src={bannerC1} 
+            alt="Champions League 2025/26" 
+            className="w-full h-full object-cover object-top"
+          />
+          {/* Gradient Overlays */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a1a] via-[#0a0a1a]/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a1a]/80 via-transparent to-[#0a0a1a]/80" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,#0a0a1a_100%)] opacity-60" />
+        </div>
+
+        {/* Animated Stars */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(20)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-1 bg-cyan-400 rounded-full animate-pulse"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 60}%`,
+                animationDelay: `${Math.random() * 3}s`,
+                opacity: Math.random() * 0.7 + 0.3
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Content */}
+        <div className="relative h-full max-w-7xl mx-auto px-6 flex flex-col justify-end pb-12 md:pb-16">
+          {/* Badge */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-400/30 backdrop-blur-sm">
+              <Star size={14} className="text-cyan-400" />
+              <span className="text-cyan-400 text-xs uppercase tracking-[0.2em] font-bold">Mùa giải 2025/26</span>
             </div>
-            <p className="text-transparent bg-clip-text bg-gradient-to-r from-[#0055FF] to-[#00E5FF]">:</p>
-            <div className="text-center">
-              <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Đội khách</p>
-              <p className="score-flip score-flip-enter">{scores.away}</p>
-            </div>
+            {liveMatches.length > 0 && (
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/20 border border-red-500/30 backdrop-blur-sm">
+                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                <span className="text-red-400 text-xs uppercase tracking-[0.2em] font-bold">{liveMatches.length} Live</span>
+              </div>
+            )}
           </div>
-          <div className="status-pill">
-            <span className="live-dot" />
-            Trực tiếp 67'
+
+          {/* Title */}
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-4" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-200 to-white">
+              MATCH CENTER
+            </span>
+          </h1>
+
+          <p className="text-white/70 text-lg md:text-xl max-w-2xl mb-6">
+            Theo dõi tất cả trận đấu UEFA Champions League. Cập nhật tỷ số trực tiếp, thống kê và lịch thi đấu.
+          </p>
+
+          {/* Quick Stats */}
+          <div className="flex flex-wrap gap-4 md:gap-6">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
+              <Trophy size={18} className="text-amber-400" />
+              <span className="text-white font-bold">{matches.length}</span>
+              <span className="text-white/60 text-sm">Trận đấu</span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
+              <Zap size={18} className="text-cyan-400" />
+              <span className="text-white font-bold">{matches.reduce((sum, m) => sum + (m.scoreHome || 0) + (m.scoreAway || 0), 0)}</span>
+              <span className="text-white/60 text-sm">Bàn thắng</span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
+              <Users size={18} className="text-purple-400" />
+              <span className="text-white font-bold">36</span>
+              <span className="text-white/60 text-sm">CLB tham dự</span>
+            </div>
           </div>
         </div>
-        <div className="flex flex-wrap gap-3">
-          {(
-            [
-              { key: 'timeline', label: 'Diễn biến' },
-              { key: 'lineups', label: 'Đội hình' },
-              { key: 'stats', label: 'Thống kê' }
-            ]
-          ).map(tab => (
-            <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`date-chip ${activeTab === tab.key ? 'active' : ''}`}>
-              {tab.label}
-            </button>
-          ))}
+
+        {/* Bottom Fade */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#0a0a1a] to-transparent" />
+      </section>
+
+      {/* Filter Section */}
+      <section className="relative z-10 -mt-8">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-wrap gap-3 p-4 rounded-2xl bg-white/[0.03] backdrop-blur-md border border-white/[0.1]">
+            {[
+              { id: 'all', label: 'Tất cả', count: matches.length, icon: Trophy },
+              { id: 'live', label: 'Đang diễn ra', count: liveMatches.length, icon: Play },
+              { id: 'upcoming', label: 'Sắp diễn ra', count: matches.filter(m => ['SCHEDULED', 'TIMED'].includes(m.status)).length, icon: Calendar },
+              { id: 'finished', label: 'Đã kết thúc', count: matches.filter(m => m.status === 'FINISHED').length, icon: Activity },
+            ].map(tab => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setFilter(tab.id)}
+                  className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium text-sm transition-all ${
+                    filter === tab.id
+                      ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25'
+                      : 'bg-white/5 text-white/70 border border-white/10 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  <Icon size={16} />
+                  {tab.label}
+                  <span className={`px-2 py-0.5 rounded-full text-xs ${
+                    filter === tab.id ? 'bg-white/20' : 'bg-black/30'
+                  }`}>
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </section>
 
-      {activeTab === 'timeline' && (
-        <section className="glass-card p-8">
-          <div className="space-y-6">
-            {timeline.map(event => (
-              <div key={event.minute} className="flex items-center gap-4">
-                <div className="w-16 text-right text-slate-400 text-sm">{event.minute}'</div>
-                <div className="flex-1 h-px bg-white/10" />
-                <div className={`rounded-3xl px-4 py-2 border ${
-                  event.team === 'home' 
-                    ? 'border-cyan-400/30 bg-cyan-500/10' 
-                    : 'border-white/20 bg-[#020617]/80'
-                }`}>
-                  <p className="text-white font-semibold">{event.player}</p>
-                  <p className="text-xs uppercase tracking-[0.3em] text-slate-300">{event.team === 'home' ? HOME_TEAM_NAME : AWAY_TEAM_NAME}</p>
+      {/* Matches Grid */}
+      <section className="max-w-7xl mx-auto px-6 py-12">
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <RefreshCw className="w-12 h-12 text-cyan-400 animate-spin mx-auto mb-4" />
+              <p className="text-white/60">Đang tải dữ liệu trận đấu...</p>
+            </div>
+          </div>
+        ) : filteredMatches.length === 0 ? (
+          <div className="text-center py-20">
+            <Calendar className="w-16 h-16 text-white/20 mx-auto mb-4" />
+            <p className="text-white/60 text-lg">Không có trận đấu nào</p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredMatches.map((match) => (
+              <div
+                key={match.id}
+                className={`group relative rounded-2xl overflow-hidden backdrop-blur-md border transition-all hover:scale-[1.02] cursor-pointer ${
+                  ['IN_PLAY', 'PAUSED', 'HALFTIME'].includes(match.status)
+                    ? 'bg-red-500/10 border-red-500/30 hover:border-red-400/50'
+                    : 'bg-white/[0.05] border-white/[0.1] hover:border-cyan-400/30'
+                }`}
+                onClick={() => setSelectedMatch(selectedMatch?.id === match.id ? null : match)}
+              >
+                {/* Status badge */}
+                <div className="absolute top-4 right-4 z-10">
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(match.status)}`}>
+                    {toMatchStatusLabel(match.status)}
+                  </span>
                 </div>
+
+                {/* Live indicator */}
+                {['IN_PLAY', 'PAUSED', 'HALFTIME'].includes(match.status) && (
+                  <div className="absolute top-4 left-4 z-10">
+                    <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse shadow-lg shadow-red-500/50" />
+                  </div>
+                )}
+
+                <div className="p-6">
+                  {/* Date & Stage */}
+                  <div className="flex items-center justify-between mb-4 text-xs text-white/50">
+                    <span>{formatMatchDate(match.utcDate)}</span>
+                    <span>{toCompetitionStageLabel(match.stage || match.groupName)}</span>
+                  </div>
+
+                  {/* Teams */}
+                  <div className="space-y-4">
+                    {/* Home Team */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center overflow-hidden">
+                          {match.homeTeamLogo ? (
+                            <img src={match.homeTeamLogo} alt="" className="w-7 h-7 object-contain" />
+                          ) : (
+                            <Shield size={20} className="text-white/40" />
+                          )}
+                        </div>
+                        <span className="text-white font-semibold">{match.homeTeamName || match.homeTeamTla}</span>
+                      </div>
+                      <span className="text-2xl font-black text-white" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                        {match.scoreHome ?? '-'}
+                      </span>
+                    </div>
+
+                    {/* Away Team */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center overflow-hidden">
+                          {match.awayTeamLogo ? (
+                            <img src={match.awayTeamLogo} alt="" className="w-7 h-7 object-contain" />
+                          ) : (
+                            <Shield size={20} className="text-white/40" />
+                          )}
+                        </div>
+                        <span className="text-white font-semibold">{match.awayTeamName || match.awayTeamTla}</span>
+                      </div>
+                      <span className="text-2xl font-black text-white" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                        {match.scoreAway ?? '-'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Time */}
+                  <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-white/50 text-sm">
+                      <Clock size={14} />
+                      <span>{formatMatchTime(match.utcDate)}</span>
+                    </div>
+                    {match.venue && (
+                      <span className="text-white/40 text-xs truncate max-w-[150px]">{match.venue}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Expanded details */}
+                {selectedMatch?.id === match.id && (
+                  <div className="px-6 pb-6 pt-2 border-t border-white/10 animate-fadeIn">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="text-center p-3 rounded-xl bg-white/5">
+                        <p className="text-white/50 text-xs mb-1">Vòng đấu</p>
+                        <p className="text-white font-semibold">{match.matchday || '-'}</p>
+                      </div>
+                      <div className="text-center p-3 rounded-xl bg-white/5">
+                        <p className="text-white/50 text-xs mb-1">Trọng tài</p>
+                        <p className="text-white font-semibold">{match.referee || '-'}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
-        </section>
-      )}
+        )}
+      </section>
 
-      {activeTab === 'stats' && (
-        <section className="glass-card p-8 space-y-4">
-          {stats.map(stat => (
-            <div key={stat.label} className="space-y-2">
-              <div className="flex items-center justify-between text-sm text-slate-500">
-                <span>{stat.label}</span>
-                <span>{stat.home} - {stat.away}</span>
-              </div>
-              {renderStatBar(stat.home, stat.away)}
-            </div>
-          ))}
-        </section>
-      )}
-
-      {activeTab === 'lineups' && (
-        <section className="grid md:grid-cols-2 gap-6">
-          {[HOME_TEAM_NAME, AWAY_TEAM_NAME].map((team, idx) => (
-            <div key={team} className="glass-card p-6 space-y-3">
-              <div className="flex items-center gap-2 text-slate-300">
-                <Shield size={16} /> {team}
-              </div>
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{idx === 0 ? '4-3-3' : '4-4-2'}</p>
-              <div className="grid grid-cols-2 gap-3">
-                {(idx === 0
-                  ? ['Ederson', 'Walker', 'Dias', 'Stones', 'Akanji', 'Rodri', 'Silva', 'De Bruyne', 'Foden', 'Alvarez', 'Haaland']
-                  : ['Courtois', 'Carvajal', 'Rudiger', 'Nacho', 'Mendy', 'Valverde', 'Modric', 'Bellingham', 'Kroos', 'Rodrygo', 'Vinicius']
-                ).map(player => (
-                  <div key={player} className="rounded-2xl border border-white/10 px-3 py-2 text-sm bg-[#020617]/60 text-white">{player}</div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </section>
-      )}
-
-      <section className="glass-card p-8 grid md:grid-cols-3 gap-6">
-        <div className="rounded-3xl border border-white/10 p-6 text-center bg-[#020617]/60 backdrop-blur-sm">
-          <Clock className="mx-auto mb-3 text-cyan-400" />
-          <p className="text-2xl font-semibold text-white">67'</p>
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Thời gian</p>
-        </div>
-        <div className="rounded-3xl border border-white/10 p-6 text-center bg-[#020617]/60 backdrop-blur-sm">
-          <Activity className="mx-auto mb-3 text-blue-400" />
-          <p className="text-2xl font-semibold text-white">17</p>
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Tổng cú sút</p>
-        </div>
-        <div className="rounded-3xl border border-white/10 p-6 text-center bg-[#020617]/60 backdrop-blur-sm">
-          <Users className="mx-auto mb-3 text-purple-400" />
-          <p className="text-2xl font-semibold text-white">55,321</p>
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Khán giả</p>
+      {/* Stats Summary */}
+      <section className="max-w-7xl mx-auto px-6 pb-16">
+        <div className="grid md:grid-cols-4 gap-4">
+          <div className="p-6 rounded-2xl backdrop-blur-md bg-white/[0.05] border border-white/[0.1] text-center group hover:border-amber-400/30 transition-all">
+            <Trophy className="w-8 h-8 text-amber-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
+            <p className="text-3xl font-black text-white mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+              {matches.length}
+            </p>
+            <p className="text-xs uppercase tracking-wider text-white/50">Tổng trận đấu</p>
+          </div>
+          <div className="p-6 rounded-2xl backdrop-blur-md bg-white/[0.05] border border-white/[0.1] text-center group hover:border-red-400/30 transition-all">
+            <Play className="w-8 h-8 text-red-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
+            <p className="text-3xl font-black text-white mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+              {liveMatches.length}
+            </p>
+            <p className="text-xs uppercase tracking-wider text-white/50">Đang diễn ra</p>
+          </div>
+          <div className="p-6 rounded-2xl backdrop-blur-md bg-white/[0.05] border border-white/[0.1] text-center group hover:border-cyan-400/30 transition-all">
+            <Activity className="w-8 h-8 text-cyan-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
+            <p className="text-3xl font-black text-white mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+              {matches.reduce((sum, m) => sum + (m.scoreHome || 0) + (m.scoreAway || 0), 0)}
+            </p>
+            <p className="text-xs uppercase tracking-wider text-white/50">Tổng bàn thắng</p>
+          </div>
+          <div className="p-6 rounded-2xl backdrop-blur-md bg-white/[0.05] border border-white/[0.1] text-center group hover:border-purple-400/30 transition-all">
+            <Calendar className="w-8 h-8 text-purple-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
+            <p className="text-3xl font-black text-white mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+              {matches.filter(m => m.status === 'FINISHED').length}
+            </p>
+            <p className="text-xs uppercase tracking-wider text-white/50">Đã hoàn thành</p>
+          </div>
         </div>
       </section>
     </div>

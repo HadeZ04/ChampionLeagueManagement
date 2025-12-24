@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Play, ArrowRight, Trophy, Users, Activity, CalendarDays, Shield, Star, Clock, Award, History } from 'lucide-react';
+import { Play, ArrowRight, Trophy, Users, Activity, CalendarDays, Shield, Star, Clock, Award, History, Zap } from 'lucide-react';
 import uefaWordmark from '@/assets/images/UEFA_CHAMPIONS_LEAGUE.png';
 import trophyImage from '@/assets/images/cup.avif';
+import footballImage from '@/assets/images/trai_bong.jpg';
 import PlayersService from '../../../layers/application/services/PlayersService';
 import MatchesService from '../../../layers/application/services/MatchesService';
 import TeamsService from '../../../layers/application/services/TeamsService';
@@ -929,6 +930,116 @@ const HomePage = () => {
             </div>
           </div>
         )}
+        </div>
+      </section>
+
+      {/* ========== OFFICIAL MATCH BALL SECTION ========== */}
+      <section className="relative rounded-[32px] overflow-hidden backdrop-blur-xl bg-white/[0.03] border border-white/[0.1]">
+        <div className="relative grid lg:grid-cols-2 gap-8 p-8 md:p-12">
+          {/* Left - Ball Image */}
+          <div className="relative flex items-center justify-center min-h-[350px]">
+            {/* Glow Effect */}
+            <div className="absolute w-[200px] h-[200px] rounded-full bg-rose-500/25 blur-[60px] animate-pulse" />
+            <div className="absolute w-[150px] h-[150px] rounded-full bg-amber-500/15 blur-[40px] animate-pulse" style={{ animationDelay: '0.5s' }} />
+            
+            {/* Ball Container with animations */}
+            <div 
+              className="relative z-10"
+              style={{ animation: 'float 4s ease-in-out infinite' }}
+            >
+              {/* Ball Image */}
+              <img 
+                src={footballImage} 
+                alt="Official Match Ball" 
+                className="w-[250px] md:w-[300px] h-auto object-contain drop-shadow-[0_20px_40px_rgba(239,68,68,0.4)] hover:scale-110 transition-transform duration-500"
+                style={{ 
+                  filter: 'brightness(1.1) contrast(1.05)',
+                  animation: 'bounce-rotate 6s ease-in-out infinite',
+                }}
+              />
+              
+              {/* Shadow beneath ball */}
+              <div 
+                className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-[50%] h-3 bg-black/20 rounded-full blur-sm"
+                style={{ animation: 'pulse 4s ease-in-out infinite' }}
+              />
+              
+              {/* Rotating ring effects */}
+              <div 
+                className="absolute rounded-full border-2 border-dashed border-rose-400/30 pointer-events-none"
+                style={{ 
+                  animation: 'spin 20s linear infinite',
+                  width: '120%',
+                  height: '120%',
+                  top: '-10%',
+                  left: '-10%'
+                }}
+              />
+              <div 
+                className="absolute rounded-full border border-cyan-400/20 pointer-events-none"
+                style={{ 
+                  animation: 'spin 30s linear infinite reverse',
+                  width: '140%',
+                  height: '140%',
+                  top: '-20%',
+                  left: '-20%'
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Right - Content */}
+          <div className="flex flex-col justify-center space-y-6">
+            {/* Badge */}
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-rose-500/10 border border-rose-400/20 backdrop-blur-sm">
+                <Zap size={14} className="text-rose-400" />
+                <span className="text-rose-300 text-xs uppercase tracking-[0.2em] font-bold">Official Match Ball</span>
+              </div>
+            </div>
+
+            {/* Title */}
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-white leading-tight" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-300 via-white to-rose-300">
+                ADIDAS UCL
+              </span>
+              <br />
+              <span className="text-white/90">PRO 2024/25</span>
+            </h2>
+
+            {/* Description */}
+            <p className="text-white/70 text-lg leading-relaxed max-w-lg">
+              Quả bóng chính thức của UEFA Champions League mùa giải 2024/25. 
+              Thiết kế độc đáo với họa tiết <span className="text-rose-400 font-semibold">ngôi sao</span> biểu tượng 
+              và công nghệ <span className="text-cyan-400 font-semibold">Connected Ball</span>.
+            </p>
+
+            {/* Specs */}
+            <div className="flex flex-wrap gap-4">
+              <div className="px-5 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08]">
+                <p className="text-rose-400 font-bold text-lg">68-70 cm</p>
+                <p className="text-white/50 text-xs">Chu vi</p>
+              </div>
+              <div className="px-5 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08]">
+                <p className="text-cyan-400 font-bold text-lg">420-445g</p>
+                <p className="text-white/50 text-xs">Trọng lượng</p>
+              </div>
+              <div className="px-5 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08]">
+                <p className="text-amber-400 font-bold text-lg">FIFA Pro</p>
+                <p className="text-white/50 text-xs">Chứng nhận</p>
+              </div>
+            </div>
+
+            {/* CTA */}
+            <Link 
+              to="/match-center" 
+              className="inline-flex items-center gap-3 px-6 py-4 rounded-2xl bg-gradient-to-r from-rose-500 to-rose-600 text-white font-bold hover:from-rose-400 hover:to-rose-500 transition-all shadow-lg shadow-rose-500/30 w-fit group"
+            >
+              <Play size={20} />
+              Xem trận đấu trực tiếp
+              <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
         </div>
       </section>
 

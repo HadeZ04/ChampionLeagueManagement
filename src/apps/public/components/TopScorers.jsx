@@ -1,152 +1,165 @@
-import React from 'react';
-import { Target, TrendingUp } from 'lucide-react';
-
-const topScorers = [
-  {
-    rank: 1,
-    player: 'Robert Lewandowski',
-    team: 'Barcelona',
-    teamLogo: 'https://img.uefa.com/imgml/TP/teams/logos/50x50/50080.png',
-    country: 'POL',
-    goals: 7,
-    matches: 6,
-    minutes: 487,
-    penalties: 1,
-    trend: 'up'
-  },
-  {
-    rank: 2,
-    player: 'Viktor Gyokeres',
-    team: 'Sporting CP',
-    teamLogo: 'https://img.uefa.com/imgml/TP/teams/logos/50x50/52747.png',
-    country: 'SWE',
-    goals: 5,
-    matches: 6,
-    minutes: 540,
-    penalties: 2,
-    trend: 'same'
-  },
-  {
-    rank: 3,
-    player: 'Raphinha',
-    team: 'Barcelona',
-    teamLogo: 'https://img.uefa.com/imgml/TP/teams/logos/50x50/50080.png',
-    country: 'BRA',
-    goals: 4,
-    matches: 6,
-    minutes: 456,
-    penalties: 0,
-    trend: 'up'
-  },
-  {
-    rank: 4,
-    player: 'Harry Kane',
-    team: 'Bayern Munich',
-    teamLogo: 'https://img.uefa.com/imgml/TP/teams/logos/50x50/50037.png',
-    country: 'ENG',
-    goals: 4,
-    matches: 6,
-    minutes: 523,
-    penalties: 1,
-    trend: 'down'
-  },
-  {
-    rank: 5,
-    player: 'Serhou Guirassy',
-    team: 'Borussia Dortmund',
-    teamLogo: 'https://img.uefa.com/imgml/TP/teams/logos/50x50/52758.png',
-    country: 'GUI',
-    goals: 4,
-    matches: 5,
-    minutes: 398,
-    penalties: 0,
-    trend: 'up'
-  }
-];
-
-const getTrendIcon = (trend) => {
-  if (trend === 'up') {
-    return <TrendingUp size={14} className="text-[#1DBF73]" />;
-  }
-  if (trend === 'down') {
-    return <TrendingUp size={14} className="text-[#F05252] rotate-180" />;
-  }
-  return <div className="w-3.5 h-3.5 bg-slate-200 rounded-full" />;
-};
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { Target, TrendingUp, RefreshCw, AlertCircle } from 'lucide-react';
+import PlayersService from '../../../layers/application/services/PlayersService';
 
 const TopScorers = () => {
+  const [topScorers, setTopScorers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchTopScorers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await PlayersService.listPlayers({
+        sortBy: 'goals',
+        sortOrder: 'desc',
+        limit: 5
+      });
+      setTopScorers(response?.players || []);
+    } catch (err) {
+      console.error('Failed to fetch top scorers:', err);
+      setError('Không thể tải dữ liệu vua phá lưới');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTopScorers();
+  }, []);
+
+  const getTrendIcon = (trend) => {
+    if (trend === 'up') {
+      return <TrendingUp size={14} className="text-emerald-400" />;
+    }
+    if (trend === 'down') {
+      return <TrendingUp size={14} className="text-rose-400 rotate-180" />;
+    }
+    return <div className="w-3.5 h-3.5 bg-white/20 rounded-full" />;
+  };
+
+  // Calculate total goals from data
+  const totalGoals = topScorers.reduce((sum, p) => sum + (p.goals || 0), 0);
+
   return (
-    <div className="glass-card p-6">
+    <div className="rounded-2xl backdrop-blur-md bg-white/[0.05] border border-white/[0.1] p-6">
       <div className="flex items-center space-x-3 mb-6">
-        <Target className="text-[#0055FF]" size={24} />
-        <h2 className="text-2xl font-bold text-slate-900">Vua phá lưới</h2>
+        <Target className="text-cyan-400" size={24} />
+        <h2 className="text-xl font-bold text-white">Vua phá lưới</h2>
         <div className="flex-1" />
-        <button className="text-[#0055FF] hover:text-[#8454FF] text-sm font-medium transition-colors">
+        <Link 
+          to="/players" 
+          className="text-cyan-400 hover:text-cyan-300 text-sm font-medium transition-colors"
+        >
           Xem tất cả →
-        </button>
+        </Link>
       </div>
 
-      <div className="space-y-4">
-        {topScorers.map((scorer) => (
-          <div key={scorer.rank} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 bg-slate-50/70 hover:bg-white hover:shadow-sm transition-colors">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <span className="text-2xl font-bold text-slate-900 w-8 text-center">
-                  {scorer.rank}
-                </span>
-                {getTrendIcon(scorer.trend)}
+      {/* Error State */}
+      {error && !loading && (
+        <div className="text-center py-6 bg-rose-500/10 rounded-xl border border-rose-500/30 mb-4">
+          <AlertCircle className="mx-auto mb-2 text-rose-400" size={28} />
+          <p className="text-sm text-white/80 mb-2">{error}</p>
+          <button
+            onClick={fetchTopScorers}
+            className="text-xs text-cyan-400 hover:text-cyan-300 underline"
+          >
+            Thử lại
+          </button>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {loading && (
+        <div className="flex items-center justify-center py-8">
+          <RefreshCw className="w-6 h-6 text-cyan-400 animate-spin" />
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && !error && topScorers.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-white/60">Chưa có dữ liệu</p>
+        </div>
+      )}
+
+      {/* Scorers List */}
+      {!loading && topScorers.length > 0 && (
+        <div className="space-y-3">
+          {topScorers.map((scorer, index) => (
+            <Link
+              key={scorer.id}
+              to={`/players/${scorer.id}`}
+              className="flex items-center justify-between p-4 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.08] hover:border-cyan-400/30 transition-all group"
+            >
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <span className={`text-xl font-bold w-8 text-center ${
+                    index === 0 ? 'text-amber-400' : 
+                    index === 1 ? 'text-slate-300' : 
+                    index === 2 ? 'text-amber-600' : 'text-white/60'
+                  }`}>
+                    {index + 1}
+                  </span>
+                  {getTrendIcon('up')}
+                </div>
+
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">
+                    {(scorer.name || scorer.displayName)?.charAt(0) || '?'}
+                  </span>
+                </div>
+
+                <div>
+                  <div className="font-semibold text-white group-hover:text-cyan-400 transition-colors">
+                    {scorer.name || scorer.displayName || 'Unknown'}
+                  </div>
+                  <div className="text-white/50 text-sm flex items-center space-x-2">
+                    <span>{scorer.nationality || '—'}</span>
+                    <span>•</span>
+                    <span>{scorer.teamName || 'N/A'}</span>
+                  </div>
+                </div>
               </div>
 
-              <img
-                src={scorer.teamLogo}
-                alt={scorer.team}
-                className="w-8 h-8 object-contain"
-                onError={(e) => { e.currentTarget.style.display = 'none'; }}
-              />
-
-              <div>
-                <div className="font-bold text-slate-900">
-                  {scorer.player}
+              <div className="text-right">
+                <div className="text-2xl font-black text-cyan-400" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                  {scorer.goals || 0}
                 </div>
-                <div className="text-slate-400 text-sm flex items-center space-x-2">
-                  <span>{scorer.country}</span>
-                  <span>-</span>
-                  <span>{scorer.team}</span>
+                <div className="text-white/50 text-xs">
+                  bàn thắng
                 </div>
               </div>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {/* Stats Summary */}
+      {!loading && topScorers.length > 0 && (
+        <div className="mt-6 pt-4 border-t border-white/10">
+          <div className="grid grid-cols-3 gap-4 text-center text-sm">
+            <div>
+              <div className="text-xl font-bold text-white">{totalGoals}</div>
+              <div className="text-white/50 text-xs">Tổng bàn Top 5</div>
             </div>
-
-            <div className="text-right">
-              <div className="text-2xl font-bold text-[#0055FF]">{scorer.goals}</div>
-              <div className="text-slate-400 text-sm">
-                {scorer.matches} trận • TB {Math.round(scorer.minutes / scorer.matches)} phút/trận
+            <div>
+              <div className="text-xl font-bold text-white">
+                {topScorers[0]?.goals || 0}
               </div>
-              {scorer.penalties > 0 && (
-                <div className="text-slate-400 text-xs">
-                  {scorer.penalties} bàn phạt đền
-                </div>
-              )}
+              <div className="text-white/50 text-xs">Cao nhất</div>
             </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-6 pt-4 border-t border-slate-100">
-        <div className="grid grid-cols-3 gap-4 text-center text-sm">
-          <div>
-            <div className="text-xl font-bold text-slate-900">312</div>
-            <div className="text-slate-400">Tổng bàn thắng</div>
-          </div>
-          <div>
-            <div className="text-xl font-bold text-slate-900">2.89</div>
-            <div className="text-slate-400">Bàn/trận</div>
-          </div>
-          <div>
-            <div className="text-xl font-bold text-slate-900">67%</div>
-            <div className="text-slate-400">Từ bóng sống</div>
+            <div>
+              <div className="text-xl font-bold text-white">
+                {(totalGoals / 5).toFixed(1)}
+              </div>
+              <div className="text-white/50 text-xs">TB/người</div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

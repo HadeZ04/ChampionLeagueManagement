@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Trophy, Download, Share2, TrendingUp, Users, Target } from 'lucide-react';
-import StandingsTable from '../components/StandingsTable';
+import { Trophy, Download, Share2, TrendingUp, TrendingDown, Minus, Users, Target, Award, AlertCircle, RefreshCw, Shield } from 'lucide-react';
+import TeamsService from '../../../layers/application/services/TeamsService';
 import TopScorers from '../components/TopScorers';
 import UpcomingMatches from '../components/UpcomingMatches';
-import TeamsService from '../../../layers/application/services/TeamsService';
 import logger from '../../../shared/utils/logger';
+import fanAtmosphere from '@/assets/images/championleague_newcastle.webp';
 
 const phases = [
   { id: 'league', name: 'Vòng phân hạng', icon: Users },
@@ -12,10 +12,10 @@ const phases = [
 ];
 
 const groups = [
-  { id: 'all', name: 'Tất cả', count: 36 },
-  { id: 'qualified', name: 'Vào thẳng', count: 8 },
-  { id: 'playoff', name: 'Tranh vé', count: 16 },
-  { id: 'eliminated', name: 'Bị loại', count: 12 }
+  { id: 'all', name: 'Tất cả' },
+  { id: 'qualified', name: 'Vào thẳng' },
+  { id: 'playoff', name: 'Tranh vé' },
+  { id: 'eliminated', name: 'Bị loại' }
 ];
 
 const StandingsPage = () => {
@@ -89,32 +89,72 @@ const StandingsPage = () => {
     }));
   }, [standings]);
 
+  // Filter standings by group
+  const filteredStandings = useMemo(() => {
+    if (selectedGroup === 'all') return formattedStandings;
+    return formattedStandings.filter(team => {
+      if (selectedGroup === 'qualified') return team.position <= 8;
+      if (selectedGroup === 'playoff') return team.position > 8 && team.position <= 24;
+      if (selectedGroup === 'eliminated') return team.position > 24;
+      return true;
+    });
+  }, [formattedStandings, selectedGroup]);
+
+  // Group counts
+  const groupCounts = useMemo(() => ({
+    all: formattedStandings.length,
+    qualified: formattedStandings.filter(t => t.position <= 8).length,
+    playoff: formattedStandings.filter(t => t.position > 8 && t.position <= 24).length,
+    eliminated: formattedStandings.filter(t => t.position > 24).length
+  }), [formattedStandings]);
+
+  const getChangeIcon = (change) => {
+    if (change > 0) return <TrendingUp size={14} className="text-emerald-400" />;
+    if (change < 0) return <TrendingDown size={14} className="text-rose-400" />;
+    return <Minus size={14} className="text-white/30" />;
+  };
+
+  const getStatusColor = (position) => {
+    if (position <= 8) return 'border-l-emerald-500 bg-emerald-500/5';
+    if (position <= 24) return 'border-l-amber-500 bg-amber-500/5';
+    return 'border-l-rose-500 bg-rose-500/5';
+  };
+
   return (
-    <div className="min-h-screen bg-transparent">
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Hero Section */}
-        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0F172A] via-[#1E3A8A] to-[#4C1D95] p-6 md:p-8 shadow-[0_0_60px_rgba(0,0,0,0.6)] border border-white/10 backdrop-blur-sm">
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0YzAtMi4yMSAxLjc5LTQgNC00czQgMS43OSA0IDQtMS43OSA0LTQgNC00LTEuNzktNC00em0wIDEwYzAtMi4yMSAxLjc5LTQgNC00czQgMS43OSA0IDQtMS43OSA0LTQgNC00LTEuNzktNC00eiIvPjwvZz48L2c+PC9zdmc+')] opacity-30"></div>
+        {/* Hero Section with Flag Background */}
+        <section className="relative overflow-hidden rounded-2xl border border-white/10">
+          {/* Background Image */}
+          <div className="absolute inset-0">
+            <img 
+              src={fanAtmosphere} 
+              alt="Champions League" 
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a1a]/95 via-[#0a0a1a]/70 to-[#0a0a1a]/50" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a1a]/80 to-transparent" />
+          </div>
           
-          <div className="relative flex flex-col lg:flex-row gap-8 items-start lg:items-center justify-between">
+          <div className="relative p-6 md:p-8 flex flex-col lg:flex-row gap-8 items-start lg:items-center justify-between">
             <div className="flex-1 space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white text-sm">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-white text-sm">
                 <Trophy size={14} className="text-cyan-400" />
-                <span className="uppercase tracking-wider font-bold">Cúp C1 châu Âu</span>
+                <span className="uppercase tracking-wider font-bold">Champions League</span>
               </div>
               
-              <h1 className="text-3xl md:text-4xl font-extrabold text-white leading-tight">
-                Bảng xếp hạng vòng phân hạng
+              <h1 className="text-3xl md:text-4xl font-black text-white leading-tight" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                Bảng xếp hạng
               </h1>
               
-              <p className="mt-2 text-sm md:text-base text-slate-200/85 max-w-2xl leading-relaxed">
+              <p className="mt-2 text-sm md:text-base text-white/70 max-w-2xl leading-relaxed">
                 Theo dõi suất đi tiếp, nhóm tranh vé và phong độ gần đây dựa trên dữ liệu giải đấu.
               </p>
               
               {selectedSeason && standings?.updated && (
-                <div className="flex flex-wrap gap-4 text-sm text-slate-300">
+                <div className="flex flex-wrap gap-4 text-sm text-white/60">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.6)]"></div>
+                    <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-lg shadow-cyan-400/60"></div>
                     <span>Mùa {selectedSeason}/{Number(selectedSeason) + 1}</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -127,7 +167,7 @@ const StandingsPage = () => {
 
             <div className="flex flex-wrap gap-3">
               <select
-                className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium cursor-pointer transition focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
+                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 text-white font-medium cursor-pointer transition focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
                 value={selectedSeason}
                 onChange={(event) => setSelectedSeason(event.target.value)}
                 disabled={isLoadingSeasons || seasons.length === 0}
@@ -141,12 +181,12 @@ const StandingsPage = () => {
                   ))}
               </select>
               
-              <button className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium transition flex items-center gap-2 group">
-                <Download size={18} className="group-hover:animate-bounce" />
+              <button className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 text-white font-medium transition flex items-center gap-2">
+                <Download size={18} />
                 <span>Xuất</span>
               </button>
               
-              <button className="px-4 py-2 rounded-full bg-gradient-to-r from-[#2563EB] to-[#22C55E] text-white font-medium hover:shadow-lg transition flex items-center gap-2">
+              <button className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition flex items-center gap-2">
                 <Share2 size={18} />
                 <span>Chia sẻ</span>
               </button>
@@ -155,20 +195,21 @@ const StandingsPage = () => {
         </section>
 
         {/* Phase Selector */}
-        <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full p-1 mt-6">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl p-1">
           {phases.map((phase) => {
             const Icon = phase.icon;
             return (
               <button
                 key={phase.id}
                 onClick={() => setSelectedPhase(phase.id)}
-                className={`inline-flex items-center gap-2 px-5 py-2 rounded-full font-semibold text-sm transition-all duration-200 ${
+                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 ${
                   selectedPhase === phase.id
-                    ? 'bg-gradient-to-r from-[#2563EB] to-[#06B6D4] text-white shadow-sm'
-                    : 'bg-[#020617]/80 text-slate-200/85 border border-white/10 hover:bg-white/10 hover:text-white'
+                      ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25'
+                      : 'text-white/70 hover:bg-white/10 hover:text-white'
                 }`}
               >
-                <Icon size={18} className={selectedPhase === phase.id ? 'text-white' : 'text-slate-300'} />
+                  <Icon size={18} />
                 <span>{phase.name}</span>
               </button>
             );
@@ -176,40 +217,41 @@ const StandingsPage = () => {
         </div>
 
         {/* Group Filter */}
-        <div className="mt-4 flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2">
           {groups.map((group) => (
             <button
               key={group.id}
               onClick={() => setSelectedGroup(group.id)}
-              className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full font-medium text-sm border transition-all duration-200 ${
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm border transition-all duration-200 ${
                 selectedGroup === group.id
-                  ? 'bg-white/15 text-white border-white/25 shadow-sm'
-                  : 'bg-[#020617]/70 text-slate-200/85 border-white/10 hover:bg-white/10 hover:text-white'
+                    ? 'bg-white/15 text-white border-white/25'
+                    : 'bg-white/5 text-white/60 border-white/10 hover:bg-white/10 hover:text-white'
               }`}
             >
               <span>{group.name}</span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-black/40 text-slate-100">
-                {group.count}
+                <span className="text-xs px-2 py-0.5 rounded-full bg-black/30 text-white/80">
+                  {groupCounts[group.id] || 0}
               </span>
             </button>
           ))}
+          </div>
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="rounded-2xl bg-rose-500/20 backdrop-blur-xl border-2 border-rose-400/30 p-6 flex items-center gap-4 animate-shake">
-            <div className="w-12 h-12 rounded-full bg-rose-500/30 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-rose-400/30">
-              <Trophy size={24} className="text-rose-300" />
+          <div className="rounded-2xl bg-rose-500/10 backdrop-blur-md border border-rose-500/30 p-6 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-rose-500/20 flex items-center justify-center flex-shrink-0">
+              <AlertCircle size={24} className="text-rose-400" />
             </div>
             <div className="flex-1">
               <h3 className="font-bold text-white">Lỗi tải dữ liệu</h3>
-              <p className="text-white/80">{error}</p>
+              <p className="text-white/70">{error}</p>
             </div>
             <button
               onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-all duration-300 font-semibold flex items-center gap-2"
+              className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all duration-300 font-semibold flex items-center gap-2"
             >
-              <TrendingUp size={16} />
+              <RefreshCw size={16} />
               Thử lại
             </button>
           </div>
@@ -220,33 +262,212 @@ const StandingsPage = () => {
           {/* Standings Table */}
           <div className="space-y-6">
             {isLoadingStandings ? (
-                <div className="rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 p-16 flex flex-col items-center justify-center gap-4 shadow-2xl">
-                  <div className="w-16 h-16 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-                  <p className="text-white/80 font-medium">Đang tải bảng xếp hạng...</p>
+              <div className="rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 p-16 flex flex-col items-center justify-center gap-4">
+                <RefreshCw className="w-12 h-12 text-cyan-400 animate-spin" />
+                <p className="text-white/70 font-medium">Đang tải bảng xếp hạng...</p>
+              </div>
+            ) : (
+              <div className="rounded-2xl overflow-hidden backdrop-blur-md bg-white/[0.03] border border-white/[0.1]">
+                {/* Header */}
+                <div className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 px-6 py-5 border-b border-white/10">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.3em] text-white/60 font-semibold">Vòng phân hạng</p>
+                      <p className="text-xl font-bold text-white mt-1">Tổng quan bảng xếp hạng</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-white/60">Cập nhật lúc</p>
+                      <p className="text-sm font-semibold text-white">{new Date().toLocaleTimeString('vi-VN')}</p>
+                    </div>
+                  </div>
                 </div>
-              ) : (
-                <StandingsTable standings={formattedStandings} selectedGroup={selectedGroup} />
+
+                {/* Legend */}
+                <div className="px-6 py-3 border-b border-white/10 flex flex-wrap gap-4 text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                    <span className="text-white/60">Vào thẳng (1-8)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                    <span className="text-white/60">Vòng tranh vé (9-24)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-rose-500"></div>
+                    <span className="text-white/60">Bị loại (25-36)</span>
+                  </div>
+                </div>
+
+                {/* Table */}
+                <div className="overflow-x-auto">
+                  <table className="min-w-full">
+                    <thead>
+                      <tr className="border-b border-white/10">
+                        {[
+                          { key: '#', label: '#', width: 'w-16' },
+                          { key: 'team', label: 'Đội', width: 'min-w-[200px]' },
+                          { key: 'p', label: 'ST', width: 'w-12' },
+                          { key: 'w', label: 'T', width: 'w-12' },
+                          { key: 'd', label: 'H', width: 'w-12' },
+                          { key: 'l', label: 'B', width: 'w-12' },
+                          { key: 'gf', label: 'BT', width: 'w-12' },
+                          { key: 'ga', label: 'BTh', width: 'w-12' },
+                          { key: 'gd', label: 'HS', width: 'w-14' },
+                          { key: 'pts', label: 'Đ', width: 'w-14' },
+                          { key: 'form', label: 'Phong độ', width: 'w-36' }
+                        ].map(col => (
+                          <th 
+                            key={col.key} 
+                            className={`${col.width} py-4 px-3 text-left text-xs font-bold uppercase tracking-wider text-white/50`}
+                          >
+                            {col.label}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {filteredStandings.length ? filteredStandings.map((team) => (
+                        <tr
+                          key={team.position}
+                          className={`transition-all duration-200 hover:bg-white/5 border-l-4 ${getStatusColor(team.position)}`}
+                        >
+                          {/* Position */}
+                          <td className="py-4 px-3">
+                            <div className="flex items-center gap-2">
+                              <div className={`
+                                flex items-center justify-center w-8 h-8 rounded-lg font-bold text-sm
+                                ${team.position <= 8 
+                                  ? 'bg-emerald-500/20 text-emerald-400' 
+                                  : team.position <= 24 
+                                  ? 'bg-amber-500/20 text-amber-400'
+                                  : 'bg-rose-500/20 text-rose-400'
+                                }
+                              `}>
+                                {team.position}
+                              </div>
+                              {getChangeIcon(team.change)}
+                            </div>
+                          </td>
+
+                          {/* Team */}
+                          <td className="py-4 px-3">
+                            <div className="flex items-center gap-3 min-w-[200px]">
+                              <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                                {team.logo ? (
+                                  <img 
+                                    src={team.logo} 
+                                    alt={team.team} 
+                                    className="w-7 h-7 object-contain"
+                                  />
+                                ) : (
+                                  <Shield size={20} className="text-white/40" />
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-semibold text-white truncate">
+                                  {team.team}
+                                </p>
+                                <p className="text-xs text-white/50">{team.country}</p>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Stats */}
+                          {[
+                            team.played,
+                            team.won,
+                            team.drawn,
+                            team.lost,
+                            team.goalsFor,
+                            team.goalsAgainst
+                          ].map((stat, idx) => (
+                            <td key={idx} className="py-4 px-3 text-center text-white/80 font-medium text-sm">
+                              {stat}
+                            </td>
+                          ))}
+
+                          {/* Goal Difference */}
+                          <td className="py-4 px-3 text-center">
+                            <span className={`
+                              inline-flex items-center justify-center px-2 py-1 rounded-lg font-bold text-sm
+                              ${team.goalDifference > 0 
+                                ? 'bg-emerald-500/20 text-emerald-400' 
+                                : team.goalDifference < 0 
+                                ? 'bg-rose-500/20 text-rose-400'
+                                : 'bg-white/10 text-white/60'
+                              }
+                            `}>
+                              {team.goalDifference > 0 ? `+${team.goalDifference}` : team.goalDifference}
+                            </span>
+                          </td>
+
+                          {/* Points */}
+                          <td className="py-4 px-3 text-center">
+                            <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/30 to-blue-500/30 text-cyan-300 font-bold text-sm border border-cyan-400/20">
+                              {team.points}
+                            </span>
+                          </td>
+
+                          {/* Form */}
+                          <td className="py-4 px-3">
+                            <div className="flex gap-1">
+                              {(team.form || []).slice(-5).map((result, idx) => (
+                                <div
+                                  key={idx}
+                                  className={`
+                                    w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold
+                                    ${result === 'W' 
+                                      ? 'bg-emerald-500/20 text-emerald-400' 
+                                      : result === 'D' 
+                                      ? 'bg-white/10 text-white/60'
+                                      : 'bg-rose-500/20 text-rose-400'
+                                    }
+                                  `}
+                                  title={result === 'W' ? 'Thắng' : result === 'D' ? 'Hòa' : 'Thua'}
+                                >
+                                  {result === 'W' ? 'T' : result === 'D' ? 'H' : 'B'}
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      )) : (
+                        <tr>
+                          <td colSpan={11} className="text-center py-16">
+                            <div className="flex flex-col items-center gap-3">
+                              <div className="w-16 h-16 rounded-xl bg-white/5 flex items-center justify-center">
+                                <Trophy size={32} className="text-white/30" />
+                              </div>
+                              <p className="text-white/50 font-medium">Chưa có bảng xếp hạng</p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
               )}
 
             {/* Qualification Info Card */}
-            <div className="rounded-3xl bg-white/5 backdrop-blur-xl p-6 border border-white/10 shadow-2xl hover:shadow-blue-500/20 hover:border-white/20 transition-all duration-300">
+            <div className="rounded-2xl backdrop-blur-md bg-white/[0.03] p-6 border border-white/[0.1]">
               <div className="flex items-start gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-400/30">
-                  <Trophy size={28} className="text-white" />
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-cyan-500/30 to-blue-500/30 flex items-center justify-center flex-shrink-0 border border-cyan-400/20">
+                  <Trophy size={28} className="text-cyan-400" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-bold text-white mb-2">Thể lệ đi tiếp</h3>
-                  <div className="space-y-2 text-sm text-white/80">
+                  <h3 className="text-lg font-bold text-white mb-3">Thể lệ đi tiếp</h3>
+                  <div className="space-y-2 text-sm text-white/70">
                     <p className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/50"></span>
+                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                       <span><strong className="text-white">Top 8 đội</strong> vào thẳng vòng 1/8</span>
                     </p>
                     <p className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-amber-400 shadow-lg shadow-amber-400/50"></span>
+                      <span className="w-2 h-2 rounded-full bg-amber-500"></span>
                       <span><strong className="text-white">Các đội hạng 9-24</strong> vào vòng tranh vé</span>
                     </p>
                     <p className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-rose-400 shadow-lg shadow-rose-400/50"></span>
+                      <span className="w-2 h-2 rounded-full bg-rose-500"></span>
                       <span><strong className="text-white">12 đội cuối</strong> bị loại</span>
                     </p>
                   </div>
@@ -262,29 +483,6 @@ const StandingsPage = () => {
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-10px); }
-          75% { transform: translateX(10px); }
-        }
-
-        .animate-shake {
-          animation: shake 0.5s ease-in-out;
-        }
-      `}</style>
     </div>
   );
 };

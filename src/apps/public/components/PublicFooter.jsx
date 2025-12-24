@@ -1,13 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Twitter, Instagram, Youtube, Mail, ArrowRight } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Youtube, Mail, ArrowRight, Trophy, Star } from 'lucide-react';
+import footerBg from '@/assets/images/footter.jpg';
 
 const footerLinks = {
   competitions: [
     { name: 'Champions League', to: '/standings' },
-    { name: 'Lịch thi đấu', to: '/matches' },
+    { name: 'Lịch thi đấu', to: '/match-center' },
     { name: 'Đội bóng', to: '/teams' },
-    { name: 'Thống kê', to: '/stats' },
+    { name: 'Lịch sử', to: '/history' },
   ],
   about: [
     { name: 'Về chúng tôi', to: '#' },
@@ -27,50 +28,91 @@ const socialLinks = [
 const PublicFooter = () => {
   return (
     <footer className="relative mt-20">
-      {/* Top gradient line */}
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+      {/* Background Image */}
+      <div className="absolute inset-0 overflow-hidden">
+        <img 
+          src={footerBg} 
+          alt="" 
+          className="w-full h-full object-cover object-top"
+        />
+        {/* Gradient Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a1a] via-[#0a0a1a]/90 to-[#0a0a1a]/70" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a1a]/80 via-transparent to-[#0a0a1a]/80" />
+      </div>
       
       {/* Main footer content */}
-      <div className="backdrop-blur-xl bg-white/[0.03] border-t border-white/[0.08]">
-        <div className="max-w-6xl mx-auto px-6 lg:px-8 py-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+      <div className="relative">
+        {/* Top CTA Section */}
+        <div className="border-b border-white/10">
+          <div className="max-w-6xl mx-auto px-6 lg:px-8 py-12">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+              <div className="text-center md:text-left">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm mb-4">
+                  <Star size={14} className="text-amber-400" />
+                  <span className="text-white text-xs uppercase tracking-[0.2em] font-bold">Trải nghiệm đỉnh cao</span>
+                </div>
+                <h3 className="text-2xl md:text-3xl font-black text-white" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                  Theo dõi những <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">ngôi sao sáng nhất</span>
+                </h3>
+              </div>
+              
+              {/* Newsletter */}
+              <div className="flex gap-2 w-full md:w-auto">
+                <input 
+                  type="email" 
+                  placeholder="Nhập email của bạn" 
+                  className="flex-1 md:w-64 px-5 py-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/50 text-sm focus:outline-none focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/20 transition-all"
+                />
+                <button className="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold text-sm hover:shadow-lg hover:shadow-cyan-500/30 transition-all whitespace-nowrap">
+                  Đăng ký
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Links Section */}
+        <div className="max-w-6xl mx-auto px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
             
             {/* Brand Column */}
             <div className="lg:col-span-2 space-y-6">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/25">
-                  <span className="text-white font-bold text-lg">CL</span>
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                  <Trophy size={24} className="text-white" />
                 </div>
                 <div>
-                  <p className="text-white font-bold text-xl">Champions League</p>
-                  <p className="text-white/50 text-sm">UEFA Official</p>
+                  <p className="text-white font-black text-2xl" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                    CHAMPIONS LEAGUE
+                  </p>
+                  <p className="text-cyan-400 text-sm font-medium">UEFA Official Platform</p>
                 </div>
               </div>
               
-              <p className="text-white/60 text-sm leading-relaxed max-w-md">
-                Trải nghiệm đỉnh cao bóng đá châu Âu với lịch thi đấu trực tiếp, 
-                thống kê chi tiết và cập nhật mới nhất từ giải đấu danh giá nhất thế giới.
+              <p className="text-white/70 text-sm leading-relaxed max-w-md">
+                Nơi những ngôi sao sáng nhất châu Âu cùng tranh tài. Theo dõi lịch thi đấu, 
+                kết quả trực tiếp và thống kê chi tiết từ giải đấu danh giá nhất thế giới.
               </p>
 
-              {/* Newsletter */}
-              <div className="space-y-3">
-                <p className="text-white/80 text-sm font-medium">Đăng ký nhận tin</p>
-                <div className="flex gap-2 max-w-sm">
-                  <input 
-                    type="email" 
-                    placeholder="Email của bạn" 
-                    className="flex-1 px-4 py-3 rounded-xl bg-white/[0.06] border border-white/[0.1] text-white placeholder-white/40 text-sm focus:outline-none focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/20 transition-all"
-                  />
-                  <button className="px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-400 text-white font-medium text-sm hover:shadow-lg hover:shadow-blue-500/25 transition-all flex items-center gap-2">
-                    <ArrowRight size={16} />
-                  </button>
-                </div>
+              {/* Social Links */}
+              <div className="flex items-center gap-3">
+                {socialLinks.map((social) => (
+                  <a
+                    key={social.label}
+                    href={social.href}
+                    aria-label={social.label}
+                    className="w-11 h-11 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white/70 hover:text-white hover:bg-gradient-to-r hover:from-cyan-500 hover:to-blue-500 hover:border-transparent transition-all group"
+                  >
+                    <social.icon size={18} className="group-hover:scale-110 transition-transform" />
+                  </a>
+                ))}
               </div>
             </div>
 
             {/* Links Column 1 */}
             <div>
-              <h4 className="text-white font-semibold text-sm uppercase tracking-wider mb-6">
+              <h4 className="text-white font-bold text-sm uppercase tracking-wider mb-6 flex items-center gap-2">
+                <div className="w-1 h-4 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-full" />
                 Khám phá
               </h4>
               <ul className="space-y-3">
@@ -78,7 +120,7 @@ const PublicFooter = () => {
                   <li key={link.name}>
                     <Link 
                       to={link.to} 
-                      className="text-white/60 hover:text-white text-sm transition-colors inline-flex items-center gap-2 group"
+                      className="text-white/60 hover:text-cyan-400 text-sm transition-colors inline-flex items-center gap-2 group"
                     >
                       {link.name}
                       <ArrowRight size={12} className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
@@ -90,7 +132,8 @@ const PublicFooter = () => {
 
             {/* Links Column 2 */}
             <div>
-              <h4 className="text-white font-semibold text-sm uppercase tracking-wider mb-6">
+              <h4 className="text-white font-bold text-sm uppercase tracking-wider mb-6 flex items-center gap-2">
+                <div className="w-1 h-4 bg-gradient-to-b from-purple-400 to-pink-500 rounded-full" />
                 Thông tin
               </h4>
               <ul className="space-y-3">
@@ -98,7 +141,7 @@ const PublicFooter = () => {
                   <li key={link.name}>
                     <Link 
                       to={link.to} 
-                      className="text-white/60 hover:text-white text-sm transition-colors inline-flex items-center gap-2 group"
+                      className="text-white/60 hover:text-cyan-400 text-sm transition-colors inline-flex items-center gap-2 group"
                     >
                       {link.name}
                       <ArrowRight size={12} className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
@@ -111,26 +154,21 @@ const PublicFooter = () => {
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-white/[0.06]">
+        <div className="border-t border-white/10">
           <div className="max-w-6xl mx-auto px-6 lg:px-8 py-6">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               {/* Copyright */}
-              <p className="text-white/40 text-sm">
+              <p className="text-white/50 text-sm">
                 © 2025 UEFA Champions League. All rights reserved.
               </p>
 
-              {/* Social Links */}
-              <div className="flex items-center gap-3">
-                {socialLinks.map((social) => (
-                  <a
-                    key={social.label}
-                    href={social.href}
-                    aria-label={social.label}
-                    className="w-9 h-9 rounded-full bg-white/[0.05] border border-white/[0.1] flex items-center justify-center text-white/60 hover:text-white hover:bg-white/[0.1] hover:border-white/20 transition-all"
-                  >
-                    <social.icon size={16} />
-                  </a>
-                ))}
+              {/* Bottom Links */}
+              <div className="flex items-center gap-6 text-sm">
+                <a href="#" className="text-white/50 hover:text-white transition-colors">Chính sách</a>
+                <span className="text-white/20">|</span>
+                <a href="#" className="text-white/50 hover:text-white transition-colors">Điều khoản</a>
+                <span className="text-white/20">|</span>
+                <a href="#" className="text-white/50 hover:text-white transition-colors">Cookie</a>
               </div>
             </div>
           </div>
