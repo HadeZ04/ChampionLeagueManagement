@@ -412,7 +412,9 @@ export const listMatches = async (filters: MatchFilters = {}): Promise<Paginated
       SELECT COUNT(1) AS total
       FROM matches m
       INNER JOIN season_team_participants hstp ON m.home_season_team_id = hstp.season_team_id
+      INNER JOIN teams ht ON hstp.team_id = ht.team_id
       INNER JOIN season_team_participants astp ON m.away_season_team_id = astp.season_team_id
+      INNER JOIN teams at ON astp.team_id = at.team_id
       ${whereClause};
     `,
     params

@@ -25,7 +25,7 @@ router.get("/", async (req, res, next) => {
     const params: Record<string, unknown> = { offset, limit };
 
     if (search) {
-      conditions.push("(LOWER(full_name) LIKE LOWER(@search) OR LOWER(display_name) LIKE LOWER(@search))");
+      conditions.push("(LOWER(p.full_name) LIKE LOWER(@search) OR LOWER(p.display_name) LIKE LOWER(@search) OR LOWER(t.name) LIKE LOWER(@search))");
       params.search = `%${search}%`;
     }
 
@@ -89,6 +89,7 @@ router.get("/", async (req, res, next) => {
       `
         SELECT COUNT(*) as total
         FROM players p
+        LEFT JOIN teams t ON p.current_team_id = t.team_id
         ${whereClause};
       `,
       params,

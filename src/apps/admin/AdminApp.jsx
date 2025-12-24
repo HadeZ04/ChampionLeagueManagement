@@ -28,6 +28,7 @@ import SeasonPlayersManagement from './pages/SeasonPlayersManagement';
 import SeasonPlayerApprovalPage from './pages/SeasonPlayerApprovalPage'
 import MyTeamPage from './pages/MyTeamPage'
 import PlayerRegistrationsPage from './pages/PlayerRegistrationsPage'
+import ScheduleManagement from './pages/ScheduleManagement'
 
 
 const AdminApp = ({ onLogout, currentUser }) => {
@@ -211,6 +212,14 @@ const AdminApp = ({ onLogout, currentUser }) => {
         />
 
 
+        <Route
+          path="schedule"
+          element={
+            <AccessGuard permission="manage_matches" currentUser={currentUser}>
+              <ScheduleManagement />
+            </AccessGuard>
+          }
+        />
         <Route
           path="matches-today"
           element={

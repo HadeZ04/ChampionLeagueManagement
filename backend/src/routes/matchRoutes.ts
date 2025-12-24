@@ -468,6 +468,36 @@ router.post("/:id/results", ...requireMatchManagement, async (req, res, next) =>
   }
 });
 
+// Bulk delete all matches (optionally filtered by seasonId)
+// NOTE: This route MUST be placed BEFORE /:id to avoid matching "bulk" as an ID
+router.delete("/bulk", ...requireMatchManagement, async (req, res, next) => {
+  try {
+    const seasonId = req.query.seasonId ? Number(req.query.seasonId) : undefined;
+    
+    let whereClause = "";
+    const params: Record<string, unknown> = {};
+    
+    if (seasonId && Number.isInteger(seasonId) && seasonId > 0) {
+      whereClause = "WHERE season_id = @seasonId";
+      params.seasonId = seasonId;
+    }
+    
+    const result = await query(
+      `DELETE FROM matches ${whereClause};`,
+      params
+    );
+    
+    const deletedCount = result.rowsAffected?.[0] ?? 0;
+    
+    res.json({ 
+      message: `Successfully deleted ${deletedCount} matches`,
+      count: deletedCount 
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.delete("/:id", ...requireMatchManagement, async (req, res, next) => {
   try {
     const id = Number(req.params.id);

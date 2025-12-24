@@ -19,6 +19,7 @@ import PlayerLookup from '../../pages/PlayerLookup';
 import LoginPage from './pages/LoginPage';
 import PortalHomePage from './pages/PortalHomePage';
 import PortalGuard from './components/PortalGuard';
+import HistoryPage from './pages/HistoryPage';
 import { Navigate } from 'react-router-dom';
 
 const PublicApp = () => {
@@ -31,6 +32,7 @@ const PublicApp = () => {
         <Route path="teams" element={<TeamsPage />} />
         <Route path="player-lookup" element={<PlayerLookup />} />
         <Route path="stats" element={<StatsPage />} />
+        <Route path="history" element={<HistoryPage />} />
         <Route path="news" element={<NewsPage />} />
         <Route path="video" element={<VideoPage />} />
         <Route path="gaming" element={<GamingPage />} />

@@ -10,12 +10,35 @@ class PlayersService {
       nationality: filters.nationality || '',
       season: filters.season || '',
       page: filters.page || 1,
-      limit: filters.limit || APP_CONFIG.UI.PAGINATION.DEFAULT_PAGE_SIZE
+      limit: filters.limit || APP_CONFIG.UI.PAGINATION.DEFAULT_PAGE_SIZE,
+      ...(filters.sortBy ? { sortBy: filters.sortBy } : {}),
+      ...(filters.sortOrder ? { sortOrder: filters.sortOrder } : {})
     }
 
     const response = await ApiService.get(APP_CONFIG.API.ENDPOINTS.PLAYERS.LIST, params)
+    
+    // Map backend field names to frontend field names
+    const players = (response?.data || []).map(player => ({
+      id: player.player_id,
+      name: player.full_name || player.display_name,
+      displayName: player.display_name,
+      dateOfBirth: player.date_of_birth,
+      placeOfBirth: player.place_of_birth,
+      nationality: player.nationality,
+      position: player.preferred_position,
+      secondaryPosition: player.secondary_position,
+      heightCm: player.height_cm,
+      weightKg: player.weight_kg,
+      dominantFoot: player.dominant_foot,
+      teamId: player.current_team_id,
+      teamName: player.team_name,
+      shirtNumber: player.shirt_number || null,
+      goals: player.goals || 0,
+      assists: player.assists || 0
+    }))
+    
     return {
-      players: response?.data || [],
+      players,
       total: response?.total || 0,
       pagination: response?.pagination || { page: params.page, limit: params.limit, totalPages: 1 }
     }
