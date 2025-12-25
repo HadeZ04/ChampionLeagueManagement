@@ -9,10 +9,14 @@ import {
   AlertCircle,
   CheckCircle,
   Calculator,
-  Loader
+  Loader,
+  Users,
+  UserPlus,
+  Info
 } from 'lucide-react';
 import StandingsAdminService from '../../../layers/application/services/StandingsAdminService';
 import SeasonService from '../../../layers/application/services/SeasonService';
+import ApiService from '../../../layers/application/services/ApiService';
 import SeasonFormModal from '../components/SeasonFormModal';
 import TeamStandingsEditor from '../components/TeamStandingsEditor';
 import ConfirmationModal from '../components/ConfirmationModal';
@@ -38,6 +42,14 @@ const StandingsManagement = () => {
   const [seasonModalLoading, setSeasonModalLoading] = useState(false);
   const [seasonToDelete, setSeasonToDelete] = useState(null);
   const [isSeasonDeleting, setIsSeasonDeleting] = useState(false);
+  
+  // Add Teams Modal State
+  const [showAddTeamsModal, setShowAddTeamsModal] = useState(false);
+  const [availableTeams, setAvailableTeams] = useState([]);
+  const [selectedTeamIds, setSelectedTeamIds] = useState([]);
+  const [isLoadingTeams, setIsLoadingTeams] = useState(false);
+  const [isAddingTeams, setIsAddingTeams] = useState(false);
+  const [participatingTeams, setParticipatingTeams] = useState([]);
 
   // Load seasons on mount
   useEffect(() => {
@@ -249,6 +261,84 @@ const StandingsManagement = () => {
     }
   };
 
+  // Load participating teams for a season
+  const loadParticipatingTeams = async () => {
+    if (!selectedSeason) return;
+    try {
+      const response = await ApiService.get(`/seasons/${selectedSeason}/participants`);
+      setParticipatingTeams(response.data || []);
+    } catch (err) {
+      console.error('Failed to load participating teams:', err);
+    }
+  };
+
+  // Load all available teams for adding to season
+  const loadAvailableTeams = async () => {
+    setIsLoadingTeams(true);
+    try {
+      const response = await ApiService.get('/teams?limit=1000');
+      const allTeams = response.data || [];
+      // Filter out teams already in the season
+      const participatingIds = new Set(participatingTeams.map(t => t.team_id));
+      const available = allTeams.filter(t => !participatingIds.has(t.team_id));
+      setAvailableTeams(available);
+    } catch (err) {
+      setError('Không thể tải danh sách đội: ' + err.message);
+    } finally {
+      setIsLoadingTeams(false);
+    }
+  };
+
+  // Handle opening the add teams modal
+  const handleOpenAddTeamsModal = async () => {
+    await loadParticipatingTeams();
+    setShowAddTeamsModal(true);
+    setSelectedTeamIds([]);
+    await loadAvailableTeams();
+  };
+
+  // Handle adding selected teams to season
+  const handleAddTeamsToSeason = async () => {
+    if (selectedTeamIds.length === 0) return;
+    
+    setIsAddingTeams(true);
+    setError(null);
+    setSuccess(null);
+    
+    try {
+      const response = await ApiService.post(`/seasons/${selectedSeason}/participants/bulk`, {
+        teamIds: selectedTeamIds,
+        status: 'active'
+      });
+      setSuccess(`Đã thêm ${response.data?.addedCount || selectedTeamIds.length} đội vào mùa giải!`);
+      setShowAddTeamsModal(false);
+      setSelectedTeamIds([]);
+      await loadStandings();
+    } catch (err) {
+      setError('Thêm đội thất bại: ' + err.message);
+    } finally {
+      setIsAddingTeams(false);
+    }
+  };
+
+  // Toggle team selection
+  const toggleTeamSelection = (teamId) => {
+    setSelectedTeamIds(prev => 
+      prev.includes(teamId) 
+        ? prev.filter(id => id !== teamId)
+        : [...prev, teamId]
+    );
+  };
+
+  // Select all teams
+  const selectAllTeams = () => {
+    if (selectedTeamIds.length === availableTeams.length) {
+      setSelectedTeamIds([]);
+    } else {
+      setSelectedTeamIds(availableTeams.map(t => t.team_id));
+    }
+  };
+
   const getStatusBadge = (position) => {
     if (position <= 8) {
       return <span className="px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded">Qualified</span>;
@@ -274,6 +364,15 @@ const StandingsManagement = () => {
         </div>
 
         <div className="flex gap-2">
+          <button
+            onClick={handleOpenAddTeamsModal}
+            disabled={!selectedSeason || isProcessing}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <UserPlus size={20} />
+            Thêm Đội
+          </button>
+
           <button
             onClick={() => setShowInitModal(true)}
             disabled={!selectedSeason || isProcessing}
@@ -390,8 +489,37 @@ const StandingsManagement = () => {
             ) : standings.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
                 <Trophy size={48} className="mx-auto mb-4 text-gray-400" />
-                <p>Chưa có dữ liệu bảng xếp hạng</p>
-                <p className="text-sm mt-2">Nhấn "Khởi Tạo" để tạo bảng xếp hạng</p>
+                <p className="text-lg font-medium">Chưa có dữ liệu bảng xếp hạng</p>
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg max-w-md mx-auto">
+                  <div className="flex items-start gap-3">
+                    <Info size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-left text-sm text-blue-800">
+                      <p className="font-medium mb-1">Hướng dẫn khởi tạo:</p>
+                      <ol className="list-decimal list-inside space-y-1 text-blue-700">
+                        <li>Thêm các đội bóng vào mùa giải</li>
+                        <li>Nhấn "Khởi Tạo" để tạo bảng xếp hạng</li>
+                        <li>Nhấn "Tính Toán" sau khi có kết quả trận đấu</li>
+                      </ol>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 flex justify-center gap-3">
+                  <button
+                    onClick={handleOpenAddTeamsModal}
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                  >
+                    <UserPlus size={18} />
+                    Thêm Đội Vào Mùa Giải
+                  </button>
+                  <button
+                    onClick={() => setShowInitModal(true)}
+                    disabled={isProcessing}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  >
+                    <Plus size={18} />
+                    Khởi Tạo
+                  </button>
+                </div>
               </div>
             ) : (
               <table className="min-w-full divide-y divide-gray-200">
@@ -569,6 +697,130 @@ const StandingsManagement = () => {
         confirmButtonClass="bg-red-600 hover:bg-red-700"
         isProcessing={isSeasonDeleting}
       />
+
+      {/* Add Teams Modal */}
+      {showAddTeamsModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4">
+            <div className="fixed inset-0 bg-black/50" onClick={() => setShowAddTeamsModal(false)} />
+            <div className="relative bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <Users size={20} className="text-indigo-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">Thêm Đội Vào Mùa Giải</h3>
+                    <p className="text-sm text-gray-500">Chọn các đội để thêm vào mùa giải</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowAddTeamsModal(false)}
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <span className="text-xl">&times;</span>
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="p-6 overflow-y-auto max-h-[50vh]">
+                {isLoadingTeams ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader className="animate-spin text-indigo-600" size={32} />
+                    <span className="ml-3 text-gray-600">Đang tải danh sách đội...</span>
+                  </div>
+                ) : availableTeams.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Users size={48} className="mx-auto mb-4 text-gray-400" />
+                    <p className="font-medium">Không có đội nào có thể thêm</p>
+                    <p className="text-sm mt-1">Tất cả các đội đã tham gia mùa giải này hoặc chưa có đội nào trong hệ thống.</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Select All */}
+                    <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedTeamIds.length === availableTeams.length}
+                          onChange={selectAllTeams}
+                          className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+                        />
+                        <span className="font-medium text-gray-700">
+                          Chọn tất cả ({availableTeams.length} đội)
+                        </span>
+                      </label>
+                      <span className="text-sm text-indigo-600 font-medium">
+                        Đã chọn: {selectedTeamIds.length}
+                      </span>
+                    </div>
+
+                    {/* Teams List */}
+                    <div className="space-y-2">
+                      {availableTeams.map(team => (
+                        <label
+                          key={team.team_id}
+                          className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                            selectedTeamIds.includes(team.team_id)
+                              ? 'bg-indigo-50 border-indigo-300'
+                              : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedTeamIds.includes(team.team_id)}
+                            onChange={() => toggleTeamSelection(team.team_id)}
+                            className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+                          />
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900">{team.name}</p>
+                            {team.short_name && (
+                              <p className="text-sm text-gray-500">{team.short_name}</p>
+                            )}
+                          </div>
+                          {team.country && (
+                            <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded">
+                              {team.country}
+                            </span>
+                          )}
+                        </label>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+                <button
+                  onClick={() => setShowAddTeamsModal(false)}
+                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleAddTeamsToSeason}
+                  disabled={selectedTeamIds.length === 0 || isAddingTeams}
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isAddingTeams ? (
+                    <>
+                      <Loader size={18} className="animate-spin" />
+                      Đang thêm...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus size={18} />
+                      Thêm {selectedTeamIds.length} Đội
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

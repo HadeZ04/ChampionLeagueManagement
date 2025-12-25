@@ -8,6 +8,13 @@ import {
   listPlayerStats,
   updatePlayerStat,
 } from "../services/playerStatsService";
+import {
+  getCardStatsBySeason,
+  getTopScorersBySeason,
+  getMotmStatsBySeason,
+  getSuspendedPlayers,
+  getSeasonStatsOverview,
+} from "../services/playerStatsAggregateService";
 
 const router = Router();
 const requireStatsRead = [
@@ -163,6 +170,89 @@ router.get("/overview", ...requireStatsRead, async (req, res, next) => {
       topPerformers: {},
       updatedAt: new Date().toISOString(),
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ============ NEW AGGREGATED STATS ENDPOINTS ============
+
+/**
+ * Get top scorers (Vua phá lưới) for a season
+ */
+router.get("/season/:seasonId/top-scorers", async (req, res, next) => {
+  try {
+    const seasonId = parseInt(req.params.seasonId, 10);
+    if (isNaN(seasonId)) {
+      return res.status(400).json({ message: "Invalid season ID" });
+    }
+    const limit = parseInt(req.query.limit as string, 10) || 20;
+    const data = await getTopScorersBySeason(seasonId, limit);
+    res.json({ data });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * Get card statistics (Thẻ vàng/đỏ) for a season
+ */
+router.get("/season/:seasonId/cards", async (req, res, next) => {
+  try {
+    const seasonId = parseInt(req.params.seasonId, 10);
+    if (isNaN(seasonId)) {
+      return res.status(400).json({ message: "Invalid season ID" });
+    }
+    const data = await getCardStatsBySeason(seasonId);
+    res.json({ data });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * Get Man of the Match statistics for a season
+ */
+router.get("/season/:seasonId/man-of-match", async (req, res, next) => {
+  try {
+    const seasonId = parseInt(req.params.seasonId, 10);
+    if (isNaN(seasonId)) {
+      return res.status(400).json({ message: "Invalid season ID" });
+    }
+    const data = await getMotmStatsBySeason(seasonId);
+    res.json({ data });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * Get suspended players (Cầu thủ bị treo giò) for a season
+ */
+router.get("/season/:seasonId/suspended", async (req, res, next) => {
+  try {
+    const seasonId = parseInt(req.params.seasonId, 10);
+    if (isNaN(seasonId)) {
+      return res.status(400).json({ message: "Invalid season ID" });
+    }
+    const data = await getSuspendedPlayers(seasonId);
+    res.json({ data });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * Get comprehensive stats overview for a season
+ */
+router.get("/season/:seasonId/overview", async (req, res, next) => {
+  try {
+    const seasonId = parseInt(req.params.seasonId, 10);
+    if (isNaN(seasonId)) {
+      return res.status(400).json({ message: "Invalid season ID" });
+    }
+    const data = await getSeasonStatsOverview(seasonId);
+    res.json({ data });
   } catch (error) {
     next(error);
   }

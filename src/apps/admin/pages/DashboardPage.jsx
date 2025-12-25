@@ -13,11 +13,19 @@ import {
   Trophy,
   User,
   Users,
-  Loader2
+  Loader2,
+  Sparkles,
+  Zap,
+  Star,
+  Activity,
+  Play,
+  ChevronRight
 } from 'lucide-react'
 import StatsService from '../../../layers/application/services/StatsService'
 import AuditLogService from '../../../layers/application/services/AuditLogService'
 import MatchesService from '../../../layers/application/services/MatchesService'
+import bannerImage from '@/assets/images/banner_c1.jpg'
+import uclLogo from '@/assets/images/UEFA_CHAMPIONS_LEAGUE.png'
 
 const DashboardPage = () => {
   const [overview, setOverview] = useState(null)
@@ -137,36 +145,82 @@ const DashboardPage = () => {
 
   return (
     <div className="space-y-8 pb-10">
-      <div className="admin-surface px-6 py-5">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border border-blue-500/20 shadow-inner">
-              <Trophy size={22} className="text-cyan-300" />
+      {/* Hero Banner Section */}
+      <div className="relative rounded-3xl ucl-hero-card">
+        {/* Background Image with Overlay */}
+        <div className="absolute inset-0 overflow-hidden rounded-3xl">
+          <img 
+            src={bannerImage} 
+            alt="Champions League" 
+            className="w-full h-full object-cover object-top"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0a1628]/95 via-[#0a1628]/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628] via-transparent to-transparent" />
+        </div>
+        
+        {/* Decorative Elements */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-1/4 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl" />
+        
+        {/* Content */}
+        <div className="relative z-10 p-8 pt-10 flex items-center justify-between min-h-[300px]">
+          <div className="max-w-xl">
+            <div className="flex items-center gap-3 mb-6">
+              <img src={uclLogo} alt="UCL" className="w-12 h-12 object-contain" />
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-full border border-blue-400/30">
+                <Sparkles size={14} className="text-cyan-400 animate-pulse" />
+                <span className="text-xs font-bold uppercase tracking-widest text-cyan-300">Mùa giải 2024/25</span>
+              </div>
             </div>
-            <div>
-              <h2 className="text-xl font-black tracking-wider uppercase text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-blue-200">
-                Bảng điều khiển
+            
+            <div className="mb-4">
+              <h1 className="text-4xl md:text-5xl font-black uppercase leading-relaxed">
+                <span className="text-white drop-shadow-lg" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
+                  Bảng điều khiển
+                </span>
+              </h1>
+              <h2 className="text-3xl md:text-4xl font-black uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300 mt-1">
+                Champions League
               </h2>
-              <p className="text-xs text-blue-200/40 font-medium">Dữ liệu cập nhật từ hệ thống.</p>
+            </div>
+            
+            <p className="text-blue-200/60 text-lg max-w-md">
+              Quản lý toàn diện giải đấu danh giá nhất châu Âu. Theo dõi trận đấu, đội bóng và cầu thủ.
+            </p>
+            
+            <div className="flex items-center gap-4 mt-6">
+              <button className="group relative px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-xl font-bold text-white overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/30 hover:scale-105">
+                <span className="relative z-10 flex items-center gap-2">
+                  <Play size={18} fill="currentColor" />
+                  Xem trận đấu hôm nay
+                </span>
+                <span className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
+              <button className="px-6 py-3 bg-white/10 backdrop-blur-sm rounded-xl font-semibold text-white border border-white/20 hover:bg-white/20 transition-all duration-300 flex items-center gap-2">
+                <Activity size={18} />
+                Thống kê
+              </button>
             </div>
           </div>
-
-          <div className="flex items-center gap-3">
-            <div className="hidden md:flex items-center bg-white/5 px-3 py-2 rounded-full border border-white/10 w-64">
-              <Search size={16} className="text-blue-200/40 mr-2" />
-              <input
-                type="text"
-                placeholder="Tìm kiếm..."
-                className="bg-transparent border-none outline-none text-sm w-full text-slate-100 placeholder:text-blue-200/30"
-              />
+          
+          {/* Right side decorative trophy/stats */}
+          <div className="hidden lg:flex flex-col items-end gap-4">
+            <div className="flex items-center gap-3 px-4 py-2 bg-black/30 backdrop-blur-md rounded-xl border border-white/10">
+              <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-lg flex items-center justify-center shadow-lg shadow-amber-500/30">
+                <Trophy size={20} className="text-white" />
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-black text-white">{overview?.totals?.matches ?? '—'}</div>
+                <div className="text-xs text-blue-200/50 uppercase tracking-wider">Trận đã đấu</div>
+              </div>
             </div>
-            <button className="relative p-2 rounded-full hover:bg-white/5 transition-colors">
-              <Bell size={20} className="text-blue-200/60" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border border-[#0a0f1e]"></span>
-            </button>
-            <div className="w-9 h-9 rounded-full bg-gradient-to-r from-blue-500 via-cyan-500 to-indigo-600 p-[2px]">
-              <div className="w-full h-full rounded-full bg-[#0a0f1e] flex items-center justify-center border border-white/10">
-                <User size={16} className="text-cyan-300" />
+            <div className="flex items-center gap-3 px-4 py-2 bg-black/30 backdrop-blur-md rounded-xl border border-white/10">
+              <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-lg flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                <Target size={20} className="text-white" />
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-black text-white">{overview?.totals?.goals ?? '—'}</div>
+                <div className="text-xs text-blue-200/50 uppercase tracking-wider">Tổng bàn thắng</div>
               </div>
             </div>
           </div>
@@ -174,62 +228,104 @@ const DashboardPage = () => {
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 rounded-lg border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-          <AlertCircle size={16} />
+        <div className="flex items-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-5 py-4 text-sm text-rose-200 backdrop-blur-sm">
+          <AlertCircle size={18} />
           {error}
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Stats Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         {statCards.map((stat, index) => {
           const theme = getStatTheme(stat.color)
           return (
-            <div key={index} className="group admin-surface p-6 transition-all duration-300 hover:-translate-y-1 hover:bg-[#0b1224]/95">
-              <div className="flex items-start justify-between">
+            <div 
+              key={index} 
+              className="group relative overflow-hidden ucl-stat-card p-6 transition-all duration-500 hover:-translate-y-2"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              {/* Glow effect on hover */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${
+                stat.color === 'blue' ? 'from-blue-500/0 to-blue-500/10' :
+                stat.color === 'green' ? 'from-emerald-500/0 to-emerald-500/10' :
+                stat.color === 'purple' ? 'from-indigo-500/0 to-indigo-500/10' :
+                'from-amber-500/0 to-amber-500/10'
+              } opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+              
+              {/* Decorative corner accent */}
+              <div className={`absolute -top-10 -right-10 w-24 h-24 ${
+                stat.color === 'blue' ? 'bg-blue-500' :
+                stat.color === 'green' ? 'bg-emerald-500' :
+                stat.color === 'purple' ? 'bg-indigo-500' :
+                'bg-amber-500'
+              } rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition-opacity duration-500`} />
+              
+              <div className="relative z-10 flex items-start justify-between">
                 <div>
-                  <p className="text-blue-200/40 text-sm font-medium">{stat.title}</p>
-                  <p className="text-3xl font-bold text-white mt-2 tracking-tight">{stat.value}</p>
+                  <p className="text-blue-200/50 text-sm font-medium uppercase tracking-wider">{stat.title}</p>
+                  <p className="text-4xl font-black text-white mt-3 tracking-tight ucl-number">{stat.value}</p>
                   {stat.change && stat.change !== '0' && (
                     <div
-                      className={`inline-flex items-center mt-3 px-2 py-1 rounded-lg text-xs font-semibold border ${
+                      className={`inline-flex items-center mt-4 px-3 py-1.5 rounded-lg text-xs font-bold border backdrop-blur-sm ${
                         stat.changeType === 'positive'
-                          ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-200'
+                          ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
                           : stat.changeType === 'negative'
-                          ? 'border-rose-500/20 bg-rose-500/10 text-rose-200'
+                          ? 'border-rose-500/30 bg-rose-500/10 text-rose-300'
                           : 'border-white/10 bg-white/5 text-blue-200/60'
                       }`}
                     >
                       {formatChangeIcon(stat.changeType)}
-                      <span className="ml-1">{formatTrendLabel(stat.change)}</span>
+                      <span className="ml-1.5">{formatTrendLabel(stat.change)}</span>
                     </div>
                   )}
                 </div>
                 <div
-                  className={`w-12 h-12 ${theme.iconBg} rounded-2xl flex items-center justify-center text-white shadow-lg ${theme.shadow} group-hover:scale-110 transition-transform duration-300`}
+                  className={`relative w-14 h-14 ${theme.iconBg} rounded-2xl flex items-center justify-center text-white shadow-xl ${theme.shadow} group-hover:scale-110 group-hover:rotate-3 transition-all duration-500`}
                 >
-                  <stat.icon size={22} />
+                  <stat.icon size={26} strokeWidth={2} />
+                  {/* Pulse ring effect */}
+                  <span className={`absolute inset-0 ${theme.iconBg} rounded-2xl animate-ping opacity-20`} />
                 </div>
               </div>
+              
+              {/* Bottom gradient line */}
+              <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${
+                stat.color === 'blue' ? 'from-blue-600 via-cyan-500 to-blue-600' :
+                stat.color === 'green' ? 'from-emerald-600 via-green-500 to-emerald-600' :
+                stat.color === 'purple' ? 'from-indigo-600 via-purple-500 to-indigo-600' :
+                'from-amber-600 via-yellow-500 to-amber-600'
+              } opacity-50 group-hover:opacity-100 transition-opacity duration-500`} />
             </div>
           )
         })}
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Activity Feed */}
         <div className="lg:col-span-2">
-          <div className="admin-surface h-full">
+          <div className="ucl-glass-card h-full">
             <div className="p-6 border-b border-white/10 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-white">Hoạt động gần đây</h3>
-              <span className="text-sm text-blue-200/40">{activities.length} sự kiện</span>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-xl flex items-center justify-center border border-blue-500/30">
+                  <Activity size={20} className="text-cyan-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Hoạt động gần đây</h3>
+                  <span className="text-xs text-blue-200/40">{activities.length} sự kiện hôm nay</span>
+                </div>
+              </div>
+              <button className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 rounded-lg transition-all flex items-center gap-1">
+                Xem tất cả <ChevronRight size={14} />
+              </button>
             </div>
             <div className="p-6">
               {loading && (
-                <div className="text-sm text-blue-200/40 flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" /> Đang tải hoạt động...
+                <div className="text-sm text-blue-200/40 flex items-center gap-2 py-8 justify-center">
+                  <Loader2 className="h-5 w-5 animate-spin text-cyan-400" /> Đang tải hoạt động...
                 </div>
               )}
 
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {activities.map((activity, idx) => {
                   const style = getActivityIconWrapper(activity.module)
                   const Icon = activity.module?.toLowerCase().includes('match')
@@ -239,90 +335,163 @@ const DashboardPage = () => {
                     : FileText
 
                   return (
-                    <div key={activity.id || idx} className="relative flex items-start gap-4 group">
+                    <div 
+                      key={activity.id || idx} 
+                      className="group relative flex items-start gap-4 p-4 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-transparent hover:border-white/10 transition-all duration-300"
+                    >
+                      {/* Timeline connector */}
                       {idx !== activities.length - 1 && (
-                        <div className="absolute top-10 left-5 w-[2px] h-[calc(100%+24px)] bg-white/10 group-hover:bg-white/20 transition-colors -z-10"></div>
+                        <div className="absolute top-14 left-8 w-[2px] h-[calc(100%-20px)] bg-gradient-to-b from-white/20 to-transparent" />
                       )}
 
                       <div
-                        className={`w-10 h-10 rounded-full ${style.bg} ${style.text} flex items-center justify-center shrink-0 border border-white/10 shadow-sm z-10`}
+                        className={`relative z-10 w-12 h-12 rounded-xl ${style.bg} ${style.text} flex items-center justify-center shrink-0 border border-white/10 shadow-lg group-hover:scale-110 transition-transform duration-300`}
                       >
-                        <Icon size={18} />
+                        <Icon size={20} />
                       </div>
 
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-3">
-                          <h4 className="text-sm font-bold text-white">{activity.action}</h4>
-                          <span className="text-xs text-blue-200/40 whitespace-nowrap">{activity.createdAt || activity.time || '--'}</span>
+                          <h4 className="text-sm font-bold text-white group-hover:text-cyan-200 transition-colors">{activity.action}</h4>
+                          <span className="text-[10px] text-blue-200/40 whitespace-nowrap font-medium bg-white/5 px-2 py-1 rounded-md">
+                            {activity.createdAt || activity.time || '--'}
+                          </span>
                         </div>
-                        {activity.details && <p className="text-blue-200/40 text-sm mt-0.5 leading-relaxed">{activity.details}</p>}
+                        {activity.details && (
+                          <p className="text-blue-200/50 text-sm mt-1 leading-relaxed line-clamp-2">{activity.details}</p>
+                        )}
                       </div>
                     </div>
                   )
                 })}
 
-                {!loading && activities.length === 0 && <div className="text-sm text-blue-200/40">Chưa có hoạt động gần đây.</div>}
+                {!loading && activities.length === 0 && (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
+                      <Activity size={28} className="text-blue-200/30" />
+                    </div>
+                    <p className="text-sm text-blue-200/40">Chưa có hoạt động gần đây</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
 
+        {/* Right Column */}
         <div className="space-y-6">
-          <div className="admin-surface p-6 text-white relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl"></div>
-
-            <div className="flex items-center justify-between mb-6 relative z-10">
-              <h3 className="text-lg font-bold">Trận đấu hôm nay</h3>
-              <span className="admin-badge admin-badge-blue">TRỰC TIẾP</span>
-            </div>
-
-            <div className="space-y-4 relative z-10">
-              {upcomingMatches.map((match) => (
-                <div
-                  key={match.id}
-                  className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 transition-all cursor-pointer"
-                >
-                  <div className="flex justify-between items-center mb-3 text-xs font-medium text-blue-200/40 uppercase tracking-wide">
-                    <span>{new Date(match.utcDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                    <span className="text-emerald-300 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                      {formatMatchStatus(match.status)}
-                    </span>
+          {/* Live Matches Card */}
+          <div className="ucl-glass-card relative overflow-hidden">
+            {/* Decorative glow */}
+            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-cyan-500/20 to-transparent rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-blue-500/10 to-transparent rounded-full blur-2xl" />
+            
+            <div className="relative z-10 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                    <Play size={18} fill="white" className="text-white ml-0.5" />
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm font-semibold text-slate-100">{match.homeTeamName}</div>
-                    <div className="text-xs font-bold text-blue-200/30 mx-2">GẶP</div>
-                    <div className="text-sm font-semibold text-slate-100 text-right">{match.awayTeamName}</div>
-                  </div>
-                  <div className="mt-2 text-xs text-blue-200/30 truncate flex items-center gap-1">
-                    <div className="w-1 h-1 bg-white/20 rounded-full"></div>
-                    {match.venue || 'Chưa xác định'}
-                  </div>
+                  <h3 className="text-lg font-bold text-white">Trận đấu hôm nay</h3>
                 </div>
-              ))}
-              {upcomingMatches.length === 0 && !loading && <div className="text-xs text-blue-200/40">Chưa có trận đấu sắp diễn ra.</div>}
+                <span className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/20 rounded-full border border-emerald-500/30">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-lg shadow-emerald-400/50" />
+                  <span className="text-xs font-bold text-emerald-300 uppercase tracking-wider">Live</span>
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                {upcomingMatches.map((match, idx) => (
+                  <div
+                    key={match.id}
+                    className="group ucl-match-card p-4 transition-all duration-300 cursor-pointer"
+                    style={{ animationDelay: `${idx * 100}ms` }}
+                  >
+                    <div className="flex justify-between items-center mb-3 text-[10px] font-bold uppercase tracking-wider">
+                      <span className="text-blue-200/50 flex items-center gap-1.5">
+                        <Clock size={12} />
+                        {new Date(match.utcDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                      <span className="text-emerald-400 flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 rounded-full">
+                        <Zap size={10} className="animate-pulse" />
+                        {formatMatchStatus(match.status)}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex-1">
+                        <div className="text-sm font-bold text-white group-hover:text-cyan-200 transition-colors truncate">
+                          {match.homeTeamName}
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0 px-3 py-1.5 bg-gradient-to-r from-blue-500/20 via-cyan-500/30 to-blue-500/20 rounded-lg border border-cyan-500/30">
+                        <span className="text-xs font-black text-cyan-300 uppercase tracking-widest">VS</span>
+                      </div>
+                      <div className="flex-1 text-right">
+                        <div className="text-sm font-bold text-white group-hover:text-cyan-200 transition-colors truncate">
+                          {match.awayTeamName}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between">
+                      <span className="text-[10px] text-blue-200/40 truncate max-w-[70%] flex items-center gap-1">
+                        <Star size={10} className="text-amber-400/50" />
+                        {match.venue || 'Địa điểm chưa xác định'}
+                      </span>
+                      <ChevronRight size={14} className="text-blue-200/30 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all" />
+                    </div>
+                  </div>
+                ))}
+                {upcomingMatches.length === 0 && !loading && (
+                  <div className="text-center py-8">
+                    <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-white/5 flex items-center justify-center">
+                      <Calendar size={24} className="text-blue-200/30" />
+                    </div>
+                    <p className="text-xs text-blue-200/40">Không có trận đấu hôm nay</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="admin-surface p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-white">Việc cần xử lý</h3>
-              <button className="p-1 hover:bg-white/5 rounded-lg">
+          {/* Pending Tasks Card */}
+          <div className="ucl-glass-card p-6">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-xl flex items-center justify-center border border-amber-500/30">
+                  <FileText size={18} className="text-amber-400" />
+                </div>
+                <h3 className="text-lg font-bold text-white">Việc cần xử lý</h3>
+              </div>
+              <button className="p-2 hover:bg-white/5 rounded-lg transition-colors">
                 <MoreHorizontal size={18} className="text-blue-200/40" />
               </button>
             </div>
 
             {pendingTasks.length === 0 ? (
-              <div className="text-sm text-blue-200/40">Không có công việc chờ xử lý.</div>
+              <div className="text-center py-8">
+                <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                  <Sparkles size={24} className="text-emerald-400" />
+                </div>
+                <p className="text-sm text-blue-200/50">Tuyệt vời! Không có công việc chờ xử lý.</p>
+              </div>
             ) : (
               <div className="space-y-3">
-                {pendingTasks.map((task) => (
+                {pendingTasks.map((task, idx) => (
                   <div
                     key={task.id}
-                    className="p-3 rounded-2xl border border-white/10 hover:border-cyan-500/20 hover:bg-white/5 transition-all group"
+                    className="group p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:border-amber-500/20 hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"
+                    style={{ animationDelay: `${idx * 50}ms` }}
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-200 ring-1 ring-amber-500/20">
+                      <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                        task.priority === 'high' 
+                          ? 'bg-rose-500/15 text-rose-300 ring-1 ring-rose-500/30'
+                          : task.priority === 'low'
+                          ? 'bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/30'
+                          : 'bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/30'
+                      }`}>
                         {formatPriority(task.priority)}
                       </span>
                       <span className="text-blue-200/40 text-[10px] font-medium flex items-center gap-1">
@@ -332,11 +501,11 @@ const DashboardPage = () => {
                     <h4 className="text-sm font-semibold text-slate-100 leading-tight group-hover:text-cyan-200 transition-colors">
                       {task.title}
                     </h4>
-                    <div className="mt-2 flex items-center gap-1.5">
-                      <div className="w-4 h-4 rounded-full bg-white/10 flex items-center justify-center text-[8px] font-bold text-blue-200/40 border border-white/10">
-                        {task.assignee ? String(task.assignee).charAt(0) : '?'}
+                    <div className="mt-3 flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-[10px] font-bold text-white ring-2 ring-[#0a1628]">
+                        {task.assignee ? String(task.assignee).charAt(0).toUpperCase() : '?'}
                       </div>
-                      <p className="text-blue-200/40 text-xs">{task.assignee || 'Chưa phân công'}</p>
+                      <p className="text-blue-200/50 text-xs">{task.assignee || 'Chưa phân công'}</p>
                     </div>
                   </div>
                 ))}

@@ -301,6 +301,73 @@ class StatsService {
       return fallback ? normalizeEntry(fallback) : null
     }
   }
+
+  // ============ NEW SEASON-BASED STATS METHODS ============
+
+  /**
+   * Get top scorers for a season (Vua phá lưới)
+   */
+  async getTopScorers(seasonId, limit = 20) {
+    try {
+      const response = await ApiService.get(`/stats/season/${seasonId}/top-scorers`, { limit })
+      return response?.data ?? []
+    } catch (error) {
+      logger.error('Failed to load top scorers', error)
+      return []
+    }
+  }
+
+  /**
+   * Get card statistics for a season (Thẻ vàng/đỏ)
+   */
+  async getCardStats(seasonId) {
+    try {
+      const response = await ApiService.get(`/stats/season/${seasonId}/cards`)
+      return response?.data ?? []
+    } catch (error) {
+      logger.error('Failed to load card stats', error)
+      return []
+    }
+  }
+
+  /**
+   * Get Man of the Match statistics for a season
+   */
+  async getManOfMatchStats(seasonId) {
+    try {
+      const response = await ApiService.get(`/stats/season/${seasonId}/man-of-match`)
+      return response?.data ?? []
+    } catch (error) {
+      logger.error('Failed to load man of match stats', error)
+      return []
+    }
+  }
+
+  /**
+   * Get suspended players for a season (Cầu thủ bị treo giò)
+   */
+  async getSuspendedPlayers(seasonId) {
+    try {
+      const response = await ApiService.get(`/stats/season/${seasonId}/suspended`)
+      return response?.data ?? []
+    } catch (error) {
+      logger.error('Failed to load suspended players', error)
+      return []
+    }
+  }
+
+  /**
+   * Get comprehensive stats overview for a season
+   */
+  async getSeasonStatsOverview(seasonId) {
+    try {
+      const response = await ApiService.get(`/stats/season/${seasonId}/overview`)
+      return response?.data ?? null
+    } catch (error) {
+      logger.error('Failed to load season stats overview', error)
+      return null
+    }
+  }
 }
 
 export default new StatsService()

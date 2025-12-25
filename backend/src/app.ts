@@ -28,6 +28,7 @@ import seasonPlayerRoutes from "./routes/seasonPlayerRoutes";
 import newsRoutes from "./routes/newsRoutes";
 import mediaRoutes from "./routes/mediaRoutes";
 import settingsRoutes from "./routes/settingsRoutes";
+import officialRoutes from "./routes/officialRoutes";
 
 const app = express();
 
@@ -67,6 +68,7 @@ app.use("/api/settings", settingsRoutes);
 
 // Admin routes
 app.use("/api/admin/standings", adminStandingsRoutes);
+app.use("/api/officials", officialRoutes);
 
 // Sync and Import utilities (keep for future use if needed)
 app.use("/api/sync", syncRoutes);

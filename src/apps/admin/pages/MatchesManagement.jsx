@@ -12,10 +12,13 @@ import {
   CheckCircle,
   AlertCircle,
   Play,
-  Loader2
+  Loader2,
+  Shield,
+  UserPlus
 } from 'lucide-react'
 import MatchesService from '../../../layers/application/services/MatchesService'
 import logger from '../../../shared/utils/logger'
+import MatchOfficialAssignmentModal from '../components/MatchOfficialAssignmentModal'
 
 const statusOptions = [
   { id: 'all', name: 'Tất cả trận' },
@@ -97,6 +100,17 @@ const MatchesManagement = () => {
   const [syncing, setSyncing] = useState(false)
   const [editingMatch, setEditingMatch] = useState(null)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showOfficialModal, setShowOfficialModal] = useState(false)
+  const [selectedMatchForOfficials, setSelectedMatchForOfficials] = useState(null)
+
+  const openOfficialModal = (match) => {
+    setSelectedMatchForOfficials({
+      matchId: match.id,
+      homeTeamName: match.homeTeamName,
+      awayTeamName: match.awayTeamName
+    })
+    setShowOfficialModal(true)
+  }
 
   useEffect(() => {
     let isMounted = true
@@ -440,8 +454,16 @@ const MatchesManagement = () => {
                       <div className="text-sm text-gray-500">{match.stage || match.groupName || 'League Phase'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{match.referee || 'Not assigned'}</div>
-                      <div className="text-xs text-gray-500">Updated {new Date(match.updatedAt).toLocaleDateString()}</div>
+                      <button
+                        onClick={() => openOfficialModal(match)}
+                        className="flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-2 py-1 rounded transition-colors"
+                      >
+                        <Shield size={14} />
+                        <span>{match.referee || 'Phân công'}</span>
+                      </button>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {match.referee ? 'Nhấn để chỉnh sửa' : 'Chưa phân công'}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {statusBadge(match.status)}
@@ -648,6 +670,19 @@ const MatchesManagement = () => {
           </div>
         </div>
       )}
+
+      {/* Official Assignment Modal */}
+      <MatchOfficialAssignmentModal
+        isOpen={showOfficialModal}
+        onClose={() => {
+          setShowOfficialModal(false)
+          setSelectedMatchForOfficials(null)
+        }}
+        match={selectedMatchForOfficials}
+        onSuccess={() => {
+          // Optionally refresh matches list after successful assignment
+        }}
+      />
     </div>
   )
 }

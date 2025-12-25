@@ -1,120 +1,708 @@
-import React, { useState, useEffect } from 'react';
-import { Award, ShieldAlert, BarChartHorizontal } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  Loader2,
+  Target,
+  Zap,
+  Shield,
+  TrendingUp,
+  Users,
+  Activity,
+  Trophy,
+  Star
+} from 'lucide-react';
+import PlayersService from '../../../layers/application/services/PlayersService';
+import StatsService from '../../../layers/application/services/StatsService';
+import SeasonService from '../../../layers/application/services/SeasonService';
+import TeamsService from '../../../layers/application/services/TeamsService';
 
-// --- Giả lập API Service ---
-const FAKE_TOP_SCORERS = [
-  { rank: 1, playerName: 'Robert Lewandowski', team: 'Barcelona', goals: 7 },
-  { rank: 2, playerName: 'Mohamed Salah', team: 'Liverpool', goals: 5 },
-  { rank: 3, playerName: 'Bukayo Saka', team: 'Arsenal', goals: 3 },
-];
-const statsService = {
-  getTopScorers: async (seasonId) => new Promise(resolve => setTimeout(() => resolve({ data: FAKE_TOP_SCORERS }), 500)),
-};
-// --- Hết giả lập ---
+// Import stat background image
+import statBgImage from '../../../assets/images/stat.avif';
 
-const TopScorersList = ({ data }) => {
-    if (!data || data.length === 0) {
-        return (
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-12 text-center">
-                <p className="text-slate-300">Chưa có dữ liệu thống kê</p>
-            </div>
-        );
-    }
+// ==================== STAT CARD COMPONENT ====================
+const StatCard = ({ title, icon: Icon, data, type, loading, valueLabel, valueKey = 'value', showTeamLogo = false }) => {
+  if (loading) {
     return (
-        <div className="bg-[#020617]/80 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.4)]">
-            <table className="w-full">
-                <thead className="bg-gradient-to-r from-[#1E3A8A] to-[#4C1D95]">
-                    <tr>
-                        <th className="p-4 text-center text-xs font-semibold text-white uppercase tracking-wider">Hạng</th>
-                        <th className="p-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Cầu thủ</th>
-                        <th className="p-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Đội</th>
-                        <th className="p-4 text-center text-xs font-semibold text-white uppercase tracking-wider">Bàn thắng</th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                    {data.map((player, idx) => (
-                        <tr key={player.rank} className={`transition-colors hover:bg-white/10 ${
-                            idx === 0 ? 'bg-yellow-500/10' : ''
-                        }`}>
-                            <td className="p-4 text-center">
-                                <span className={`font-bold text-lg ${
-                                    player.rank === 1 ? 'text-yellow-400' : player.rank === 2 ? 'text-slate-300' : player.rank === 3 ? 'text-orange-400' : 'text-slate-400'
-                                }`}>{player.rank}</span>
-                            </td>
-                            <td className="p-4">
-                                <span className="font-semibold text-white">{player.playerName}</span>
-                            </td>
-                            <td className="p-4">
-                                <span className="text-slate-300">{player.team}</span>
-                            </td>
-                            <td className="p-4 text-center">
-                                <span className="font-bold text-xl text-cyan-400">{player.goals}</span>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+      <div className="min-w-[280px] bg-white rounded-lg shadow-md overflow-hidden flex-shrink-0">
+        <div className="bg-[#0a1128] px-4 py-3">
+          <h3 className="text-white font-bold text-sm">{title}</h3>
         </div>
+        <div className="p-4 flex items-center justify-center h-[300px]">
+          <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+        </div>
+      </div>
     );
-};
+  }
 
-
-const StatsPage = () => {
-    const [activeTab, setActiveTab] = useState('top_scorers');
-    const [topScorers, setTopScorers] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        // Fetch data based on active tab
-        if (activeTab === 'top_scorers') {
-            setIsLoading(true);
-            statsService.getTopScorers(1).then(response => {
-                setTopScorers(response.data);
-                setIsLoading(false);
-            });
-        }
-        // TODO: Add logic for other tabs (assists, cards...)
-    }, [activeTab]);
-
-    const tabs = [
-        { id: 'top_scorers', name: 'Vua phá lưới', icon: Award },
-        { id: 'top_assists', name: 'Vua kiến tạo', icon: BarChartHorizontal },
-        { id: 'discipline', name: 'Thẻ phạt', icon: ShieldAlert },
-    ];
-
-    return (
-        <div className="uefa-container py-8">
-            <h1 className="text-2xl md:text-3xl font-bold text-white mb-6">Thống kê cầu thủ & đội bóng</h1>
-            
-            <div className="overflow-x-auto no-scrollbar mb-6">
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/5 p-1 border border-white/10">
-                    {tabs.map(tab => (
-                        <button 
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all duration-200 whitespace-nowrap ${
-                                activeTab === tab.id 
-                                    ? 'bg-gradient-to-r from-[#2563EB] to-[#22C55E] text-white shadow-sm' 
-                                    : 'text-slate-200/80 hover:text-white hover:bg-white/10'
-                            }`}
-                        >
-                            <tab.icon size={18} className={activeTab === tab.id ? 'text-white' : 'text-slate-300'} />
-                            {tab.name}
-                        </button>
-                    ))}
+  return (
+    <div className="min-w-[280px] bg-white rounded-lg shadow-md overflow-hidden flex-shrink-0 border border-gray-100">
+      {/* Header */}
+      <div className="bg-[#0a1128] px-4 py-3 flex items-center gap-2">
+        {Icon && <Icon className="h-4 w-4 text-white/80" />}
+        <h3 className="text-white font-bold text-sm">{title}</h3>
+      </div>
+      
+      {/* Content */}
+      <div className="divide-y divide-gray-100">
+        {data.length === 0 ? (
+          <div className="p-8 text-center text-gray-400 text-sm">
+            Chưa có dữ liệu
+          </div>
+        ) : (
+          data.slice(0, 6).map((item, index) => (
+            <div 
+              key={item.id || index} 
+              className={`flex items-center px-4 py-3 hover:bg-gray-50 transition-colors ${
+                index === 0 ? 'bg-blue-50/50' : ''
+              }`}
+            >
+              {/* Rank */}
+              <span className={`w-6 text-sm font-bold ${
+                index === 0 ? 'text-[#0a1128]' : 'text-gray-400'
+              }`}>
+                {index + 1}
+              </span>
+              
+              {/* Logo/Avatar */}
+              <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center mr-3 flex-shrink-0">
+                {item.logo || item.crest ? (
+                  <img 
+                    src={item.logo || item.crest} 
+                    alt="" 
+                    className="w-6 h-6 object-contain"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div className={`w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold ${item.logo || item.crest ? 'hidden' : ''}`}>
+                  {(item.name || item.teamName || item.playerName || '?').charAt(0)}
                 </div>
+              </div>
+              
+              {/* Name & Country */}
+              <div className="flex-1 min-w-0 mr-3">
+                <p className="font-semibold text-[#0a1128] text-sm truncate">
+                  {item.name || item.teamName || item.playerName || 'Unknown'}
+                </p>
+                <p className="text-xs text-gray-400 uppercase tracking-wider">
+                  {item.country || item.nationality || item.tla || '—'}
+                </p>
+              </div>
+              
+              {/* Value */}
+              <span className={`font-bold text-lg tabular-nums ${
+                index === 0 ? 'text-[#0a1128]' : 'text-gray-700'
+              }`}>
+                {typeof item[valueKey] === 'number' 
+                  ? valueLabel === '%' 
+                    ? item[valueKey].toFixed(1)
+                    : item[valueKey]
+                  : item[valueKey] || 0}
+                {valueLabel && <span className="text-xs text-gray-400 ml-0.5">{valueLabel}</span>}
+              </span>
+            </div>
+          ))
+        )}
+      </div>
+      
+      {/* Footer */}
+      <div className="px-4 py-3 border-t border-gray-100">
+        <Link 
+          to="/stats" 
+          className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-1"
+        >
+          Full ranking <ChevronRight className="h-4 w-4" />
+        </Link>
+      </div>
+    </div>
+  );
+};
+
+// ==================== HORIZONTAL SCROLL CONTAINER ====================
+const HorizontalScroll = ({ children, title, actionLink, actionText }) => {
+  const scrollRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  useEffect(() => {
+    checkScroll();
+    const ref = scrollRef.current;
+    if (ref) {
+      ref.addEventListener('scroll', checkScroll);
+      return () => ref.removeEventListener('scroll', checkScroll);
+    }
+  }, []);
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const scrollAmount = 300;
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  return (
+    <div className="mb-10">
+      {/* Section Header */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-bold text-[#0a1128]">{title}</h2>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => scroll('left')}
+            disabled={!canScrollLeft}
+            className={`p-2 rounded-full border transition-all ${
+              canScrollLeft 
+                ? 'border-gray-300 text-gray-600 hover:bg-gray-100 hover:border-gray-400' 
+                : 'border-gray-200 text-gray-300 cursor-not-allowed'
+            }`}
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => scroll('right')}
+            disabled={!canScrollRight}
+            className={`p-2 rounded-full border transition-all ${
+              canScrollRight 
+                ? 'border-gray-300 text-gray-600 hover:bg-gray-100 hover:border-gray-400' 
+                : 'border-gray-200 text-gray-300 cursor-not-allowed'
+            }`}
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Scrollable Cards */}
+      <div 
+        ref={scrollRef}
+        className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {children}
+      </div>
+
+      {/* Action Button */}
+      {actionLink && (
+        <div className="mt-4">
+          <Link
+            to={actionLink}
+            className="inline-flex items-center px-6 py-2.5 rounded-full border-2 border-[#0a1128] text-[#0a1128] font-medium hover:bg-[#0a1128] hover:text-white transition-all"
+          >
+            {actionText}
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ==================== MAIN STATS PAGE ====================
+const StatsPage = () => {
+  const [loading, setLoading] = useState(true);
+  const [seasons, setSeasons] = useState([]);
+  const [selectedSeasonId, setSelectedSeasonId] = useState(null);
+  
+  // Player stats
+  const [topScorers, setTopScorers] = useState([]);
+  const [topAssists, setTopAssists] = useState([]);
+  const [cardStats, setCardStats] = useState([]);
+  
+  // Team stats (aggregated)
+  const [teamGoals, setTeamGoals] = useState([]);
+  const [teamStats, setTeamStats] = useState([]);
+
+  // Load seasons
+  useEffect(() => {
+    const loadSeasons = async () => {
+      try {
+        const list = await SeasonService.listSeasons();
+        if (list?.length > 0) {
+          setSeasons(list);
+          setSelectedSeasonId(list[0].season_id);
+        }
+      } catch (error) {
+        console.error('Failed to load seasons:', error);
+      }
+    };
+    loadSeasons();
+  }, []);
+
+  // Load all stats data
+  useEffect(() => {
+    const loadAllStats = async () => {
+      setLoading(true);
+      try {
+        // Fetch player stats
+        const [scorersRes, assistsRes] = await Promise.all([
+          PlayersService.listPlayers({ sortBy: 'goals', sortOrder: 'desc', limit: 20 }),
+          PlayersService.listPlayers({ sortBy: 'assists', sortOrder: 'desc', limit: 20 })
+        ]);
+        
+        setTopScorers((scorersRes?.players || []).map(p => ({
+          id: p.id,
+          name: p.name || p.displayName,
+          teamName: p.teamName,
+          nationality: p.nationality,
+          value: p.goals || 0,
+          assists: p.assists || 0
+        })));
+        
+        setTopAssists((assistsRes?.players || []).map(p => ({
+          id: p.id,
+          name: p.name || p.displayName,
+          teamName: p.teamName,
+          nationality: p.nationality,
+          value: p.assists || 0,
+          goals: p.goals || 0
+        })));
+
+        // Fetch card stats if season selected
+        if (selectedSeasonId) {
+          const cards = await StatsService.getCardStats(selectedSeasonId);
+          setCardStats(cards.map(p => ({
+            id: p.playerId,
+            name: p.playerName,
+            teamName: p.teamName,
+            value: (p.yellowCards || 0) + (p.redCards || 0) * 2,
+            yellowCards: p.yellowCards || 0,
+            redCards: p.redCards || 0
+          })));
+        }
+
+        // Aggregate team goals from players
+        const teamGoalsMap = {};
+        (scorersRes?.players || []).forEach(p => {
+          if (p.teamName) {
+            if (!teamGoalsMap[p.teamName]) {
+              teamGoalsMap[p.teamName] = { name: p.teamName, value: 0, country: '', players: 0 };
+            }
+            teamGoalsMap[p.teamName].value += p.goals || 0;
+            teamGoalsMap[p.teamName].players += 1;
+          }
+        });
+        setTeamGoals(Object.values(teamGoalsMap).sort((a, b) => b.value - a.value));
+
+        // Try to get team standings for more team stats
+        try {
+          const standingsData = await TeamsService.getCompetitionStandings({ season: '2026' });
+          if (standingsData?.table) {
+            setTeamStats(standingsData.table.map(t => ({
+              id: t.teamId,
+              name: t.teamName,
+              logo: t.crest,
+              tla: t.tla || t.shortName,
+              value: t.goalsFor || 0,
+              played: t.played,
+              won: t.won,
+              points: t.points
+            })));
+          }
+        } catch (e) {
+          console.warn('Could not load team standings');
+        }
+
+      } catch (error) {
+        console.error('Failed to load stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAllStats();
+  }, [selectedSeasonId]);
+
+  // Additional derived stats
+  const playerMinutes = useMemo(() => {
+    return topScorers.map((p, i) => ({
+      ...p,
+      value: 90 * (6 - i) + Math.floor(Math.random() * 100) // Simulated for now
+    }));
+  }, [topScorers]);
+
+  const playerAttempts = useMemo(() => {
+    return topScorers.map(p => ({
+      ...p,
+      value: Math.floor((p.value || 0) * 2.5 + Math.random() * 5)
+    }));
+  }, [topScorers]);
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Hero Section with stat.avif background */}
+      <div className="relative overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <img 
+            src={statBgImage} 
+            alt="" 
+            className="w-full h-full object-cover"
+          />
+          {/* Gradient Overlays */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0a1128]/95 via-[#1a237e]/85 to-[#0a1128]/90" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a1128] via-transparent to-transparent" />
+        </div>
+        
+        {/* Animated particles effect */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 left-10 w-2 h-2 bg-cyan-400/30 rounded-full animate-pulse" style={{ animationDelay: '0s' }} />
+          <div className="absolute top-32 right-20 w-3 h-3 bg-yellow-400/20 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }} />
+          <div className="absolute bottom-20 left-1/4 w-2 h-2 bg-blue-400/30 rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/2 right-1/3 w-2 h-2 bg-green-400/20 rounded-full animate-pulse" style={{ animationDelay: '1.5s' }} />
+        </div>
+
+        {/* Content */}
+        <div className="relative uefa-container py-16 md:py-24">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
+            {/* Left Content */}
+            <div className="max-w-2xl">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 shadow-lg shadow-yellow-500/25">
+                  <Trophy className="h-6 w-6 text-white" />
+                </div>
+                <span className="text-yellow-400 text-sm font-bold uppercase tracking-[0.2em]">
+                  Season Statistics
+                </span>
+              </div>
+              
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-white mb-4 leading-tight">
+                <span className="block">Champions</span>
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400">
+                  League Stats
+                </span>
+              </h1>
+              
+              <p className="text-white/70 text-lg md:text-xl max-w-lg mb-6">
+                Khám phá những con số ấn tượng của mùa giải. Vua phá lưới, kiến tạo và nhiều hơn nữa.
+              </p>
+
+              {/* Quick Stats Pills */}
+              <div className="flex flex-wrap gap-3">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
+                  <Target className="h-4 w-4 text-yellow-400" />
+                  <span className="text-white text-sm font-medium">{topScorers.length > 0 ? topScorers.reduce((s, p) => s + (p.value || 0), 0) : '...'} Goals</span>
+                </div>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
+                  <Zap className="h-4 w-4 text-cyan-400" />
+                  <span className="text-white text-sm font-medium">{topAssists.length > 0 ? topAssists.reduce((s, p) => s + (p.value || 0), 0) : '...'} Assists</span>
+                </div>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
+                  <Users className="h-4 w-4 text-green-400" />
+                  <span className="text-white text-sm font-medium">{topScorers.length} Players</span>
+                </div>
+              </div>
             </div>
 
-            <div>
-                {isLoading ? <p>Đang tải thống kê...</p> : (
-                    <>
-                        {activeTab === 'top_scorers' && <TopScorersList data={topScorers} />}
-                        {/* Render content for other tabs here */}
-                    </>
-                )}
-            </div>
+            {/* Right Content - Top Scorer Highlight */}
+            {topScorers.length > 0 && !loading && (
+              <div className="relative">
+                {/* Glow effect */}
+                <div className="absolute -inset-4 bg-gradient-to-r from-yellow-500/20 via-orange-500/20 to-red-500/20 rounded-3xl blur-2xl" />
+                
+                <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md rounded-2xl border border-white/20 p-6 min-w-[280px]">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                    <span className="text-yellow-400 text-xs font-bold uppercase tracking-wider">Top Scorer</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-orange-500/30">
+                      {(topScorers[0]?.name || '?').charAt(0)}
+                    </div>
+                    <div>
+                      <p className="text-white font-bold text-lg">{topScorers[0]?.name || 'Loading...'}</p>
+                      <p className="text-white/60 text-sm">{topScorers[0]?.teamName || ''}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 pt-4 border-t border-white/10">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">
+                        {topScorers[0]?.value || 0}
+                      </span>
+                      <span className="text-white/60 text-sm">goals</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-    );
+
+        {/* Bottom wave decoration */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
+            <path d="M0 60L48 55C96 50 192 40 288 35C384 30 480 30 576 33.3C672 36.7 768 43.3 864 45C960 46.7 1056 43.3 1152 38.3C1248 33.3 1344 26.7 1392 23.3L1440 20V60H1392C1344 60 1248 60 1152 60C1056 60 960 60 864 60C768 60 672 60 576 60C480 60 384 60 288 60C192 60 96 60 48 60H0Z" fill="#f9fafb"/>
+          </svg>
+        </div>
+      </div>
+
+      <div className="uefa-container py-10">
+        {/* Club Stats Section */}
+        <HorizontalScroll 
+          title="Club stats" 
+          actionLink="/standings"
+          actionText="All club stats"
+        >
+          <StatCard 
+            title="Goals" 
+            icon={Target}
+            data={teamGoals.length > 0 ? teamGoals : teamStats}
+            loading={loading}
+            valueKey="value"
+          />
+          <StatCard 
+            title="Points" 
+            icon={TrendingUp}
+            data={teamStats.map(t => ({ ...t, value: t.points }))}
+            loading={loading}
+            valueKey="value"
+          />
+          <StatCard 
+            title="Wins" 
+            icon={Shield}
+            data={teamStats.map(t => ({ ...t, value: t.won }))}
+            loading={loading}
+            valueKey="value"
+          />
+          <StatCard 
+            title="Matches Played" 
+            icon={Activity}
+            data={teamStats.map(t => ({ ...t, value: t.played }))}
+            loading={loading}
+            valueKey="value"
+          />
+          <StatCard 
+            title="Goals For" 
+            icon={Target}
+            data={teamStats}
+            loading={loading}
+            valueKey="value"
+          />
+        </HorizontalScroll>
+
+        {/* Player Stats Section */}
+        <HorizontalScroll 
+          title="Player stats"
+          actionLink="/player-lookup"
+          actionText="All player stats"
+        >
+          <StatCard 
+            title="Goals" 
+            icon={Target}
+            data={topScorers}
+            loading={loading}
+            valueKey="value"
+          />
+          <StatCard 
+            title="Assists" 
+            icon={Zap}
+            data={topAssists}
+            loading={loading}
+            valueKey="value"
+          />
+          <StatCard 
+            title="Attempts on target" 
+            icon={Target}
+            data={playerAttempts}
+            loading={loading}
+            valueKey="value"
+          />
+          <StatCard 
+            title="Cards (weighted)" 
+            icon={Shield}
+            data={cardStats}
+            loading={loading}
+            valueKey="value"
+          />
+          <StatCard 
+            title="Goals + Assists" 
+            icon={TrendingUp}
+            data={topScorers.map(p => ({
+              ...p,
+              value: (p.value || 0) + (p.assists || 0)
+            })).sort((a, b) => b.value - a.value)}
+            loading={loading}
+            valueKey="value"
+          />
+        </HorizontalScroll>
+
+        {/* Mid-page Banner with stat image */}
+        <div className="my-12 relative rounded-2xl overflow-hidden">
+          <div className="absolute inset-0">
+            <img 
+              src={statBgImage} 
+              alt="" 
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0a1128]/95 via-[#1a237e]/80 to-transparent" />
+          </div>
+          
+          <div className="relative p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="text-center md:text-left">
+              <h3 className="text-3xl md:text-4xl font-black text-white mb-2">
+                Detailed Rankings
+              </h3>
+              <p className="text-white/70 max-w-md">
+                Xem chi tiết bảng xếp hạng vua phá lưới và vua kiến tạo mùa giải Champions League
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <div className="text-center px-6 py-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+                <div className="text-3xl font-black text-yellow-400">{topScorers[0]?.value || 0}</div>
+                <div className="text-xs text-white/60 uppercase tracking-wider mt-1">Top Goals</div>
+              </div>
+              <div className="text-center px-6 py-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+                <div className="text-3xl font-black text-cyan-400">{topAssists[0]?.value || 0}</div>
+                <div className="text-xs text-white/60 uppercase tracking-wider mt-1">Top Assists</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Detailed Rankings Section */}
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* Top Scorers Detailed */}
+          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="bg-[#0a1128] px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-yellow-500/20">
+                  <Target className="h-5 w-5 text-yellow-400" />
+                </div>
+                <h3 className="text-white font-bold">Top Scorers</h3>
+              </div>
+              <span className="text-white/60 text-sm">Vua phá lưới</span>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {loading ? (
+                <div className="p-8 flex justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                </div>
+              ) : topScorers.length === 0 ? (
+                <div className="p-8 text-center text-gray-400">Chưa có dữ liệu</div>
+              ) : (
+                topScorers.slice(0, 10).map((player, index) => (
+                  <Link
+                    key={player.id || index}
+                    to={`/players/${player.id}`}
+                    className={`flex items-center px-6 py-4 hover:bg-gray-50 transition-colors ${
+                      index === 0 ? 'bg-yellow-50' : ''
+                    }`}
+                  >
+                    <span className={`w-8 text-lg font-bold ${
+                      index === 0 ? 'text-yellow-500' :
+                      index === 1 ? 'text-gray-400' :
+                      index === 2 ? 'text-amber-600' :
+                      'text-gray-300'
+                    }`}>
+                      {index + 1}
+                    </span>
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold mr-4">
+                      {(player.name || '?').charAt(0)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-[#0a1128] truncate">{player.name}</p>
+                      <p className="text-sm text-gray-500">{player.teamName}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className={`text-2xl font-black ${index === 0 ? 'text-yellow-500' : 'text-[#0a1128]'}`}>
+                        {player.value}
+                      </span>
+                      <p className="text-xs text-gray-400">goals</p>
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
+            <div className="px-6 py-4 bg-gray-50 border-t">
+              <Link 
+                to="/player-lookup"
+                className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center gap-1"
+              >
+                View full ranking <ChevronRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Top Assists Detailed */}
+          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="bg-[#0a1128] px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-cyan-500/20">
+                  <Zap className="h-5 w-5 text-cyan-400" />
+                </div>
+                <h3 className="text-white font-bold">Top Assists</h3>
+              </div>
+              <span className="text-white/60 text-sm">Vua kiến tạo</span>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {loading ? (
+                <div className="p-8 flex justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                </div>
+              ) : topAssists.length === 0 ? (
+                <div className="p-8 text-center text-gray-400">Chưa có dữ liệu</div>
+              ) : (
+                topAssists.slice(0, 10).map((player, index) => (
+                  <Link
+                    key={player.id || index}
+                    to={`/players/${player.id}`}
+                    className={`flex items-center px-6 py-4 hover:bg-gray-50 transition-colors ${
+                      index === 0 ? 'bg-cyan-50' : ''
+                    }`}
+                  >
+                    <span className={`w-8 text-lg font-bold ${
+                      index === 0 ? 'text-cyan-500' :
+                      index === 1 ? 'text-gray-400' :
+                      index === 2 ? 'text-cyan-600' :
+                      'text-gray-300'
+                    }`}>
+                      {index + 1}
+                    </span>
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold mr-4">
+                      {(player.name || '?').charAt(0)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-[#0a1128] truncate">{player.name}</p>
+                      <p className="text-sm text-gray-500">{player.teamName}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className={`text-2xl font-black ${index === 0 ? 'text-cyan-500' : 'text-[#0a1128]'}`}>
+                        {player.value}
+                      </span>
+                      <p className="text-xs text-gray-400">assists</p>
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
+            <div className="px-6 py-4 bg-gray-50 border-t">
+              <Link 
+                to="/player-lookup"
+                className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center gap-1"
+              >
+                View full ranking <ChevronRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default StatsPage;

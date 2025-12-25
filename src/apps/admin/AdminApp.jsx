@@ -29,6 +29,7 @@ import SeasonPlayerApprovalPage from './pages/SeasonPlayerApprovalPage'
 import MyTeamPage from './pages/MyTeamPage'
 import PlayerRegistrationsPage from './pages/PlayerRegistrationsPage'
 import ScheduleManagement from './pages/ScheduleManagement'
+import OfficialsManagement from './pages/OfficialsManagement'
 
 
 const AdminApp = ({ onLogout, currentUser }) => {
@@ -233,6 +234,14 @@ const AdminApp = ({ onLogout, currentUser }) => {
           element={
             <AccessGuard permission="manage_matches" currentUser={currentUser}>
               <LiveMatchUpdatePage />
+            </AccessGuard>
+          }
+        />
+        <Route
+          path="officials"
+          element={
+            <AccessGuard permission="manage_matches" currentUser={currentUser}>
+              <OfficialsManagement />
             </AccessGuard>
           }
         />
