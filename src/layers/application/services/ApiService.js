@@ -74,8 +74,8 @@ class ApiService {
 
           // Dispatch global error event for monitoring
           if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('api:error', { 
-              detail: { error, endpoint, attempt } 
+            window.dispatchEvent(new CustomEvent('api:error', {
+              detail: { error, endpoint, attempt }
             }))
           }
 
@@ -91,8 +91,18 @@ class ApiService {
         if (!responseText) return null
 
         try {
-          return JSON.parse(responseText)
-        } catch {
+          const parsed = JSON.parse(responseText)
+          if (Array.isArray(parsed)) {
+            return { data: parsed }
+          }
+          if (typeof parsed === 'object' && parsed !== null) {
+            return parsed.data !== undefined ? parsed : { data: parsed }
+          }
+          return { data: parsed }
+
+
+        }
+        catch {
           return responseText
         }
 

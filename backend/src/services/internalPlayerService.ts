@@ -1,18 +1,19 @@
 import { query } from "../db/sqlServer";
 
 export interface CreatePlayerDto {
-    full_name: string;
+    name: string;
     date_of_birth: string;
     nationality?: string;
-    preferred_position?: string;
+    position?: string;
+    internal_team_id?: number;
 }
 
 export interface Player {
     player_id: number;
-    full_name: string;
+    name: string;
     date_of_birth: string;
     nationality: string | null;
-    preferred_position: string | null;
+    position: string | null;
     created_at?: string;
 }
 
@@ -20,50 +21,61 @@ export interface Player {
  * Create a new player in the internal database
  */
 export const createPlayer = async (data: CreatePlayerDto): Promise<Player> => {
-    const { full_name, date_of_birth, nationality, preferred_position } = data;
+    const { name, date_of_birth, nationality, position, internal_team_id } = data;
 
-    // Insert into players table
-    // Note: relying on DB default for created_at if it exists, or ignoring it if not strictly required by schema logic visible so far.
-    // Based on existing code, we insert basic fields.
-
-    const result = await query<{ player_id: number }>(
-        `
-      INSERT INTO players (
-        full_name,
-        display_name,
-        date_of_birth,
-        nationality,
-        preferred_position
-      )
-      VALUES (
-        @full_name,
-        @full_name, -- Default display_name to full_name
-        @date_of_birth,
-        @nationality,
-        @preferred_position
-      );
-      
-      SELECT SCOPE_IDENTITY() as player_id;
-    `,
-        {
-            full_name: full_name.trim(),
+    // Insert into FootballPlayers (Single Source)
+    const result = await query<{
+        id: number;
+        name: string;
+        nationality: string;
+        position: string;
+        date_of_birth: string;
+    }>(`
+        INSERT INTO dbo.FootballPlayers (
+            name,
             date_of_birth,
-            nationality: nationality ? nationality.trim() : null,
-            preferred_position: preferred_position ? preferred_position.trim() : null
-        }
-    );
+            nationality,
+            position,
+            internal_team_id,
+            is_manual,
+            external_key,
+            updated_at
+        )
+        OUTPUT 
+            INSERTED.id, 
+            INSERTED.name, 
+            INSERTED.nationality, 
+            INSERTED.position, 
+            CONVERT(VARCHAR(10), INSERTED.date_of_birth, 23) as date_of_birth
+        VALUES (
+            @name,
+            @dob,
+            @nationality,
+            @position,
+            @teamId,
+            1, -- is_manual
+            'MANUAL:' + CAST(NEWID() AS VARCHAR(50)),
+            GETDATE()
+        );
+    `, {
+        name: name.trim(),
+        dob: date_of_birth,
+        nationality: nationality ? nationality.trim() : 'Unknown',
+        position: position ? position.trim() : null,
+        teamId: internal_team_id ?? null
+    });
 
-    const playerId = result.recordset[0]?.player_id;
+    const newId = result.recordset[0]?.id;
 
-    if (!playerId) {
+    if (!newId) {
         throw new Error("Failed to create player");
     }
 
     return {
-        player_id: playerId,
-        full_name: full_name.trim(),
-        date_of_birth,
-        nationality: nationality || null,
-        preferred_position: preferred_position || null
+        player_id: newId,
+        name: result.recordset[0].name,
+        date_of_birth: result.recordset[0].date_of_birth,
+        nationality: result.recordset[0].nationality,
+        position: result.recordset[0].position
     };
 };

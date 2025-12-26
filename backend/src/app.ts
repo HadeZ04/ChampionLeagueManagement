@@ -31,6 +31,7 @@ import settingsRoutes from "./routes/settingsRoutes";
 
 const app = express();
 
+app.set("etag", false);
 app.use(cors());
 app.use(express.json());
 if ((process.env.NODE_ENV ?? "development") !== "test") {

@@ -120,9 +120,9 @@ const mapSeasonRow = (row: SeasonRow): SeasonSummary => ({
   startDate: row.start_date,
   endDate: row.end_date,
   tournamentId: row.tournament_id,
-  tournamentName: row.tournament_name,
+  tournamentName: row.tournament_name || 'Unknown Tournament',
   rulesetId: row.ruleset_id,
-  rulesetName: row.ruleset_name,
+  rulesetName: row.ruleset_name || 'Unknown Ruleset',
   description: row.description,
   participationFee: row.participation_fee !== null ? Number(row.participation_fee) : 0,
   maxTeams: row.max_teams,
@@ -494,7 +494,7 @@ export async function getInternalStandings(filters: { seasonId?: number; season?
   try {
     // Get season info
     let seasonId = filters.seasonId;
-    
+
     // If season year provided (like "2024"), find the corresponding seasonId
     if (!seasonId && filters.season) {
       try {
@@ -508,12 +508,12 @@ export async function getInternalStandings(filters: { seasonId?: number; season?
            )
            AND status IN ('in_progress', 'completed')
            ORDER BY start_date DESC`,
-          { 
+          {
             seasonPattern: `%${filters.season}%`,
             seasonYear: isNaN(Number(filters.season)) ? 0 : Number(filters.season)
           }
         );
-        
+
         if (seasonByYear.recordset && seasonByYear.recordset.length > 0) {
           seasonId = seasonByYear.recordset[0].season_id;
         }
@@ -521,7 +521,7 @@ export async function getInternalStandings(filters: { seasonId?: number; season?
         console.log('[getInternalStandings] Season lookup by year failed:', err);
       }
     }
-    
+
     if (!seasonId) {
       // Get latest season
       try {
@@ -531,7 +531,7 @@ export async function getInternalStandings(filters: { seasonId?: number; season?
            WHERE status IN ('in_progress', 'completed')
            ORDER BY start_date DESC, season_id DESC`
         );
-        
+
         if (!latestSeason.recordset || latestSeason.recordset.length === 0) {
           console.log('[getInternalStandings] No active season found, returning empty standings');
           return {
@@ -545,7 +545,7 @@ export async function getInternalStandings(filters: { seasonId?: number; season?
             table: []
           };
         }
-        
+
         seasonId = latestSeason.recordset[0].season_id;
       } catch (err) {
         console.log('[getInternalStandings] Latest season query failed:', err);
@@ -565,7 +565,7 @@ export async function getInternalStandings(filters: { seasonId?: number; season?
     // Get season details
     let season: any;
     let startYear: number;
-    
+
     try {
       const seasonInfo = await query<{
         season_id: number;
@@ -694,4 +694,40 @@ export async function getInternalStandings(filters: { seasonId?: number; season?
     }
     throw error;
   }
+}
+
+export async function listSeasonTeamsByIdentifier(identifier: string | number) {
+  // 1. Resolve season_id
+  const seasonRes = await query(
+    `
+    SELECT TOP 1 season_id
+    FROM seasons
+    WHERE season_id = TRY_CAST(@id AS INT)
+       OR code = @id
+       OR name = @id
+    `,
+    { id: String(identifier) }
+  );
+
+  const seasonId = seasonRes.recordset[0]?.season_id;
+  if (!seasonId) return [];
+
+  // 2. Get teams in season
+  const teamsRes = await query(
+    `
+    SELECT
+      stp.season_team_id,
+      stp.season_id,
+      t.team_id,
+      t.name AS team_name
+    FROM season_team_participants stp
+    JOIN teams t ON t.team_id = stp.team_id
+    WHERE stp.season_id = @seasonId
+      AND stp.status = 'active'
+    ORDER BY t.name
+    `,
+    { seasonId }
+  );
+
+  return teamsRes.recordset;
 }
