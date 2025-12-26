@@ -9,6 +9,7 @@ import {
   initializeStandingsForSeason,
   getTeamStandings,
 } from "../services/standingsAdminService";
+import { getSeasonStandings, StandingsMode } from "../services/standingsService_v2";
 
 const router = Router();
 const requireStandingsManagement = [requireAuth, requireAnyPermission("manage_matches", "manage_teams")] as const;
@@ -16,6 +17,8 @@ const requireStandingsManagement = [requireAuth, requireAnyPermission("manage_ma
 /**
  * GET /admin/standings/season/:seasonId
  * Get standings for a specific season
+ * Query params:
+ *   - mode: "live" (default) | "final" (with head-to-head tie-break)
  */
 router.get("/season/:seasonId", ...requireStandingsManagement, async (req, res, next) => {
   try {
@@ -24,10 +27,23 @@ router.get("/season/:seasonId", ...requireStandingsManagement, async (req, res, 
       return res.status(400).json({ error: "Invalid season ID" });
     }
 
-    const standings = await getStandingsForSeason(seasonId);
+    // Get mode from query params
+    const mode = (req.query.mode as StandingsMode) || "live";
+    
+    // Validate mode
+    if (mode !== "live" && mode !== "final") {
+      return res.status(400).json({ 
+        error: "Invalid mode. Must be 'live' or 'final'" 
+      });
+    }
+
+    // Use new service with tie-break support
+    const standings = await getSeasonStandings(seasonId, mode);
+    
     res.json({ 
       data: standings,
-      total: standings.length 
+      total: standings.length,
+      mode: mode
     });
   } catch (error) {
     next(error);

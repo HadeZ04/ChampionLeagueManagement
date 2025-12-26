@@ -8,10 +8,11 @@ class StandingsAdminService {
   /**
    * Get standings for a season
    * @param {number} seasonId 
+   * @param {string} mode - "live" or "final" (default: "live")
    */
-  async getStandingsBySeason(seasonId) {
+  async getStandingsBySeason(seasonId, mode = 'live') {
     try {
-      const response = await ApiService.get(`/admin/standings/season/${seasonId}`);
+      const response = await ApiService.get(`/admin/standings/season/${seasonId}?mode=${mode}`);
       return response;
     } catch (error) {
       logger.error('Failed to get standings by season:', error);

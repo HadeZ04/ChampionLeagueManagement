@@ -56,8 +56,9 @@ export default {
         'uefa-dark-gray': '#003B73'
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['"Space Grotesk"', 'Inter', 'system-ui', 'sans-serif']
+        sans: ['"Manrope"', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'sans-serif'],
+        display: ['"Manrope"', 'system-ui', 'sans-serif'],
+        numbers: ['"Manrope"', 'system-ui', 'sans-serif']
       },
       spacing: {
         18: '4.5rem',

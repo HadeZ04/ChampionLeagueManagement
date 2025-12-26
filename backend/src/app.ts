@@ -29,6 +29,8 @@ import newsRoutes from "./routes/newsRoutes";
 import mediaRoutes from "./routes/mediaRoutes";
 import settingsRoutes from "./routes/settingsRoutes";
 import officialRoutes from "./routes/officialRoutes";
+import awardsRoutes from "./routes/awardsRoutes";
+import disciplineRoutes from "./routes/disciplineRoutes";
 
 const app = express();
 
@@ -65,6 +67,8 @@ app.use("/api/matches", matchRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/api/media", mediaRoutes);
 app.use("/api/settings", settingsRoutes);
+app.use("/api/seasons", awardsRoutes);
+app.use("/api/seasons", disciplineRoutes);
 
 // Admin routes
 app.use("/api/admin/standings", adminStandingsRoutes);

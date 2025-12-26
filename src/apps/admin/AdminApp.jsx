@@ -30,6 +30,8 @@ import SeasonPlayerApprovalPage from './pages/SeasonPlayerApprovalPage'
 import MyTeamPage from './pages/MyTeamPage'
 import PlayerRegistrationsPage from './pages/PlayerRegistrationsPage'
 import OfficialsManagement from './pages/OfficialsManagement'
+import SeasonAwardsPage from './pages/SeasonAwardsPage'
+import SeasonDisciplinePage from './pages/SeasonDisciplinePage'
 
 
 const AdminApp = ({ onLogout, currentUser }) => {
@@ -250,6 +252,22 @@ const AdminApp = ({ onLogout, currentUser }) => {
           element={
             <AccessGuard permission="manage_matches" currentUser={currentUser}>
               <OfficialsManagement />
+            </AccessGuard>
+          }
+        />
+        <Route
+          path="awards"
+          element={
+            <AccessGuard permission="view_reports" currentUser={currentUser}>
+              <SeasonAwardsPage />
+            </AccessGuard>
+          }
+        />
+        <Route
+          path="discipline"
+          element={
+            <AccessGuard permission="manage_matches" currentUser={currentUser}>
+              <SeasonDisciplinePage />
             </AccessGuard>
           }
         />
