@@ -15,6 +15,7 @@ const ScheduleManagement = () => {
   const [selectedSeasonId, setSelectedSeasonId] = useState('');
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
+  const [quickSelectCount, setQuickSelectCount] = useState(20);
 
   useEffect(() => {
     fetchTeams();
@@ -138,6 +139,7 @@ const ScheduleManagement = () => {
     }
   }
 
+
   const rounds = schedule.reduce((acc, match) => {
     acc[match.roundNumber] = acc[match.roundNumber] || [];
     acc[match.roundNumber].push(match);
@@ -154,8 +156,7 @@ const ScheduleManagement = () => {
       setSuccessMsg(`Deleted ${count} matches from database.`);
       setSchedule([]); // Clear local state too
       setIsGenerated(false);
-      // Refetch to confirm empty?
-      await fetchExistingSchedule(); // Should return empty
+      // Do not refetch immediately to avoid race conditions or auto-jumping back
     } catch (err) {
       console.error(err);
       setError('Failed to clear database schedule.');
@@ -163,6 +164,30 @@ const ScheduleManagement = () => {
       setLoading(false);
     }
   };
+
+  const handleQuickSelect = () => {
+    const count = Math.min(Math.max(1, quickSelectCount), teams.length);
+    const toSelect = teams.slice(0, count).map(t => t.id);
+    setSelectedTeamIds(toSelect);
+  };
+
+  const handleSelectAll = () => {
+    setSelectedTeamIds(teams.map(t => t.id));
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedTeamIds([]);
+  };
+
+  const [activeTab, setActiveTab] = useState('create');
+
+  useEffect(() => {
+    if (isGenerated && schedule.length > 0) {
+      setActiveTab('view');
+    } else {
+      setActiveTab('create');
+    }
+  }, [isGenerated, schedule.length]); // Auto-switch on generation/clear
 
   return (
     <div className="p-6">
@@ -182,24 +207,29 @@ const ScheduleManagement = () => {
             ))}
           </select>
           <div className="h-8 w-px bg-gray-300 mx-2"></div>
+
+          <div className="flex bg-gray-100 p-1 rounded-lg">
+            <button
+              onClick={() => setActiveTab('create')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'create' ? 'bg-white shadow text-blue-600' : 'text-gray-600 hover:text-gray-900'}`}
+            >
+              Setup New
+            </button>
+            <button
+              onClick={() => setActiveTab('view')}
+              disabled={!isGenerated}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'view' ? 'bg-white shadow text-blue-600' : 'text-gray-600 hover:text-gray-900 disabled:opacity-50'}`}
+            >
+              View Schedule
+            </button>
+          </div>
+
           <button
             onClick={handleClearDatabase}
             disabled={loading}
-            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg disabled:bg-gray-400"
+            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg disabled:bg-gray-400 ml-2"
           >
-            <ListRestart size={18} /> Clear DB Schedule
-          </button>
-          {isGenerated && (
-            <button onClick={handleReset} className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg">
-              <ListRestart size={18} /> Reset View
-            </button>
-          )}
-          <button
-            onClick={handleGenerate}
-            disabled={loading || selectedTeamIds.length < 2 || !selectedSeasonId}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            <CalendarCheck size={18} /> {loading ? 'Processing...' : 'Generate Schedule'}
+            <ListRestart size={18} /> Clear DB
           </button>
         </div>
       </div>
@@ -216,18 +246,52 @@ const ScheduleManagement = () => {
         </div>
       )}
 
-      {!isGenerated ? (
+      {activeTab === 'create' && (
         <div className="bg-white p-6 rounded-lg shadow-sm border space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold">Select Teams for Season ({selectedTeamIds.length} selected)</h2>
-            <div>
-              <label className="mr-2 font-medium">Start Date:</label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="border p-1 rounded"
-              />
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <h2 className="text-xl font-bold">Select Teams ({selectedTeamIds.length} selected)</h2>
+
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2 bg-gray-50 p-2 rounded border">
+                <span className="text-sm font-medium">Quick Select:</span>
+                <input
+                  type="number"
+                  min="2"
+                  max={teams.length}
+                  value={quickSelectCount}
+                  onChange={(e) => setQuickSelectCount(parseInt(e.target.value) || 0)}
+                  className="w-16 border rounded px-2 py-1 text-sm"
+                />
+                <button
+                  onClick={handleQuickSelect}
+                  className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                >
+                  Apply
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button onClick={handleSelectAll} className="text-xs border border-gray-300 px-3 py-1 rounded hover:bg-gray-100">Select All</button>
+                <button onClick={handleDeselectAll} className="text-xs border border-gray-300 px-3 py-1 rounded hover:bg-gray-100">Clear</button>
+              </div>
+
+              <div className="flex items-center gap-2 border-l pl-4">
+                <label className="font-medium text-sm">Start Date:</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="border p-1 rounded text-sm"
+                />
+              </div>
+
+              <button
+                onClick={handleGenerate}
+                disabled={loading || selectedTeamIds.length < 2 || !selectedSeasonId}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed ml-auto"
+              >
+                <CalendarCheck size={18} /> Generate
+              </button>
             </div>
           </div>
 
@@ -246,9 +310,12 @@ const ScheduleManagement = () => {
             <p className="text-gray-500">No teams found. Please add teams in Team Management first.</p>
           )}
         </div>
-      ) : (
+      )}
+
+      {activeTab === 'view' && (
         <div className="space-y-6">
-          <div className="flex justify-end">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-bold">Current Schedule</h2>
             <button
               onClick={handleSave}
               disabled={loading}
@@ -257,27 +324,33 @@ const ScheduleManagement = () => {
               <Save size={18} /> Save All Changes to Database
             </button>
           </div>
-          {Object.entries(rounds).map(([roundNumber, matches]) => (
-            <div key={roundNumber} className="bg-white p-4 rounded-lg shadow-sm border">
-              <h3 className="font-bold text-lg mb-3">Round {roundNumber} <span className="text-sm font-normal text-gray-500">- {new Date(matches[0].scheduledKickoff).toLocaleDateString()}</span></h3>
-              <div className="space-y-2">
-                {matches.map((match, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded border-b last:border-0">
-                    <div className="flex-1 text-right font-semibold">{match.homeTeamName}</div>
-                    <div className="mx-4 text-gray-500 px-2 bg-gray-100 rounded text-sm">VS</div>
-                    <div className="flex-1 text-left font-semibold">{match.awayTeamName}</div>
-                    <div className="flex flex-col items-end">
-                      <span className="text-xs text-gray-500">{new Date(match.scheduledKickoff).toLocaleDateString()}</span>
-                      <span className="text-xs text-gray-400">{new Date(match.scheduledKickoff).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          {Object.entries(rounds).length === 0 ? (
+            <div className="text-center py-10 bg-gray-50 rounded border">
+              <p className="text-gray-500">No schedule generated yet.</p>
+              <button onClick={() => setActiveTab('create')} className="mt-2 text-blue-600 font-medium hover:underline">Create a schedule</button>
             </div>
-          ))}
+          ) : (
+            Object.entries(rounds).map(([roundNumber, matches]) => (
+              <div key={roundNumber} className="bg-white p-4 rounded-lg shadow-sm border">
+                <h3 className="font-bold text-lg mb-3">Round {roundNumber} <span className="text-sm font-normal text-gray-500">- {new Date(matches[0].scheduledKickoff).toLocaleDateString()}</span></h3>
+                <div className="space-y-2">
+                  {matches.map((match, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded border-b last:border-0">
+                      <div className="flex-1 text-right font-semibold">{match.homeTeamName}</div>
+                      <div className="mx-4 text-gray-500 px-2 bg-gray-100 rounded text-sm">VS</div>
+                      <div className="flex-1 text-left font-semibold">{match.awayTeamName}</div>
+                      <div className="flex flex-col items-end">
+                        <span className="text-xs text-gray-500">{new Date(match.scheduledKickoff).toLocaleDateString()}</span>
+                        <span className="text-xs text-gray-400">{new Date(match.scheduledKickoff).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
         </div>
-      )
-      }
+      )}
     </div >
   );
 };

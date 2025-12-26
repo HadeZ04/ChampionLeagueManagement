@@ -168,8 +168,8 @@ const MatchCenterPage = () => {
                   key={tab.id}
                   onClick={() => setFilter(tab.id)}
                   className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium text-sm transition-all ${filter === tab.id
-                      ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25'
-                      : 'bg-white/5 text-white/70 border border-white/10 hover:bg-white/10 hover:text-white'
+                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25'
+                    : 'bg-white/5 text-white/70 border border-white/10 hover:bg-white/10 hover:text-white'
                     }`}
                 >
                   <Icon size={16} />
@@ -181,6 +181,30 @@ const MatchCenterPage = () => {
                 </button>
               );
             })}
+
+            <div className="ml-auto pl-3 border-l border-white/10">
+              <button
+                onClick={() => {
+                  setLoading(true); // Visual feedback
+                  const fetchMatches = async () => {
+                    try {
+                      const response = await MatchesService.getAllMatches({ limit: 50 });
+                      setMatches(response?.matches || []);
+                    } catch (error) {
+                      console.error('Failed to fetch matches:', error);
+                    } finally {
+                      setLoading(false);
+                    }
+                  };
+                  fetchMatches();
+                }}
+                className="flex items-center gap-2 px-4 py-3 rounded-xl font-medium text-sm bg-white/5 text-white/70 border border-white/10 hover:bg-white/10 hover:text-white transition-all"
+                title="Cập nhật dữ liệu"
+              >
+                <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+                <span>Làm mới</span>
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -205,8 +229,8 @@ const MatchCenterPage = () => {
               <div
                 key={match.id}
                 className={`group relative rounded-2xl overflow-hidden backdrop-blur-md border transition-all hover:scale-[1.02] cursor-pointer ${['IN_PLAY', 'PAUSED', 'HALFTIME'].includes(match.status)
-                    ? 'bg-red-500/10 border-red-500/30 hover:border-red-400/50'
-                    : 'bg-white/[0.05] border-white/[0.1] hover:border-cyan-400/30'
+                  ? 'bg-red-500/10 border-red-500/30 hover:border-red-400/50'
+                  : 'bg-white/[0.05] border-white/[0.1] hover:border-cyan-400/30'
                   }`}
                 onClick={() => setSelectedMatch(selectedMatch?.id === match.id ? null : match)}
               >
