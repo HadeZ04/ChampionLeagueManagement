@@ -1,0 +1,9 @@
+[DISALLOW_1766503989767] EventID: 99, Type: GOAL, STID: 84, HomeSTID: 84, AwaySTID: 67, IsHome: true
+[DISALLOW] Decs - Home: 1, Away: 0
+[DISALLOW] Update Executed
+[DISALLOW_1766503999270] EventID: 92, Type: GOAL, STID: 84, HomeSTID: 84, AwaySTID: 67, IsHome: true
+[DISALLOW] Decs - Home: 1, Away: 0
+[DISALLOW] Update Executed
+[DISALLOW_1766504006401] EventID: 98, Type: GOAL, STID: 84, HomeSTID: 84, AwaySTID: 67, IsHome: true
+[DISALLOW] Decs - Home: 1, Away: 0
+[DISALLOW] Update Executed

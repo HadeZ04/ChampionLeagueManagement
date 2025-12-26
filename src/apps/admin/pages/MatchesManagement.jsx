@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Plus,
   Calendar,
@@ -118,6 +119,7 @@ const MatchesManagement = () => {
       try {
         setLoading(true)
         setError(null)
+
         // Use getAllMatches to fetch INTERNAL system matches (which includes the generated schedule)
         const response = await MatchesService.getAllMatches({
           status: filters.status === 'all' ? '' : filters.status,
@@ -126,13 +128,16 @@ const MatchesManagement = () => {
           page: pagination.page,
           limit: pagination.limit
         })
+
         if (!isMounted) return
+
         setMatches(response.matches || [])
         setPagination(prev => ({
           ...prev,
           ...response.pagination,
           total: response.total
         }))
+
       } catch (err) {
         logger.error('Failed to load matches', err)
         if (isMounted) {
@@ -323,13 +328,13 @@ const MatchesManagement = () => {
               <Download size={16} />
               <span>Xuất lịch thi đấu</span>
             </button>
-            <a
-              href="/admin/schedule"
+            <Link
+              to="/admin/schedule"
               className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
             >
               <Calendar size={16} />
               <span>Generate Schedule</span>
-            </a>
+            </Link>
           </div>
         </div>
       </div>

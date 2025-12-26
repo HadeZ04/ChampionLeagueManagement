@@ -57,7 +57,7 @@ router.get("/standings", async (req, res, next) => {
     const seasonId = typeof req.query.seasonId === "string" ? Number(req.query.seasonId) : undefined;
     const season = typeof req.query.season === "string" ? req.query.season : undefined;
     const standings = await getInternalStandings({ seasonId, season });
-    
+
     console.log('[GET /teams/standings] Success, returned', standings.table.length, 'teams');
     res.json({ data: standings });
   } catch (error) {
@@ -112,18 +112,18 @@ router.get("/:teamId/players", async (req, res, next) => {
     }
 
     const season = parseSeason(req.query.season);
-    
+
     // Import player service to get players by team
     const { listPlayers } = await import("../services/playerService");
-    const players = await listPlayers({ 
-      teamId, 
+    const players = await listPlayers({
+      teamId,
       season,
-      limit: 100 
+      limit: 100
     });
 
-    res.json({ 
-      data: players.data, 
-      total: players.total 
+    res.json({
+      data: players.data,
+      total: players.total
     });
   } catch (error) {
     next(error);
@@ -163,7 +163,10 @@ router.delete("/:id", async (req, res, next) => {
     }
 
     res.status(204).send();
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message && error.message.includes("Cannot delete team")) {
+      return res.status(409).json({ message: error.message });
+    }
     next(error);
   }
 });

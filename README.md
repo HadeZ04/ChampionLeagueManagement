@@ -31,13 +31,9 @@ This project implements a **3-Tier Architecture** with **Dual-Frontend** design 
 - **Migrations** - Database schema management
 - **Config** - Database configuration
 
-
-
-
-#### 4. Enviroment
+#### 4. Environment
 npm install @radix-ui/react-slot @radix-ui/react-toggle-group @radix-ui/react-toggle canvas-confetti class-variance-authority date-fns framer-motion lucide-react react-dom react-intersection-observer react-router-dom react react-hot-toast
- 
->>>>>>> 3b2587c (Updated full database and feature admin)
+
 ## 📁 Project Structure
 
 ```

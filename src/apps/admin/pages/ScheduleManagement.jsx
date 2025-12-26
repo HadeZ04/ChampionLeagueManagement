@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import MatchesService from '../../../layers/application/services/MatchesService';
 import TeamsService from '../../../layers/application/services/TeamsService';
+import ApiService from '../../../layers/application/services/ApiService'; // Import ApiService
 import { CalendarCheck, ListRestart, Save, CheckCircle, AlertCircle } from 'lucide-react';
 
 const ScheduleManagement = () => {
@@ -10,20 +11,36 @@ const ScheduleManagement = () => {
   const [isGenerated, setIsGenerated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [seasons, setSeasons] = useState([]);
+  const [selectedSeasonId, setSelectedSeasonId] = useState('');
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
 
   useEffect(() => {
     fetchTeams();
+    fetchSeasons();
     fetchExistingSchedule();
   }, []);
+
+  const fetchSeasons = async () => {
+    try {
+      const response = await ApiService.get('/seasons'); // Using ApiService directly is simpler here if service not avail
+      // Or if SeasonService exists, use it. But I don't see SeasonService in imports.
+      // Let's assume response.data is the array
+      setSeasons(response.data || []);
+      // Set default to first or current
+      const current = (response.data || []).find(s => s.isCurrent) || (response.data || [])[0];
+      if (current) setSelectedSeasonId(current.id || current.seasonId);
+    } catch (err) {
+      console.error("Failed to fetch seasons", err);
+    }
+  }
 
   const fetchTeams = async () => {
     try {
       setLoading(true);
       const { teams } = await TeamsService.getAllTeams({ limit: 100 });
       setTeams(teams || []);
-      // Default select all teams for now
       setSelectedTeamIds(teams.map(t => t.id));
     } catch (err) {
       console.error(err);
@@ -70,7 +87,7 @@ const ScheduleManagement = () => {
 
       const generatedFixtures = await MatchesService.generateRoundRobinSchedule(
         selectedTeamIds,
-        null, // seasonId (server defaults if null)
+        selectedSeasonId ? Number(selectedSeasonId) : null, // Pass selected season as number
         startDate
       );
 
@@ -79,6 +96,7 @@ const ScheduleManagement = () => {
         ...f,
         homeTeamName: teams.find(t => t.id === f.homeTeamId)?.name || 'Unknown',
         awayTeamName: teams.find(t => t.id === f.awayTeamId)?.name || 'Unknown',
+        scheduledKickoff: f.utcDate || f.scheduledKickoff // Map backend utcDate to frontend property
       }));
 
       setSchedule(enrichedFixtures);
@@ -191,6 +209,20 @@ const ScheduleManagement = () => {
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold">Select Teams for Season ({selectedTeamIds.length} selected)</h2>
             <div>
+              <label className="mr-2 font-medium">Season:</label>
+              <select
+                value={selectedSeasonId}
+                onChange={(e) => setSelectedSeasonId(e.target.value)}
+                className="border p-1 rounded mr-4"
+              >
+                <option value="">-- Auto --</option>
+                {seasons.map(s => (
+                  <option key={s.id || s.seasonId} value={s.id || s.seasonId}>
+                    {s.name} ({s.code})
+                  </option>
+                ))}
+              </select>
+
               <label className="mr-2 font-medium">Start Date:</label>
               <input
                 type="date"
@@ -236,7 +268,10 @@ const ScheduleManagement = () => {
                     <div className="flex-1 text-right font-semibold">{match.homeTeamName}</div>
                     <div className="mx-4 text-gray-500 px-2 bg-gray-100 rounded text-sm">VS</div>
                     <div className="flex-1 text-left font-semibold">{match.awayTeamName}</div>
-                    <span className="text-xs text-gray-400">{new Date(match.scheduledKickoff).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <div className="flex flex-col items-end">
+                      <span className="text-xs text-gray-500">{new Date(match.scheduledKickoff).toLocaleDateString()}</span>
+                      <span className="text-xs text-gray-400">{new Date(match.scheduledKickoff).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
                   </div>
                 ))}
               </div>

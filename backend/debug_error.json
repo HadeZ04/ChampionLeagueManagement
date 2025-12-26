@@ -1,0 +1,17 @@
+{
+  "message": "The DELETE statement conflicted with the REFERENCE constraint \"FK__season_pl__playe__7E8CC4B1\". The conflict occurred in database \"ChampionLeagueManagement\", table \"dbo.season_player_registrations\", column 'player_id'.",
+  "number": 547,
+  "originalError": {
+    "info": {
+      "name": "ERROR",
+      "handlerName": "onErrorMessage",
+      "number": 547,
+      "state": 0,
+      "class": 16,
+      "message": "The DELETE statement conflicted with the REFERENCE constraint \"FK__season_pl__playe__7E8CC4B1\". The conflict occurred in database \"ChampionLeagueManagement\", table \"dbo.season_player_registrations\", column 'player_id'.",
+      "serverName": "thang2309",
+      "procName": "",
+      "lineNumber": 5
+    }
+  }
+}

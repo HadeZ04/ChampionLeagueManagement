@@ -4,6 +4,7 @@ import { query } from "../db/sqlServer";
 import { requireAuth, requirePermission } from "../middleware/authMiddleware";
 import { logEvent } from "../services/auditService";
 import { getInternalSeasons, getInternalStandings } from "../services/seasonService";
+import { deleteTeam } from "../services/teamService";
 import { AuthenticatedRequest } from "../types";
 
 const router = Router();
@@ -477,13 +478,7 @@ router.delete("/:id", ...requireTeamManagement, async (req: AuthenticatedRequest
     }
 
     try {
-      await query(
-        `
-          DELETE FROM teams
-          WHERE team_id = @teamId;
-        `,
-        { teamId },
-      );
+      await deleteTeam(teamId);
     } catch (error: any) {
       if (error?.number === 547) {
         return res.status(409).json({ error: "Team is referenced and cannot be deleted" });

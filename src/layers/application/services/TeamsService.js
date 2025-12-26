@@ -34,7 +34,7 @@ class TeamsService {
       }
 
       const response = await ApiService.get(APP_CONFIG.API.ENDPOINTS.TEAMS.LIST, params)
-      
+
       // Map backend data structure to frontend structure
       const teams = (response.data || []).map(team => ({
         id: team.team_id,
@@ -49,7 +49,7 @@ class TeamsService {
         description: team.description,
         playerCount: 0 // Will be populated separately if needed
       }))
-      
+
       return {
         teams,
         pagination: response.pagination || {},
@@ -104,7 +104,8 @@ class TeamsService {
       return true
     } catch (error) {
       console.error('Failed to delete team:', error)
-      throw error
+      const message = error.payload?.message || error.message || 'Failed to delete team'
+      throw new Error(message)
     }
   }
 

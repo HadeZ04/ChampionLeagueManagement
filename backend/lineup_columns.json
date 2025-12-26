@@ -1,0 +1,106 @@
+[
+  {
+    "TableName": "match_lineup_players",
+    "ColumnName": "is_captain"
+  },
+  {
+    "TableName": "match_lineup_players",
+    "ColumnName": "lineup_id"
+  },
+  {
+    "TableName": "match_lineup_players",
+    "ColumnName": "lineup_player_id"
+  },
+  {
+    "TableName": "match_lineup_players",
+    "ColumnName": "notes"
+  },
+  {
+    "TableName": "match_lineup_players",
+    "ColumnName": "order_number"
+  },
+  {
+    "TableName": "match_lineup_players",
+    "ColumnName": "position_code"
+  },
+  {
+    "TableName": "match_lineup_players",
+    "ColumnName": "role_code"
+  },
+  {
+    "TableName": "match_lineup_players",
+    "ColumnName": "season_id"
+  },
+  {
+    "TableName": "match_lineup_players",
+    "ColumnName": "season_player_id"
+  },
+  {
+    "TableName": "match_lineup_players",
+    "ColumnName": "shirt_number"
+  },
+  {
+    "TableName": "match_lineups",
+    "ColumnName": "bench_players_count"
+  },
+  {
+    "TableName": "match_lineups",
+    "ColumnName": "formation"
+  },
+  {
+    "TableName": "match_lineups",
+    "ColumnName": "kit_description"
+  },
+  {
+    "TableName": "match_lineups",
+    "ColumnName": "lineup_id"
+  },
+  {
+    "TableName": "match_lineups",
+    "ColumnName": "match_id"
+  },
+  {
+    "TableName": "match_lineups",
+    "ColumnName": "notes"
+  },
+  {
+    "TableName": "match_lineups",
+    "ColumnName": "review_notes"
+  },
+  {
+    "TableName": "match_lineups",
+    "ColumnName": "reviewed_at"
+  },
+  {
+    "TableName": "match_lineups",
+    "ColumnName": "reviewed_by"
+  },
+  {
+    "TableName": "match_lineups",
+    "ColumnName": "season_id"
+  },
+  {
+    "TableName": "match_lineups",
+    "ColumnName": "season_team_id"
+  },
+  {
+    "TableName": "match_lineups",
+    "ColumnName": "squad_size"
+  },
+  {
+    "TableName": "match_lineups",
+    "ColumnName": "starting_players_count"
+  },
+  {
+    "TableName": "match_lineups",
+    "ColumnName": "status"
+  },
+  {
+    "TableName": "match_lineups",
+    "ColumnName": "submitted_at"
+  },
+  {
+    "TableName": "match_lineups",
+    "ColumnName": "submitted_by"
+  }
+]

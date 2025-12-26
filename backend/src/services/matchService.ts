@@ -13,6 +13,21 @@ class NotificationService {
   }
 }
 
+export interface DraftMatch {
+  seasonId: number;
+  matchday: number;
+  homeTeamId: number;
+  awayTeamId: number;
+  utcDate: string;
+  venue?: string;
+  status: string;
+  homeSeasonTeamId?: number;
+  awaySeasonTeamId?: number;
+  homeTeamName?: string;
+  awayTeamName?: string;
+  roundNumber?: number;
+}
+
 export interface MatchRecord {
   matchId: number;
   seasonId: number;
@@ -344,6 +359,7 @@ export const listMatches = async (filters: MatchFilters = {}): Promise<Paginated
                 stp.team_id AS teamId,
                 player_name AS player,
                 event_type AS type,
+                card_type AS cardType,
                 event_minute AS minute,
                 description
             FROM match_events me
@@ -464,6 +480,7 @@ export const getMatchById = async (matchId: number): Promise<MatchRecord | null>
                 stp.team_id AS teamId,
                 me.player_name AS player,
                 me.event_type AS type,
+                me.card_type AS cardType,
                 me.event_minute AS minute,
                 me.description
             FROM match_events me
@@ -655,6 +672,15 @@ export const deleteMatch = async (matchId: number): Promise<boolean> => {
   return (result.rowsAffected?.[0] ?? 0) > 0;
 };
 
+export const deleteAllMatches = async (seasonId?: number): Promise<number> => {
+  const whereClause = seasonId ? "WHERE season_id = @seasonId" : "";
+  const result = await query(
+    `DELETE FROM matches ${whereClause};`,
+    seasonId ? { seasonId } : {}
+  );
+  return result.rowsAffected?.[0] ?? 0;
+};
+
 export const listLiveMatches = async (): Promise<MatchRecord[]> => {
   const result = await query(
     `
@@ -679,7 +705,36 @@ export const listLiveMatches = async (): Promise<MatchRecord[]> => {
         m.away_score AS awayScore,
         m.attendance,
         m.match_code AS matchCode,
-        CONVERT(VARCHAR(33), m.updated_at, 127) AS updatedAt
+        CONVERT(VARCHAR(33), m.updated_at, 127) AS updatedAt,
+        (SELECT TOP 1 JSON_QUERY((SELECT player_name AS playerName, team_name AS teamName FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)) FROM match_mvps WHERE match_id = m.match_id) AS mvpJson,
+        (SELECT (
+            SELECT 
+                match_event_id AS id,
+                stp.team_id AS teamId,
+                player_name AS player,
+                event_type AS type,
+                card_type AS cardType,
+                event_minute AS minute,
+                description
+            FROM match_events me
+            INNER JOIN season_team_participants stp ON me.season_team_id = stp.season_team_id
+            WHERE me.match_id = m.match_id 
+            ORDER BY me.event_minute ASC, me.created_at ASC
+            FOR JSON PATH
+        )) AS eventsJson,
+        (SELECT (
+            SELECT 
+                stp.team_id AS teamId,
+                mts.possession_percent AS possession,
+                mts.shots_total AS shots,
+                mts.shots_on_target AS onTarget,
+                mts.corners,
+                mts.fouls_committed AS fouls
+            FROM match_team_statistics mts
+            INNER JOIN season_team_participants stp ON mts.season_team_id = stp.season_team_id
+            WHERE mts.match_id = m.match_id
+            FOR JSON PATH
+        )) AS statsJson
       FROM matches m
       INNER JOIN season_team_participants hstp ON m.home_season_team_id = hstp.season_team_id
       INNER JOIN teams ht ON hstp.team_id = ht.team_id
@@ -691,7 +746,35 @@ export const listLiveMatches = async (): Promise<MatchRecord[]> => {
     `
   );
 
-  return result.recordset;
+  const parseJSON = (str: any) => {
+    try {
+      return typeof str === 'string' ? JSON.parse(str) : str;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const matches: MatchRecord[] = result.recordset.map((row: any) => {
+    const rawEvents = parseJSON(row.eventsJson) || [];
+    const rawStats = parseJSON(row.statsJson) || [];
+    const rawMvp = parseJSON(row.mvpJson);
+
+    // Map stats array to home/away object
+    const homeStats = rawStats.find((s: any) => s.teamId === row.homeTeamId) || null;
+    const awayStats = rawStats.find((s: any) => s.teamId === row.awayTeamId) || null;
+
+    return {
+      ...row,
+      mvp: rawMvp ? { playerName: rawMvp.playerName, teamName: rawMvp.teamName } : null,
+      events: rawEvents,
+      stats: {
+        home: homeStats,
+        away: awayStats
+      }
+    };
+  });
+
+  return matches;
 };
 
 // Generate random matches from active teams
@@ -1083,3 +1166,284 @@ export const syncMatchesFromUpstream = async (options: {
     skippedMatches: skippedCount,
   };
 };
+
+export const createBulkMatches = async (matches: DraftMatch[]): Promise<number> => {
+  if (!matches.length) return 0;
+
+  console.log(`[BulkCreate] Starting bulk create for ${matches.length} matches`);
+  const uniqueSeasonIds = [...new Set(matches.map(m => m.seasonId))];
+  const defaultStadiumId = await ensureDefaultStadium();
+
+  // 1. Prepare Caches
+  const teamSeasonMap = new Map<string, number>(); // "seasonId:teamId" -> seasonTeamId
+  const roundMap = new Map<string, number>(); // "seasonId:roundNum" -> roundId
+  const rulesetMap = new Map<number, number>(); // seasonId -> rulesetId
+
+  for (const sId of uniqueSeasonIds) {
+    // A. Ruleset
+    try {
+      const rs = await query<{ ruleset_id: number }>(`SELECT ruleset_id FROM seasons WHERE season_id = @sId`, { sId });
+      rulesetMap.set(sId, rs.recordset[0]?.ruleset_id ?? 1);
+    } catch { rulesetMap.set(sId, 1); }
+
+    // B. Teams
+    const teamsInThisSeason = new Set([
+      ...matches.filter(m => m.seasonId === sId).map(m => m.homeTeamId),
+      ...matches.filter(m => m.seasonId === sId).map(m => m.awayTeamId),
+    ]);
+
+    // Fetch existing teams
+    const existingTeams = await query(
+      `SELECT team_id, season_team_id FROM season_team_participants WHERE season_id = @sId`,
+      { sId }
+    );
+    existingTeams.recordset.forEach((r: any) => {
+      teamSeasonMap.set(`${sId}:${r.team_id}`, r.season_team_id);
+    });
+
+    // Insert missing teams
+    const missingTeams = [...teamsInThisSeason].filter(tid => !teamSeasonMap.has(`${sId}:${tid}`));
+    for (const tid of missingTeams) {
+      const stId = await ensureTeamInSeason(tid, sId);
+      teamSeasonMap.set(`${sId}:${tid}`, stId);
+    }
+
+    // C. Rounds
+    const roundsInThisSeason = new Set(matches.filter(m => m.seasonId === sId).map(m => m.roundNumber || m.matchday || 1));
+    // Fetch existing rounds
+    const existingRounds = await query(
+      `SELECT round_number, round_id FROM season_rounds WHERE season_id = @sId`,
+      { sId }
+    );
+    existingRounds.recordset.forEach((r: any) => {
+      roundMap.set(`${sId}:${r.round_number}`, r.round_id);
+    });
+
+    // Insert missing rounds
+    const missingRounds = [...roundsInThisSeason].filter(rn => !roundMap.has(`${sId}:${rn}`));
+    for (const rn of missingRounds) {
+      const rId = await ensureRoundForSeason(sId, rn);
+      roundMap.set(`${sId}:${rn}`, rId);
+    }
+  }
+
+  // 2. Batch Insert
+  let totalInserted = 0;
+  const chunkSize = 50;
+
+  for (let i = 0; i < matches.length; i += chunkSize) {
+    const chunk = matches.slice(i, i + chunkSize);
+    const valuesPart: string[] = [];
+    const params: any = { defaultStadiumId };
+
+    chunk.forEach((m, idx) => {
+      const sId = m.seasonId;
+      const rNum = m.roundNumber || m.matchday || 1;
+      const roundId = roundMap.get(`${sId}:${rNum}`);
+      const homeSeasonTeamId = teamSeasonMap.get(`${sId}:${m.homeTeamId}`);
+      const awaySeasonTeamId = teamSeasonMap.get(`${sId}:${m.awayTeamId}`);
+      const rulesetId = rulesetMap.get(sId) ?? 1;
+
+      // Generate unique match code
+      const matchCode = `M${sId}-${roundId}-${homeSeasonTeamId}-${awaySeasonTeamId}-${Math.floor(Math.random() * 10000000)}`;
+
+      params[`s${idx}`] = sId;
+      params[`r${idx}`] = roundId;
+      params[`md${idx}`] = m.matchday || 1;
+      params[`ht${idx}`] = homeSeasonTeamId ?? null;
+      params[`at${idx}`] = awaySeasonTeamId ?? null;
+      // params[`stad${idx}`] = m.venue ? defaultStadiumId : defaultStadiumId; // removed unused venue
+      params[`rs${idx}`] = rulesetId;
+      params[`k${idx}`] = m.utcDate;
+      params[`mc${idx}`] = matchCode;
+
+      valuesPart.push(`(@s${idx}, @r${idx}, @md${idx}, @ht${idx}, @at${idx}, @defaultStadiumId, @rs${idx}, @k${idx}, 'scheduled', @mc${idx})`);
+    });
+
+    if (valuesPart.length === 0) continue;
+
+    const sql = `
+      INSERT INTO matches (
+        season_id, round_id, matchday_number,
+        home_season_team_id, away_season_team_id,
+        stadium_id, ruleset_id, scheduled_kickoff, status,
+        match_code
+      )
+      VALUES ${valuesPart.join(', ')};
+    `;
+
+    try {
+      await query(sql, params);
+      totalInserted += chunk.length;
+      console.log(`[BulkCreate] Inserted chunk ${(i / chunkSize) + 1}: ${chunk.length} matches`);
+    } catch (e) {
+      console.error(`[BulkCreate] Batch insert failed for chunk ${i}:`, e);
+    }
+  }
+
+  return totalInserted;
+};
+
+export const generateRoundRobinSchedule = async (params: {
+  teamIds: number[];
+  seasonId?: number;
+  startDate?: string;
+}): Promise<DraftMatch[]> => {
+  const { teamIds, seasonId, startDate } = params;
+  if (!teamIds || teamIds.length < 2) {
+    throw new Error('At least 2 teams are required');
+  }
+
+  // If seasonId is provided, verify it exists
+  let sId = seasonId;
+  let rulesetId = 1;
+
+  if (sId) {
+    const seasonRes = await query<{ season_id: number, ruleset_id: number }>(
+      "SELECT season_id, ruleset_id FROM seasons WHERE season_id = @id",
+      { id: sId }
+    );
+    if (seasonRes.recordset.length) {
+      rulesetId = seasonRes.recordset[0].ruleset_id;
+    } else {
+      // Fallback or error? Let's default to recently active if invalid, or just keep sId
+      console.warn(`Season ID ${sId} not found, proceeding potentially with default FK issues if strictly enforced`);
+    }
+  } else {
+    // Try to get current season
+    // Try to get current season from status
+    const currentSeason = await query<{ season_id: number }>("SELECT TOP 1 season_id FROM seasons WHERE status = 'in_progress' ORDER BY start_date DESC");
+    sId = currentSeason.recordset[0]?.season_id;
+  }
+
+  // Helper to rotate array for round robin
+  const rotate = (arr: number[]) => {
+    const last = arr.pop();
+    if (last) arr.splice(1, 0, last);
+    return arr;
+  };
+
+  // Helper to shuffle array (Fisher-Yates)
+  const shuffle = (array: number[]) => {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  };
+
+  // 1. Randomize teams
+  const shuffledTeamIds = shuffle([...teamIds]);
+  const teams = [...shuffledTeamIds];
+
+  if (teams.length % 2 !== 0) {
+    teams.push(0); // Dummy team
+  }
+
+  const numTeams = teams.length;
+  const numRounds = (numTeams - 1) * 2; // Double round robin
+  const matchesPerRound = numTeams / 2;
+
+  console.log(`[ScheduleGen] Generating schedule for ${numTeams} teams (including dummy if odd)`);
+  console.log(`[ScheduleGen] Total Rounds: ${numRounds}`);
+  console.log(`[ScheduleGen] Matches per Round (max): ${matchesPerRound}`);
+
+  const schedule: any[] = [];
+
+  // Find next valid Tuesday start date
+  let currentRoundDate = startDate ? new Date(startDate) : new Date();
+
+  // Advance to next Tuesday if not already
+  while (currentRoundDate.getDay() !== 2) {
+    currentRoundDate.setDate(currentRoundDate.getDate() + 1);
+  }
+
+  // Single Round Robin first
+  let roundTeams = [...teams];
+
+  for (let round = 1; round <= numRounds; round++) {
+    const isSecondHalf = round > (numRounds / 2);
+
+    // Determine matches for this round
+    const roundMatchesData = [];
+
+    for (let i = 0; i < matchesPerRound; i++) {
+      const t1 = roundTeams[i];
+      const t2 = roundTeams[numTeams - 1 - i];
+
+      if (t1 === 0 || t2 === 0) continue;
+
+      // Swap home/away for second half
+      const home = isSecondHalf ? t2 : t1;
+      const away = isSecondHalf ? t1 : t2;
+
+      roundMatchesData.push({ home, away });
+    }
+
+    // Shuffle matches within the round to randomize who plays on which day
+    // (Optional, but good for variety)
+    // const shuffledRoundMatches = roundMatchesData; // or shuffle(roundMatchesData) if object shuffling needed
+
+    // Distribute matches across Tue (2), Wed (3), Thu (4)
+    // If round has e.g. 4 matches: 2 on Tue, 1 on Wed, 1 on Thu? Or just sequential.
+    // Let's do sequential distribution: Tue, Wed, Thu, Tue, Wed, Thu...
+
+    // Reset day offset for the start of the week
+    let dayOffset = 0;
+
+    for (let mIndex = 0; mIndex < roundMatchesData.length; mIndex++) {
+      const matchPair = roundMatchesData[mIndex];
+
+      // 0 -> Tue (offset 0), 1 -> Wed (offset 1), 2 -> Thu (offset 2), 3 -> Tue (offset 0)...
+      const dayMode = mIndex % 3;
+
+      const matchDate = new Date(currentRoundDate);
+      matchDate.setDate(matchDate.getDate() + dayMode);
+
+      // Set Random Time: 01:00 to 04:00
+      // Random hour: 1, 2, 3, or 4? (User said "rạng sáng" usually 1-4)
+      // Let's say 01:00 to 04:59? Or fixed slots?
+      // User requested "khung giờ rạng sáng". 02:00, 03:00 is safe Champions League style (local time usually late, but rạng sáng VN is correct).
+      const randomHour = Math.floor(Math.random() * (4 - 1 + 1)) + 1; // 1 to 4
+      matchDate.setHours(randomHour, 0, 0, 0);
+
+      schedule.push({
+        homeTeamId: matchPair.home,
+        awayTeamId: matchPair.away,
+        matchday: round,
+        roundNumber: round,
+        seasonId: sId,
+        utcDate: matchDate.toISOString(),
+        status: 'scheduled',
+        venue: 'TBC',
+        homeTeamName: `Team ${matchPair.home}`,
+        awayTeamName: `Team ${matchPair.away}`
+      });
+    }
+
+    // Prepare date for next round (Next Week)
+    // Current round started on a Tuesday. Next round should start on next Tuesday (+7 days)
+    currentRoundDate.setDate(currentRoundDate.getDate() + 7);
+
+    // Rotate for next round (Berger rotation)
+    // Keep first team fixed, rotate the rest
+    // Standard Berger table rotation
+    // Note: The teams array includes the dummy if odd.
+    // If numTeams is even (including dummy), index 0 is fixed.
+
+    // teams array is [0, 1, 2, 3...]
+    // fixed is roundTeams[0]
+    // moving is roundTeams[1...end]
+    const fixed = roundTeams[0];
+    const moving = roundTeams.slice(1);
+
+    // Rotate moving: last becomes first
+    const last = moving.pop();
+    if (last !== undefined) moving.unshift(last);
+
+    roundTeams = [fixed, ...moving];
+  }
+
+  return schedule;
+};
+

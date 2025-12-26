@@ -1,0 +1,67 @@
+﻿Current CWD: D:\ChampionLeagueManagement-main\backend
+Dotenv loaded: {
+  PORT: '4000',
+  DB_HOST: 'thang2309.database.windows.net',
+  DB_PORT: '1433',
+  DB_USER: 'thang2309',
+  DB_PASS: '***',
+  DB_NAME: 'ChampionLeagueManagement',
+  DB_ENCRYPT: 'true',
+  DB_TRUST_SERVER_CERTIFICATE: 'true',
+  JWT_SECRET: '***',
+  JWT_EXPIRES_IN: '2h',
+  FOOTBALL_DATA_API_TOKEN: '***',
+  FOOTBALL_DATA_COMPETITION_CODE: 'CL'
+}
+Reading SQL file from: D:\ChampionLeagueManagement-main\backend\debug_mapping.sql
+Executing SQL...
+Database connection pool established
+--- Result Set 1 ---
+[
+  {
+    "CurrentSeasonId": 3
+  }
+]
+--- Result Set 2 ---
+[
+  {
+    "Metric": "Total External Matches",
+    "Count": 144
+  }
+]
+--- Result Set 3 ---
+[
+  {
+    "Metric": "Matches with Mapped Home Team",
+    "Count": 216
+  }
+]
+--- Result Set 4 ---
+[
+  {
+    "Metric": "Matches with Mapped Home Participant",
+    "Count": 144
+  }
+]
+--- Result Set 5 ---
+[
+  {
+    "Metric": "Matches with Mapped Away Team",
+    "Count": 216
+  }
+]
+--- Result Set 6 ---
+[
+  {
+    "Metric": "Matches with Mapped Away Participant",
+    "Count": 144
+  }
+]
+--- Result Set 7 ---
+[
+  {
+    "Metric": "Matches Fully Mapped",
+    "Count": 135
+  }
+]
+âœ… SQL executed successfully!

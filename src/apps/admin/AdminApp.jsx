@@ -22,6 +22,7 @@ import StandingsPage from "../public/pages/StandingsPage";
 import StandingsManagement from './pages/StandingsManagement';
 import SeasonManagement from './pages/SeasonManagement'
 import MatchDayManagement from './pages/MatchDayManagement';
+import ScheduleManagement from './pages/ScheduleManagement';
 import LiveMatchUpdatePage from './pages/LiveMatchUpdatePage';
 import AccessGuard from './components/AccessGuard';
 import SeasonPlayersManagement from './pages/SeasonPlayersManagement';
@@ -226,6 +227,14 @@ const AdminApp = ({ onLogout, currentUser }) => {
           element={
             <AccessGuard permission="manage_matches" currentUser={currentUser}>
               <MatchDayManagement />
+            </AccessGuard>
+          }
+        />
+        <Route
+          path="schedule"
+          element={
+            <AccessGuard permission="manage_matches" currentUser={currentUser}>
+              <ScheduleManagement />
             </AccessGuard>
           }
         />
