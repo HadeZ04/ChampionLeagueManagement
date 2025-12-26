@@ -94,9 +94,9 @@ const SeasonAwardsPage = () => {
           className="w-full md:w-96 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
           {seasons.map(season => (
-            <key={season.seasonId} value={season.seasonId}>
+            <option key={season.seasonId} value={season.seasonId}>
               {season.name} ({season.seasonYear})
-            </key>
+            </option>
           ))}
         </select>
         {selectedSeason && (
