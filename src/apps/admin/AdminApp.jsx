@@ -29,7 +29,6 @@ import SeasonPlayersManagement from './pages/SeasonPlayersManagement';
 import SeasonPlayerApprovalPage from './pages/SeasonPlayerApprovalPage'
 import MyTeamPage from './pages/MyTeamPage'
 import PlayerRegistrationsPage from './pages/PlayerRegistrationsPage'
-import ScheduleManagement from './pages/ScheduleManagement'
 import OfficialsManagement from './pages/OfficialsManagement'
 
 
