@@ -100,8 +100,8 @@ const MatchesPage = () => {
 
         const formatMatch = (m, isExternal) => ({
           id: isExternal ? `ext-${m.id}` : m.id,
-          date: m.utcDate ? String(m.utcDate).split('T')[0] : '',
-          time: m.utcDate ? new Date(m.utcDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '00:00',
+          date: m.utcDate ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(new Date(m.utcDate)) : '',
+          time: m.utcDate ? new Date(m.utcDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' }) : '00:00',
           status: (() => {
             if (m.status === 'in_progress' || m.status === 'IN_PLAY') return 'live';
             if (m.status === 'completed' || m.status === 'FINISHED') return 'finished';
@@ -188,6 +188,7 @@ const MatchesPage = () => {
 
   const formatDate = (dateString) =>
     new Date(dateString).toLocaleDateString('vi-VN', {
+      timeZone: 'Asia/Bangkok',
       weekday: 'long',
       day: 'numeric',
       month: 'long',

@@ -332,7 +332,7 @@ const ScheduleManagement = () => {
           ) : (
             Object.entries(rounds).map(([roundNumber, matches]) => (
               <div key={roundNumber} className="bg-white p-4 rounded-lg shadow-sm border">
-                <h3 className="font-bold text-lg mb-3">Round {roundNumber} <span className="text-sm font-normal text-gray-500">- {new Date(matches[0].scheduledKickoff).toLocaleDateString()}</span></h3>
+                <h3 className="font-bold text-lg mb-3">Round {roundNumber} <span className="text-sm font-normal text-gray-500">- {new Date(matches[0].scheduledKickoff).toLocaleDateString('vi-VN', { timeZone: 'Asia/Bangkok' })}</span></h3>
                 <div className="space-y-2">
                   {matches.map((match, index) => (
                     <div key={index} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded border-b last:border-0">
@@ -340,8 +340,8 @@ const ScheduleManagement = () => {
                       <div className="mx-4 text-gray-500 px-2 bg-gray-100 rounded text-sm">VS</div>
                       <div className="flex-1 text-left font-semibold">{match.awayTeamName}</div>
                       <div className="flex flex-col items-end">
-                        <span className="text-xs text-gray-500">{new Date(match.scheduledKickoff).toLocaleDateString()}</span>
-                        <span className="text-xs text-gray-400">{new Date(match.scheduledKickoff).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        <span className="text-xs text-gray-500">{new Date(match.scheduledKickoff).toLocaleDateString('vi-VN', { timeZone: 'Asia/Bangkok' })}</span>
+                        <span className="text-xs text-gray-400">{new Date(match.scheduledKickoff).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' })}</span>
                       </div>
                     </div>
                   ))}
