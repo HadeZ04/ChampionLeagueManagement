@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Clock, Activity, Users, Shield, Calendar, Trophy, Play, ChevronRight, Filter, RefreshCw, Star, Zap } from 'lucide-react';
 import MatchesService from '../../../layers/application/services/MatchesService';
+import ApiService from '../../../layers/application/services/ApiService';
 import { toMatchStatusLabel, toCompetitionStageLabel } from '../../../shared/utils/vi';
 import bannerC1 from '@/assets/images/banner_c1.jpg';
 
@@ -10,13 +11,18 @@ const MatchCenterPage = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // all, live, upcoming, finished
   const [selectedMatch, setSelectedMatch] = useState(null);
+  const [selectedSeason, setSelectedSeason] = useState('all'); // Default to 'all' seasons
+  const [seasons, setSeasons] = useState([]); // To store available seasons
 
-  // Fetch matches
+  // Fetch matches and seasons
   useEffect(() => {
-    const fetchMatches = async () => {
+    const fetchMatches = async (seasonId) => {
       try {
         setLoading(true);
-        const response = await MatchesService.getAllMatches({ limit: 50 });
+        const response = await MatchesService.getAllMatches({
+          limit: 1000,
+          seasonId: seasonId === 'all' ? undefined : seasonId
+        });
         setMatches(response?.matches || []);
       } catch (error) {
         console.error('Failed to fetch matches:', error);
@@ -25,8 +31,18 @@ const MatchCenterPage = () => {
       }
     };
 
-    fetchMatches();
-  }, []);
+    const fetchSeasons = async () => {
+      try {
+        const response = await ApiService.get('/seasons'); // Assuming an endpoint for seasons
+        setSeasons(response?.seasons || []);
+      } catch (error) {
+        console.error('Failed to fetch seasons:', error);
+      }
+    };
+
+    fetchSeasons();
+    fetchMatches(selectedSeason);
+  }, [selectedSeason]);
 
   // Filter matches
   const filteredMatches = useMemo(() => {
@@ -155,7 +171,24 @@ const MatchCenterPage = () => {
       {/* Filter Section */}
       <section className="relative z-10 -mt-8">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-wrap gap-3 p-4 rounded-2xl bg-white/[0.03] backdrop-blur-md border border-white/[0.1]">
+          <div className="flex flex-wrap gap-3 p-4 rounded-2xl bg-white/[0.03] backdrop-blur-md border border-white/[0.1] items-center">
+            {/* Season Filter */}
+            <div className="mr-3">
+              <select
+                value={selectedSeason}
+                onChange={(e) => {
+                  setSelectedSeason(e.target.value);
+                  // Trigger fetch immediately or depend on useEffect
+                }}
+                className="bg-black/40 text-white border border-white/10 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-cyan-500 transition-colors"
+              >
+                <option value="all">Tất cả mùa giải</option>
+                {seasons.map(s => (
+                  <option key={s.id || s.seasonId} value={s.id || s.seasonId}>{s.name}</option>
+                ))}
+              </select>
+            </div>
+
             {[
               { id: 'all', label: 'Tất cả', count: matches.length, icon: Trophy },
               { id: 'live', label: 'Đang diễn ra', count: liveMatches.length, icon: Play },
@@ -186,17 +219,7 @@ const MatchCenterPage = () => {
               <button
                 onClick={() => {
                   setLoading(true); // Visual feedback
-                  const fetchMatches = async () => {
-                    try {
-                      const response = await MatchesService.getAllMatches({ limit: 50 });
-                      setMatches(response?.matches || []);
-                    } catch (error) {
-                      console.error('Failed to fetch matches:', error);
-                    } finally {
-                      setLoading(false);
-                    }
-                  };
-                  fetchMatches();
+                  fetchMatches(selectedSeason);
                 }}
                 className="flex items-center gap-2 px-4 py-3 rounded-xl font-medium text-sm bg-white/5 text-white/70 border border-white/10 hover:bg-white/10 hover:text-white transition-all"
                 title="Cập nhật dữ liệu"
