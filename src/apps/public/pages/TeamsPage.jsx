@@ -173,7 +173,7 @@ const TeamsPage = () => {
           </div>
 
           {/* Title */}
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-4" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-4">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-white to-cyan-300">
               CÂU LẠC BỘ
             </span>
@@ -381,7 +381,7 @@ const TeamsPage = () => {
             { value: summaryStats.averageFounded || '—', label: 'Năm thành lập TB', color: 'amber' },
           ].map((stat) => (
             <div key={stat.label} className="rounded-2xl p-6 backdrop-blur-md bg-white/[0.04] border border-white/[0.1] text-center">
-              <p className={`text-3xl font-black text-${stat.color}-400`} style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+              <p className={`text-3xl font-black text-${stat.color}-400`}>
                 {stat.value}
               </p>
               <p className="text-xs uppercase tracking-[0.2em] text-white/50 mt-2">{stat.label}</p>

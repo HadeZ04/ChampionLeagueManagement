@@ -51,7 +51,7 @@ const PublicFooter = () => {
                   <Star size={14} className="text-amber-400" />
                   <span className="text-white text-xs uppercase tracking-[0.2em] font-bold">Trải nghiệm đỉnh cao</span>
                 </div>
-                <h3 className="text-2xl md:text-3xl font-black text-white" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                <h3 className="text-2xl md:text-3xl font-black text-white">
                   Theo dõi những <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">ngôi sao sáng nhất</span>
                 </h3>
               </div>
@@ -82,7 +82,7 @@ const PublicFooter = () => {
                   <Trophy size={24} className="text-white" />
                 </div>
                 <div>
-                  <p className="text-white font-black text-2xl" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                  <p className="text-white font-black text-2xl">
                     CHAMPIONS LEAGUE
                   </p>
                   <p className="text-cyan-400 text-sm font-medium">UEFA Official Platform</p>

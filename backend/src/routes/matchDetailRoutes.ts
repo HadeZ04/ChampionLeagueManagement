@@ -3,6 +3,7 @@ import { z } from "zod";
 import * as eventService from "../services/matchEventService";
 import * as lineupService from "../services/matchLineupService";
 import * as statsService from "../services/playerMatchStatsService";
+import { isPlayerSuspendedForMatch } from "../services/disciplinaryService";
 
 const router = Router();
 
@@ -62,7 +63,8 @@ router.post("/:matchId/lineups", async (req, res, next) => {
         // Expecting array of players
         const payload = z.array(z.object({
             seasonTeamId: z.number(),
-            playerId: z.number(),
+            playerId: z.number().optional(), // Legacy support
+            seasonPlayerId: z.number().optional(), // Preferred
             isStarting: z.boolean(),
             isCaptain: z.boolean(),
             jerseyNumber: z.number().optional(),
@@ -70,6 +72,42 @@ router.post("/:matchId/lineups", async (req, res, next) => {
             status: z.string().default('active'),
             seasonId: z.number()
         })).parse(req.body);
+
+        // Check for suspended players before saving
+        const suspendedPlayers = [];
+        for (const item of payload) {
+            const seasonPlayerId = item.seasonPlayerId || item.playerId;
+            if (!seasonPlayerId) {
+                continue; // Skip if no player ID
+            }
+
+            const suspensionCheck = await isPlayerSuspendedForMatch(
+                item.seasonId,
+                matchId,
+                seasonPlayerId
+            );
+
+            if (suspensionCheck.suspended) {
+                suspendedPlayers.push({
+                    seasonPlayerId,
+                    reason: suspensionCheck.reason
+                });
+            }
+        }
+
+        // If any suspended players, reject the lineup
+        if (suspendedPlayers.length > 0) {
+            return res.status(400).json({
+                error: 'Lineup contains suspended players',
+                suspendedPlayers: suspendedPlayers.map(sp => ({
+                    seasonPlayerId: sp.seasonPlayerId,
+                    reason: sp.reason,
+                    message: sp.reason === 'RED_CARD' 
+                        ? 'Player suspended due to red card'
+                        : 'Player suspended due to accumulation of yellow cards'
+                }))
+            });
+        }
 
         // Bulk upsert logic (loop for now)
         for (const item of payload) {

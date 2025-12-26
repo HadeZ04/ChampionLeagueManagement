@@ -118,7 +118,7 @@ const MatchCenterPage = () => {
           </div>
 
           {/* Title */}
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-4" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-4">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-200 to-white">
               MATCH CENTER
             </span>
@@ -269,7 +269,7 @@ const MatchCenterPage = () => {
                         </div>
                         <span className="text-white font-semibold">{match.homeTeamName || match.homeTeamTla}</span>
                       </div>
-                      <span className="text-2xl font-black text-white" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                      <span className="text-2xl font-black text-white">
                         {match.scoreHome ?? '-'}
                       </span>
                     </div>
@@ -286,7 +286,7 @@ const MatchCenterPage = () => {
                         </div>
                         <span className="text-white font-semibold">{match.awayTeamName || match.awayTeamTla}</span>
                       </div>
-                      <span className="text-2xl font-black text-white" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                      <span className="text-2xl font-black text-white">
                         {match.scoreAway ?? '-'}
                       </span>
                     </div>
@@ -330,28 +330,28 @@ const MatchCenterPage = () => {
         <div className="grid md:grid-cols-4 gap-4">
           <div className="p-6 rounded-2xl backdrop-blur-md bg-white/[0.05] border border-white/[0.1] text-center group hover:border-amber-400/30 transition-all">
             <Trophy className="w-8 h-8 text-amber-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
-            <p className="text-3xl font-black text-white mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+            <p className="text-3xl font-black text-white mb-1">
               {matches.length}
             </p>
             <p className="text-xs uppercase tracking-wider text-white/50">Tổng trận đấu</p>
           </div>
           <div className="p-6 rounded-2xl backdrop-blur-md bg-white/[0.05] border border-white/[0.1] text-center group hover:border-red-400/30 transition-all">
             <Play className="w-8 h-8 text-red-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
-            <p className="text-3xl font-black text-white mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+            <p className="text-3xl font-black text-white mb-1">
               {liveMatches.length}
             </p>
             <p className="text-xs uppercase tracking-wider text-white/50">Đang diễn ra</p>
           </div>
           <div className="p-6 rounded-2xl backdrop-blur-md bg-white/[0.05] border border-white/[0.1] text-center group hover:border-cyan-400/30 transition-all">
             <Activity className="w-8 h-8 text-cyan-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
-            <p className="text-3xl font-black text-white mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+            <p className="text-3xl font-black text-white mb-1">
               {matches.reduce((sum, m) => sum + (m.scoreHome || 0) + (m.scoreAway || 0), 0)}
             </p>
             <p className="text-xs uppercase tracking-wider text-white/50">Tổng bàn thắng</p>
           </div>
           <div className="p-6 rounded-2xl backdrop-blur-md bg-white/[0.05] border border-white/[0.1] text-center group hover:border-purple-400/30 transition-all">
             <Calendar className="w-8 h-8 text-purple-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
-            <p className="text-3xl font-black text-white mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+            <p className="text-3xl font-black text-white mb-1">
               {matches.filter(m => m.status === 'FINISHED').length}
             </p>
             <p className="text-xs uppercase tracking-wider text-white/50">Đã hoàn thành</p>
