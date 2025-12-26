@@ -16,15 +16,17 @@ import RejectReasonView from "../components/RejectReasonView";
 import ApiService from '../../../layers/application/services/ApiService';
 import APP_CONFIG from '../../../config/app.config';
 import toast, { Toaster } from 'react-hot-toast';
+import { hasPermission } from '../utils/accessControl';
 
 
-const SeasonPlayerApprovalPage = () => {
+const SeasonPlayerApprovalPage = ({ currentUser }) => {
     const [list, setList] = useState([]);
     const [loading, setLoading] = useState(false);
 
     // Filters
     const [filterSeason, setFilterSeason] = useState("");
     const [filterTeam, setFilterTeam] = useState("");
+    const [filterStatus, setFilterStatus] = useState("pending");
 
     const [rejectId, setRejectId] = useState(null);
     const [approveId, setApproveId] = useState(null);
@@ -32,13 +34,18 @@ const SeasonPlayerApprovalPage = () => {
     const [showApproveAllConfirm, setShowApproveAllConfirm] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
+    const canApprove = hasPermission(currentUser, 'approve_player_registrations');
+
     // =========================
     // Load pending registrations
     // =========================
     const fetchPending = async () => {
         setLoading(true);
         try {
-            const data = await ApiService.get(APP_CONFIG.API.ENDPOINTS.SEASON_PLAYERS.PENDING);
+            const data = await ApiService.get(
+                APP_CONFIG.API.ENDPOINTS.PLAYER_REGISTRATIONS.LIST,
+                filterStatus ? { status: filterStatus } : {}
+            );
             // Standardize data
             const safeData = (data || []).map(item => ({
                 ...item,
@@ -56,7 +63,7 @@ const SeasonPlayerApprovalPage = () => {
 
     useEffect(() => {
         fetchPending();
-    }, []);
+    }, [filterStatus]);
 
     //Derived State for Filters
     const uniqueSeasons = React.useMemo(() => {
@@ -78,6 +85,7 @@ const SeasonPlayerApprovalPage = () => {
     const resetFilters = () => {
         setFilterSeason("");
         setFilterTeam("");
+        setFilterStatus("pending");
     };
 
     // =========================
@@ -90,7 +98,7 @@ const SeasonPlayerApprovalPage = () => {
     const confirmApproveSingle = async () => {
         setSubmitting(true);
         try {
-            const endpoint = APP_CONFIG.API.ENDPOINTS.SEASON_PLAYERS.APPROVE.replace(':id', approveId);
+            const endpoint = APP_CONFIG.API.ENDPOINTS.PLAYER_REGISTRATIONS.APPROVE.replace(':id', approveId);
             await ApiService.post(endpoint);
             
             toast.success("Duyệt hồ sơ thành công");
@@ -114,7 +122,7 @@ const SeasonPlayerApprovalPage = () => {
 
         setSubmitting(true);
         try {
-            const endpoint = APP_CONFIG.API.ENDPOINTS.SEASON_PLAYERS.REJECT.replace(':id', rejectId);
+            const endpoint = APP_CONFIG.API.ENDPOINTS.PLAYER_REGISTRATIONS.REJECT.replace(':id', rejectId);
             await ApiService.post(endpoint, { reason: rejectReason });
             
             toast.success("Từ chối hồ sơ thành công");
@@ -181,7 +189,7 @@ const SeasonPlayerApprovalPage = () => {
                         Xem và duyệt các hồ sơ đăng ký cầu thủ đang chờ xử lý trong mùa giải hiện tại.
                     </p>
                 </div>
-                {list.length > 0 && (
+                {canApprove && filterStatus === 'pending' && list.length > 0 && (
                     <div className="flex items-center gap-4">
                         <div className="bg-blue-900/30 text-blue-300 border border-blue-800 text-sm font-semibold px-4 py-1.5 rounded-full">
                             {list.length} hồ sơ đang chờ
@@ -203,6 +211,20 @@ const SeasonPlayerApprovalPage = () => {
                 <div className="flex items-center gap-2 text-gray-400 mb-2 md:mb-0 mr-2">
                     <Filter size={20} />
                     <span className="font-medium text-sm">Bộ lọc:</span>
+                </div>
+
+                <div className="w-full md:w-44">
+                    <label className="block text-xs uppercase text-gray-500 font-semibold mb-1">Status</label>
+                    <select
+                        value={filterStatus}
+                        onChange={(e) => setFilterStatus(e.target.value)}
+                        className="w-full bg-gray-900 border border-gray-700 text-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
+                    >
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="">All</option>
+                    </select>
                 </div>
 
                 <div className="w-full md:w-48">
@@ -317,7 +339,7 @@ const SeasonPlayerApprovalPage = () => {
                                             )}
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            {item.registration_status === 'pending' && (
+                                            {canApprove && item.registration_status === 'pending' && (
                                                 <div className="flex items-center justify-end gap-2">
                                                     <button
                                                         disabled={submitting}

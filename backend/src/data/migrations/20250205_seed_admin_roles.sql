@@ -26,7 +26,11 @@ USING (VALUES
     ('view_audit_logs',   N'View audit logs',   N'Read-only access to audit_events.'),
     ('manage_content',    N'Manage content',    N'Create and curate news, media, and CMS content.'),
     ('manage_matches',    N'Manage matches',    N'Schedule matches, update live data, and finalize results.'),
-    ('manage_teams',      N'Manage teams',      N'Approve rosters, register teams, maintain squads.')
+    ('manage_teams',      N'Manage teams',      N'Approve rosters, register teams, maintain squads.'),
+    ('manage_own_player_registrations', N'Manage own player registrations', N'Create, edit, and view player registrations for the teams assigned to the user.'),
+    ('view_own_team',     N'View own team',     N'Read-only access to the teams/squad assigned to the user.'),
+    ('approve_player_registrations', N'Approve player registrations', N'Review and approve/reject player registrations across all teams.'),
+    ('manage_own_team_squad', N'Manage own team squad', N'Edit approved players within the user’s assigned teams.')
 ) AS source (code, name, description)
 ON target.code = source.code
 WHEN NOT MATCHED THEN
@@ -40,6 +44,7 @@ USING (VALUES
     ('admin',          N'Administrator',       N'Operational admin without system lock features', 0),
     ('content_manager',N'Content Manager',     N'Editorial / CMS responsibilities', 0),
     ('match_official', N'Match Official',      N'Live match operations team', 0),
+    ('team_admin',     N'Team Administrator',  N'Manage player registrations for assigned teams', 0),
     ('viewer',         N'Read-only Viewer',    N'Analyst/reporting account', 0)
 ) AS source (code, name, description, is_system_role)
 ON target.code = source.code
@@ -57,13 +62,19 @@ VALUES
     ('super_admin', 'manage_content'),
     ('super_admin', 'manage_matches'),
     ('super_admin', 'manage_teams'),
-    ('admin', 'manage_users'),
+    ('super_admin', 'approve_player_registrations'),
+    ('super_admin', 'manage_own_player_registrations'),
+    ('super_admin', 'view_own_team'),
+    ('super_admin', 'manage_own_team_squad'),
     ('admin', 'manage_rulesets'),
-    ('admin', 'view_audit_logs'),
     ('admin', 'manage_matches'),
+    ('admin', 'manage_teams'),
+    ('admin', 'approve_player_registrations'),
     ('content_manager', 'manage_content'),
     ('match_official', 'manage_matches'),
-    ('viewer', 'view_audit_logs');
+    ('team_admin', 'manage_own_player_registrations'),
+    ('team_admin', 'view_own_team'),
+    ('team_admin', 'manage_own_team_squad');
 
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.role_id, p.permission_id

@@ -5,6 +5,7 @@ import { query } from "../db/sqlServer";
 import { appConfig } from "../config";
 import { HttpError, UnauthorizedError } from "../utils/httpError";
 import { logEvent } from "./auditService";
+import { getUserTeamIds } from "./userTeamService";
 
 interface UserRecord {
   user_id: number;
@@ -200,11 +201,13 @@ export async function login(username: string, password: string) {
 
   const roles = await getUserRoles(user.user_id);
   const permissions = await getUserPermissions(user.user_id);
+  const teamIds = await getUserTeamIds(user.user_id);
   const payload = {
     sub: user.user_id,
     username: user.username,
     roles,
     permissions,
+    teamIds,
     type: "access" as const,
   };
   const secret: Secret = appConfig.jwt.secret;
@@ -233,6 +236,7 @@ export async function login(username: string, password: string) {
       lastName: user.last_name,
       roles,
       permissions,
+      teamIds,
       lastLoginAt: new Date(),
     },
   };
@@ -261,6 +265,7 @@ export async function getProfile(userId: number) {
 
   const roles = await getUserRoles(user.user_id);
   const permissions = await getUserPermissions(user.user_id);
+  const teamIds = await getUserTeamIds(user.user_id);
   return {
     id: user.user_id,
     username: user.username,
@@ -273,5 +278,6 @@ export async function getProfile(userId: number) {
     mfaEnabled: user.mfa_enabled,
     roles,
     permissions,
+    teamIds,
   };
 }

@@ -1,4 +1,4 @@
-const ADMIN_ALLOWED_ROLES = ['super_admin', 'admin', 'content_manager', 'match_official', 'competition_manager']
+const ADMIN_ALLOWED_ROLES = ['super_admin', 'admin', 'team_admin', 'content_manager', 'match_official', 'competition_manager']
 
 export const hasAdminPortalAccess = (user) => {
   if (!user || !Array.isArray(user.roles)) {
@@ -18,6 +18,13 @@ export const hasPermission = (user, permission) => {
     return true
   }
   return Array.isArray(user.permissions) && user.permissions.includes(permission)
+}
+
+export const hasAnyPermission = (user, permissions = []) => {
+  if (!Array.isArray(permissions) || permissions.length === 0) {
+    return hasAdminPortalAccess(user)
+  }
+  return permissions.some((permission) => hasPermission(user, permission))
 }
 
 export { ADMIN_ALLOWED_ROLES }

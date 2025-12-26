@@ -70,6 +70,7 @@ export const NEWS_CATEGORIES = {
 export const USER_ROLES = {
   SUPER_ADMIN: 'super_admin',
   ADMIN: 'admin',
+  TEAM_ADMIN: 'team_admin',
   CONTENT_MANAGER: 'content_manager',
   MATCH_OFFICIAL: 'match_official',
   VIEWER: 'viewer'
@@ -82,9 +83,15 @@ export const PERMISSIONS = {
   DELETE: 'delete',
   ADMIN: 'admin',
   MANAGE_USERS: 'manage_users',
+  MANAGE_RULESETS: 'manage_rulesets',
+  VIEW_AUDIT_LOGS: 'view_audit_logs',
   MANAGE_MATCHES: 'manage_matches',
   MANAGE_TEAMS: 'manage_teams',
-  MANAGE_CONTENT: 'manage_content'
+  MANAGE_CONTENT: 'manage_content',
+  MANAGE_OWN_PLAYER_REGISTRATIONS: 'manage_own_player_registrations',
+  VIEW_OWN_TEAM: 'view_own_team',
+  APPROVE_PLAYER_REGISTRATIONS: 'approve_player_registrations',
+  MANAGE_OWN_TEAM_SQUAD: 'manage_own_team_squad'
 }
 
 // Event Type Constants

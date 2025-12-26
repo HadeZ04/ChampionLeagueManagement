@@ -21,7 +21,7 @@ import ImportPlayersCsvModal from '../components/ImportPlayersCsvModal'
 
 const defaultTeamsOption = [{ id: 'all', name: 'Tất cả đội' }]
 
-const PlayersManagement = () => {
+const PlayersManagement = ({ currentUser }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedTeam, setSelectedTeam] = useState('all')
   const [selectedPosition, setSelectedPosition] = useState('all')
@@ -198,7 +198,7 @@ const PlayersManagement = () => {
         </div>
       </div>
 
-      <SeasonPlayerRegistrationForm />
+      <SeasonPlayerRegistrationForm currentUser={currentUser} />
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
         <div className="flex flex-col md:flex-row gap-4">

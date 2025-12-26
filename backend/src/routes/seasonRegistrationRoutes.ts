@@ -14,12 +14,12 @@ const router = Router();
 // Assuming we might want basic auth? Use request: "logAuditEvent(user_id...)", so auth is implied.
 // Checking app.ts or auth library used.
 // Based on "middleware/authMiddleware.ts" existing:
-import { requireAuth } from "../middleware/authMiddleware";
+import { requireAuth, requirePermission } from "../middleware/authMiddleware";
 
-router.get("/pending", requireAuth, registrationController.listPending);
-router.post("/:id/approve", requireAuth, registrationController.approve);
-router.post("/:id/reject", requireAuth, registrationController.reject);
+router.get("/pending", requireAuth, requirePermission("approve_player_registrations"), registrationController.listPending);
+router.post("/:id/approve", requireAuth, requirePermission("approve_player_registrations"), registrationController.approve);
+router.post("/:id/reject", requireAuth, requirePermission("approve_player_registrations"), registrationController.reject);
 
-router.post("/register", requireAuth, upload.single("file"), registrationController.register);
+router.post("/register", requireAuth, requirePermission("manage_teams"), upload.single("file"), registrationController.register);
 
 export default router;

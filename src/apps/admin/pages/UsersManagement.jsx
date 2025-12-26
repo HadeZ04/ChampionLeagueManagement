@@ -35,6 +35,7 @@ const statusStyleMap = {
 const roleStyleMap = {
   super_admin: 'bg-red-100 text-red-800',
   admin: 'bg-blue-100 text-blue-800',
+  team_admin: 'bg-cyan-100 text-cyan-800',
   content_manager: 'bg-indigo-100 text-indigo-800',
   match_official: 'bg-emerald-100 text-emerald-800',
   viewer: 'bg-gray-100 text-gray-800'
