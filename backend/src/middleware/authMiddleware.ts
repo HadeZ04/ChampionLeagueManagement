@@ -71,3 +71,33 @@ export function requireAnyPermission(...permissions: string[]) {
     next();
   };
 }
+
+// Alias for compatibility with other modules
+export const authenticate = requireAuth;
+
+// Role-based access control
+export function requireRole(roles: string | string[]) {
+  const allowedRoles = Array.isArray(roles) ? roles : [roles];
+  
+  return (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      throw UnauthorizedError("Authentication required");
+    }
+
+    const userRoles = Array.isArray(req.user.roles) ? req.user.roles : [];
+    
+    // Super admin has access to everything
+    if (userRoles.includes("super_admin")) {
+      next();
+      return;
+    }
+
+    const hasRole = allowedRoles.some((role) => userRoles.includes(role));
+
+    if (!hasRole) {
+      throw ForbiddenError("You do not have the required role to perform this action");
+    }
+
+    next();
+  };
+}

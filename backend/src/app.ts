@@ -48,6 +48,10 @@ app.use("/api/users", userRoutes);
 app.use("/api/roles", roleRoutes);
 app.use("/api/permissions", permissionRoutes);
 app.use("/api/rulesets", rulesetRoutes);
+// IMPORTANT: Mount specific season sub-routes BEFORE generic seasonRoutes
+// to prevent /:id from matching /:seasonId/awards or /:seasonId/discipline
+app.use("/api/seasons", awardsRoutes);
+app.use("/api/seasons", disciplineRoutes);
 app.use("/api/seasons", seasonRoutes);
 app.use("/api/audit-events", auditRoutes);
 app.use("/api/season-players", seasonRegistrationRoutes);
@@ -67,8 +71,6 @@ app.use("/api/matches", matchRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/api/media", mediaRoutes);
 app.use("/api/settings", settingsRoutes);
-app.use("/api/seasons", awardsRoutes);
-app.use("/api/seasons", disciplineRoutes);
 
 // Admin routes
 app.use("/api/admin/standings", adminStandingsRoutes);

@@ -1,4 +1,4 @@
-import { query } from "./src/db/sqlServer";
+import { query } from "../../src/db/sqlServer";
 import * as fs from 'fs';
 
 const listTeamsFks = async () => {

@@ -1,5 +1,6 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
+import ErrorBoundary from '../../shared/components/ErrorBoundary'
 
 // 1. Chỉ cần import Layout và các trang
 import AdminLayout from './components/AdminLayout'
@@ -36,10 +37,11 @@ import SeasonDisciplinePage from './pages/SeasonDisciplinePage'
 
 const AdminApp = ({ onLogout, currentUser }) => {
   return (
-    <Routes>
-      {/* 2. Dùng AdminLayout làm route cha */}
-      {/* Prop onLogout được truyền vào Layout để nó có thể truyền xuống Header */}
-      <Route path="/" element={<AdminLayout onLogout={onLogout} currentUser={currentUser} />}>
+    <ErrorBoundary>
+      <Routes>
+        {/* 2. Dùng AdminLayout làm route cha */}
+        {/* Prop onLogout được truyền vào Layout để nó có thể truyền xuống Header */}
+        <Route path="/" element={<AdminLayout onLogout={onLogout} currentUser={currentUser} />}>
 
         {/* 3. Các trang con sẽ được render bên trong <Outlet/> của AdminLayout */}
         <Route index element={<DashboardPage />} /> {/* trang mặc định khi vào /admin */}
@@ -279,6 +281,7 @@ const AdminApp = ({ onLogout, currentUser }) => {
       {/* Bạn có thể thêm các route không cần layout ở đây, ví dụ: */}
       {/* <Route path="/login" element={<LoginPage />} /> */}
     </Routes>
+    </ErrorBoundary>
   )
 }
 

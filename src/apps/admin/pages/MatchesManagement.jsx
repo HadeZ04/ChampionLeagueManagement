@@ -265,7 +265,6 @@ const MatchesManagement = () => {
   const openEditModal = (match) => {
     // Convert ISO string to format accepted by datetime-local (YYYY-MM-DDThh:mm)
     let formattedDate = ''
-    console.log('DEBUG: openEditModal match.scheduledKickoff:', match.scheduledKickoff);
     if (match.scheduledKickoff) {
       const date = new Date(match.scheduledKickoff)
       // Adjust to local time string ISO format (ignoring timezone offset for simplicity in this context or handling it)
@@ -637,7 +636,6 @@ const MatchesManagement = () => {
                   type="datetime-local"
                   value={editingMatch.scheduledKickoff}
                   onChange={(e) => {
-                    console.log('DEBUG: Date input changed to:', e.target.value);
                     setEditingMatch(prev => ({ ...prev, scheduledKickoff: e.target.value }));
                   }}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"

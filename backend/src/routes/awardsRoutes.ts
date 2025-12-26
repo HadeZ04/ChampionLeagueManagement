@@ -4,7 +4,7 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { authenticate } from '../middleware/auth';
+import { authenticate } from '../middleware/authMiddleware';
 import { getTopScorers, getTopMVPs, getSeasonAwardsSummary } from '../services/awardService';
 
 const router = Router();

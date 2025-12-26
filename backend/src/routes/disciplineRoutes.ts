@@ -4,7 +4,7 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { authenticate, requireRole } from '../middleware/auth';
+import { authenticate, requireRole } from '../middleware/authMiddleware';
 import { 
   getCardSummary, 
   getSuspensionsForSeason, 

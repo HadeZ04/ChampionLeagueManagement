@@ -1,4 +1,4 @@
-import { query } from "./src/db/sqlServer";
+import { query } from "../../src/db/sqlServer";
 
 const deleteTeamDebug = async (id) => {
     console.log(`Attempting to delete team ${id}...`);

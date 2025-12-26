@@ -1,4 +1,4 @@
-import { query } from './src/db/sqlServer';
+import { query } from '../../src/db/sqlServer';
 
 async function checkSeasonColumn() {
     try {
