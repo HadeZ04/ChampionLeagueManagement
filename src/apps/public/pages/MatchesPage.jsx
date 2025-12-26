@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, ChevronLeft, ChevronRight, Tv, Download } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Tv, Download, Trophy } from 'lucide-react';
 import MatchCard from '../components/MatchCard';
 import WeatherWidget from '../components/WeatherWidget';
 import MatchPreview from '../components/MatchPreview';
@@ -59,19 +59,42 @@ import SeasonService from '../../../layers/application/services/SeasonService';
 
 const MatchesPage = () => {
   const [matches, setMatches] = useState([]);
+  const [seasons, setSeasons] = useState([]);
+  const [selectedSeason, setSelectedSeason] = useState(''); // Empty for 'current' or 'all' depending on API default. Or we can default to latest.
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(''); // Default empty to show all matches initially
+  const [selectedDate, setSelectedDate] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
+
+  // Load Seasons
+  useEffect(() => {
+    const loadSeasons = async () => {
+      try {
+        const data = await SeasonService.listSeasons();
+        setSeasons(data || []);
+        // Optional: auto-select current season
+        const current = (data || []).find(s => s.is_active || s.isCurrent) || (data || [])[0];
+        if (current) setSelectedSeason(current.seasonId || current.id);
+      } catch (err) {
+        console.error('Failed to load seasons', err);
+      }
+    };
+    loadSeasons();
+  }, []);
 
   useEffect(() => {
     const fetchMatches = async () => {
       setIsLoading(true);
       try {
-        // 1. Fetch matches from both sources (Removed SeasonService dependency as we want ALL matches)
-        const [systemData, externalData, liveMatches] = await Promise.all([
-          matchService.getAllMatches({ limit: 100 }),
-          matchService.getExternalMatches({ limit: 100 }),
+        // 1. Fetch matches from system only
+        const [systemData, liveMatches] = await Promise.all([
+          matchService.getAllMatches({
+            limit: 100,
+            seasonId: selectedSeason,
+            date: selectedDate // Optimization: filter by date at API level if possible, but frontend filtering exists too. matchService supports dateFrom/dateTo but not single date? Check Service.
+            // backend route supports dateFrom/dateTo. Frontend has selectedDate.
+            // Let's pass seasonId mainly.
+          }),
           matchService.getLiveMatches()
         ]);
 
@@ -112,7 +135,6 @@ const MatchesPage = () => {
         });
 
         const systemMatches = (systemData.matches || []).map(m => formatMatch(m, false));
-        const externalMatches = (externalData.matches || []).map(m => formatMatch(m, true));
         const formattedLiveMatches = (liveMatches || []).map(m => formatMatch(m, false));
 
         // Create a map to ensure uniqueness by ID
@@ -120,9 +142,7 @@ const MatchesPage = () => {
 
         // Add system matches
         systemMatches.forEach(m => matchMap.set(m.id, m));
-        // Add external matches
-        externalMatches.forEach(m => matchMap.set(m.id, m));
-        // Add live matches (override if duplicates, though unlikely to clash with external)
+        // Add live matches (override if duplicates)
         formattedLiveMatches.forEach(m => matchMap.set(m.id, m));
 
         const uniqueMatches = Array.from(matchMap.values());
@@ -141,7 +161,7 @@ const MatchesPage = () => {
     };
 
     fetchMatches();
-  }, []);
+  }, [selectedSeason]); // Re-fetch when season changes
 
   const filteredMatches = matches.filter(match => {
     // If user picks a specific filter (Today, Live, etc), use that
@@ -196,6 +216,22 @@ const MatchesPage = () => {
               <span className="hidden sm:inline">Xuất lịch</span>
             </button>
 
+            {/* Season Selector */}
+            <label className="flex items-center gap-2 text-sm font-semibold text-slate-200 bg-[#020617]/80 px-3 py-2 border border-white/20 rounded-full hover:bg-white/10 transition-colors cursor-pointer">
+              <Trophy size={16} className="text-amber-400" />
+              <select
+                value={selectedSeason}
+                onChange={(e) => setSelectedSeason(e.target.value)}
+                className="bg-transparent border-none p-0 focus:ring-0 text-white max-w-[150px] cursor-pointer outline-none appearance-none"
+              >
+                {seasons.map(s => (
+                  <option key={s.seasonId || s.id} value={s.seasonId || s.id} className="text-black">
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
             <label className="flex items-center gap-2 text-sm font-semibold text-slate-200 bg-[#020617]/80 px-3 py-2 border border-white/20 rounded-full hover:bg-white/10 transition-colors cursor-pointer">
               <Calendar size={18} />
               <input
@@ -207,7 +243,7 @@ const MatchesPage = () => {
             </label>
           </div>
         </div>
-      </section>
+      </section >
 
       <div className="flex flex-wrap gap-3">
         {filters.map(filter => (
@@ -221,86 +257,90 @@ const MatchesPage = () => {
         ))}
       </div>
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg relative flex items-center justify-between" role="alert">
-          <div>
-            <strong className="font-bold">Lỗi! </strong>
-            <span className="block sm:inline">{error}</span>
-          </div>
-          <button
-            onClick={() => window.location.reload()}
-            className="ml-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-semibold"
-          >
-            Thử lại
-          </button>
-        </div>
-      )}
-
-      {isLoading ? (
-        <div className="grid gap-4">
-          {[...Array(4)].map((_, idx) => (
-            <div key={idx} className="glass-card p-6 space-y-4">
-              <div className="skeleton-bar w-1/3" />
-              <div className="skeleton-bar w-2/3" />
-              <div className="skeleton-bar w-full" />
+      {
+        error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg relative flex items-center justify-between" role="alert">
+            <div>
+              <strong className="font-bold">Lỗi! </strong>
+              <span className="block sm:inline">{error}</span>
             </div>
-          ))}
-        </div>
-      ) : (
-        <div className="grid lg:grid-cols-4 gap-8">
-          <div className="lg:col-span-3 space-y-8">
-            {Object.entries(groupedMatches).length ? (
-              Object.entries(groupedMatches).map(([date, dayMatches], idx) => (
-                <div key={date} className="space-y-4" style={{ animation: `fadeUp 500ms ease ${idx * 80}ms both` }}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Vòng {dayMatches[0]?.matchday}</p>
-                      <h3 className="text-xl font-semibold text-slate-900">{formatDate(date)}</h3>
+            <button
+              onClick={() => window.location.reload()}
+              className="ml-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-semibold"
+            >
+              Thử lại
+            </button>
+          </div>
+        )
+      }
+
+      {
+        isLoading ? (
+          <div className="grid gap-4">
+            {[...Array(4)].map((_, idx) => (
+              <div key={idx} className="glass-card p-6 space-y-4">
+                <div className="skeleton-bar w-1/3" />
+                <div className="skeleton-bar w-2/3" />
+                <div className="skeleton-bar w-full" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid lg:grid-cols-4 gap-8">
+            <div className="lg:col-span-3 space-y-8">
+              {Object.entries(groupedMatches).length ? (
+                Object.entries(groupedMatches).map(([date, dayMatches], idx) => (
+                  <div key={date} className="space-y-4" style={{ animation: `fadeUp 500ms ease ${idx * 80}ms both` }}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Vòng {dayMatches[0]?.matchday}</p>
+                        <h3 className="text-xl font-semibold text-slate-900">{formatDate(date)}</h3>
+                      </div>
+                      <span className="text-slate-400 text-sm">{dayMatches.length} trận</span>
                     </div>
-                    <span className="text-slate-400 text-sm">{dayMatches.length} trận</span>
+                    <div className="space-y-4">
+                      {dayMatches.map((match, matchIdx) => (
+                        <div style={{ animation: `fadeUp 480ms ease ${matchIdx * 60}ms both` }} key={match.id}>
+                          <MatchCard match={match} />
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="space-y-4">
-                    {dayMatches.map((match, matchIdx) => (
-                      <div style={{ animation: `fadeUp 480ms ease ${matchIdx * 60}ms both` }} key={match.id}>
-                        <MatchCard match={match} />
+                ))
+              ) : (
+                <div className="glass-card p-10 text-center">
+                  <Calendar size={48} className="mx-auto text-slate-300 mb-4" />
+                  <p className="text-slate-700 text-lg">Không tìm thấy trận đấu</p>
+                  <p className="text-slate-400">Hãy điều chỉnh bộ lọc hoặc chọn ngày khác.</p>
+                </div>
+              )}
+            </div>
+
+            <aside className="space-y-6">
+              <WeatherWidget city="Liverpool" temperature={'8\u00B0C'} condition="Partly Cloudy" />
+              <div className="glass-card p-6">
+                <h3 className="text-xl font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                  <Tv size={20} className="text-[#0055FF]" /> Phát sóng
+                </h3>
+                <div className="space-y-3">
+                  {matches
+                    .filter(m => m.status === 'upcoming' && m.tvChannels)
+                    .slice(0, 3)
+                    .map(match => (
+                      <div key={match.id} className="p-3 rounded-2xl border border-slate-100 bg-slate-50/70">
+                        <p className="text-sm font-semibold text-slate-900">
+                          {match.homeTeam.shortName} gặp {match.awayTeam.shortName}
+                        </p>
+                        <p className="text-xs text-slate-500">{match.time} - {match.tvChannels.join(', ')}</p>
                       </div>
                     ))}
-                  </div>
                 </div>
-              ))
-            ) : (
-              <div className="glass-card p-10 text-center">
-                <Calendar size={48} className="mx-auto text-slate-300 mb-4" />
-                <p className="text-slate-700 text-lg">Không tìm thấy trận đấu</p>
-                <p className="text-slate-400">Hãy điều chỉnh bộ lọc hoặc chọn ngày khác.</p>
               </div>
-            )}
+              <MatchPreview />
+            </aside>
           </div>
-
-          <aside className="space-y-6">
-            <WeatherWidget city="Liverpool" temperature={'8\u00B0C'} condition="Partly Cloudy" />
-            <div className="glass-card p-6">
-              <h3 className="text-xl font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                <Tv size={20} className="text-[#0055FF]" /> Phát sóng
-              </h3>
-              <div className="space-y-3">
-                {matches
-                  .filter(m => m.status === 'upcoming' && m.tvChannels)
-                  .slice(0, 3)
-                  .map(match => (
-                    <div key={match.id} className="p-3 rounded-2xl border border-slate-100 bg-slate-50/70">
-                      <p className="text-sm font-semibold text-slate-900">
-                        {match.homeTeam.shortName} gặp {match.awayTeam.shortName}
-                      </p>
-                      <p className="text-xs text-slate-500">{match.time} - {match.tvChannels.join(', ')}</p>
-                    </div>
-                  ))}
-              </div>
-            </div>
-            <MatchPreview />
-          </aside>
-        </div>
-      )}
+        )
+      }
 
       <div className="flex items-center justify-between border-t border-slate-200 pt-6 text-sm text-slate-500">
         <button className="flex items-center gap-2 text-[#0055FF] font-semibold">
@@ -313,7 +353,7 @@ const MatchesPage = () => {
           <ChevronRight size={16} />
         </button>
       </div>
-    </div>
+    </div >
   );
 };
 

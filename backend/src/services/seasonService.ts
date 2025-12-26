@@ -391,10 +391,23 @@ export async function updateSeason(seasonId: number, input: UpdateSeasonInput): 
 export async function deleteSeason(seasonId: number): Promise<boolean> {
   // 1. Delete dependent match data
   await query(`
+    DELETE FROM match_lineup_players WHERE lineup_id IN (SELECT lineup_id FROM match_lineups WHERE match_id IN (SELECT match_id FROM matches WHERE season_id = @seasonId));
+    DELETE FROM match_lineups WHERE match_id IN (SELECT match_id FROM matches WHERE season_id = @seasonId);
+    DELETE FROM match_reports WHERE match_id IN (SELECT match_id FROM matches WHERE season_id = @seasonId);
+    DELETE FROM match_official_assignments WHERE match_id IN (SELECT match_id FROM matches WHERE season_id = @seasonId);
+    DELETE FROM player_match_stats WHERE match_id IN (SELECT match_id FROM matches WHERE season_id = @seasonId);
     DELETE FROM match_events WHERE match_id IN (SELECT match_id FROM matches WHERE season_id = @seasonId);
     DELETE FROM match_mvps WHERE match_id IN (SELECT match_id FROM matches WHERE season_id = @seasonId);
     DELETE FROM match_team_statistics WHERE match_id IN (SELECT match_id FROM matches WHERE season_id = @seasonId);
     DELETE FROM match_audit_logs WHERE match_id IN (SELECT match_id FROM matches WHERE season_id = @seasonId);
+  `, { seasonId });
+
+  // 1.1 Delete season-specific registrations and details
+  await query(`
+      DELETE FROM season_player_registrations WHERE season_id = @seasonId;
+      DELETE FROM season_team_registrations WHERE season_id = @seasonId;
+      DELETE FROM season_invitations WHERE season_id = @seasonId;
+      DELETE FROM team_kits WHERE season_id = @seasonId;
   `, { seasonId });
 
   // 2. Delete matches
@@ -409,7 +422,10 @@ export async function deleteSeason(seasonId: number): Promise<boolean> {
   // 5. Delete participants (and implicitly their roles in this season if any, usually purely relational)
   await query(`DELETE FROM season_team_participants WHERE season_id = @seasonId`, { seasonId });
 
-  // 6. Delete season
+  // 6. Delete season history
+  await query(`DELETE FROM season_status_history WHERE season_id = @seasonId`, { seasonId });
+
+  // 7. Delete season
   const result = await query(
     `DELETE FROM seasons WHERE season_id = @seasonId`,
     { seasonId }
