@@ -4,7 +4,7 @@
  */
 
 import sql from 'mssql';
-import { getPool } from '../config/database';
+import { getPool } from '../db/sqlServer';
 
 export interface CardSummary {
   seasonPlayerId: number;

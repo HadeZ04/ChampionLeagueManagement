@@ -9,10 +9,10 @@ import {
   isPlayerSuspendedForMatch,
   recalculateDisciplinaryForSeason
 } from '../disciplinaryService';
-import { getPool } from '../../config/database';
+import { getPool } from '../db/sqlServer';
 
 // Mock database
-jest.mock('../../config/database');
+jest.mock('../db/sqlServer');
 
 const mockPool = {
   request: jest.fn().mockReturnThis(),
