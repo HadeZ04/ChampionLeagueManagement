@@ -290,6 +290,7 @@ const SeasonManagement = () => {
 
       {seasonToDelete && (
         <ConfirmationModal
+          isOpen={!!seasonToDelete}
           title="Xóa mùa giải"
           message={`Bạn có chắc chắn muốn xóa mùa giải "${seasonToDelete.name}"? Hành động này không thể hoàn tác.`}
           confirmText="Xóa"

@@ -123,11 +123,18 @@ router.delete(
     if (Number.isNaN(seasonId)) {
       return res.status(400).json({ error: "Invalid season id" });
     }
-    const deleted = await deleteSeason(seasonId);
-    if (!deleted) {
-      return res.status(404).json({ error: "Season not found" });
+    try {
+      const deleted = await deleteSeason(seasonId);
+      if (!deleted) {
+        return res.status(404).json({ error: "Season not found" });
+      }
+      res.status(204).send();
+    } catch (err: any) {
+      console.error("Delete Season Error:", err);
+      // Log to file for debugging agent to see
+
+      res.status(500).json({ error: "Failed to delete season", details: err.message });
     }
-    res.status(204).send();
   }
 );
 
@@ -199,7 +206,7 @@ router.post(
     );
 
     if (existing.recordset.length > 0) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: "Team already participating in this season",
         seasonTeamId: existing.recordset[0].season_team_id
       });
@@ -255,10 +262,10 @@ router.post(
         );
 
         if (existing.recordset.length > 0) {
-          results.push({ 
-            teamId, 
-            seasonTeamId: existing.recordset[0].season_team_id, 
-            error: "Already exists" 
+          results.push({
+            teamId,
+            seasonTeamId: existing.recordset[0].season_team_id,
+            error: "Already exists"
           });
           continue;
         }

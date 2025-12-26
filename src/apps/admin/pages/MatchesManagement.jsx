@@ -18,6 +18,7 @@ import {
   UserPlus
 } from 'lucide-react'
 import MatchesService from '../../../layers/application/services/MatchesService'
+import SeasonService from '../../../layers/application/services/SeasonService'
 import logger from '../../../shared/utils/logger'
 import MatchOfficialAssignmentModal from '../components/MatchOfficialAssignmentModal'
 
@@ -92,8 +93,10 @@ const MatchesManagement = () => {
   const [filters, setFilters] = useState({
     dateFrom: '',
     dateTo: '',
-    status: 'all'
+    status: 'all',
+    seasonId: ''
   })
+  const [seasons, setSeasons] = useState([])
   const [matches, setMatches] = useState([])
   const [pagination, setPagination] = useState({ page: 1, limit: 20, totalPages: 1, total: 0 })
   const [loading, setLoading] = useState(true)
@@ -115,6 +118,26 @@ const MatchesManagement = () => {
 
   useEffect(() => {
     let isMounted = true
+    const fetchSeasons = async () => {
+      try {
+        const data = await SeasonService.listSeasons()
+        if (isMounted) {
+          setSeasons(data || [])
+        }
+      } catch (err) {
+        console.error('Failed to fetch seasons', err)
+      }
+    }
+
+    fetchSeasons()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  useEffect(() => {
+    let isMounted = true
     const fetchMatches = async () => {
       try {
         setLoading(true)
@@ -123,6 +146,7 @@ const MatchesManagement = () => {
         // Use getAllMatches to fetch INTERNAL system matches (which includes the generated schedule)
         const response = await MatchesService.getAllMatches({
           status: filters.status === 'all' ? '' : filters.status,
+          seasonId: filters.seasonId === 'all' ? '' : filters.seasonId,
           dateFrom: filters.dateFrom,
           dateTo: filters.dateTo,
           page: pagination.page,
@@ -360,6 +384,21 @@ const MatchesManagement = () => {
               className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
               placeholder="To"
             />
+          </div>
+          <div className="flex items-center space-x-3">
+            <Filter size={18} className="text-gray-400" />
+            <select
+              value={filters.seasonId}
+              onChange={(e) => setFilters(prev => ({ ...prev, seasonId: e.target.value }))}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
+            >
+              <option value="">Tất cả mùa giải</option>
+              {seasons.map(season => (
+                <option key={season.seasonId || season.id} value={season.seasonId || season.id}>
+                  {season.name}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="flex items-center space-x-3">
             <Filter size={18} className="text-gray-400" />

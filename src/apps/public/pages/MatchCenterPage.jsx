@@ -16,7 +16,7 @@ const MatchCenterPage = () => {
     const fetchMatches = async () => {
       try {
         setLoading(true);
-        const response = await MatchesService.getExternalMatches({ limit: 50 });
+        const response = await MatchesService.getAllMatches({ limit: 50 });
         setMatches(response?.matches || []);
       } catch (error) {
         console.error('Failed to fetch matches:', error);
@@ -38,8 +38,8 @@ const MatchCenterPage = () => {
   }, [matches, filter]);
 
   // Group by status
-  const liveMatches = useMemo(() => 
-    matches.filter(m => ['IN_PLAY', 'PAUSED', 'HALFTIME'].includes(m.status)), 
+  const liveMatches = useMemo(() =>
+    matches.filter(m => ['IN_PLAY', 'PAUSED', 'HALFTIME'].includes(m.status)),
     [matches]
   );
 
@@ -74,9 +74,9 @@ const MatchCenterPage = () => {
       <section className="relative h-[500px] md:h-[600px] overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0">
-          <img 
-            src={bannerC1} 
-            alt="Champions League 2025/26" 
+          <img
+            src={bannerC1}
+            alt="Champions League 2025/26"
             className="w-full h-full object-cover object-top"
           />
           {/* Gradient Overlays */}
@@ -167,17 +167,15 @@ const MatchCenterPage = () => {
                 <button
                   key={tab.id}
                   onClick={() => setFilter(tab.id)}
-                  className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium text-sm transition-all ${
-                    filter === tab.id
+                  className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium text-sm transition-all ${filter === tab.id
                       ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25'
                       : 'bg-white/5 text-white/70 border border-white/10 hover:bg-white/10 hover:text-white'
-                  }`}
+                    }`}
                 >
                   <Icon size={16} />
                   {tab.label}
-                  <span className={`px-2 py-0.5 rounded-full text-xs ${
-                    filter === tab.id ? 'bg-white/20' : 'bg-black/30'
-                  }`}>
+                  <span className={`px-2 py-0.5 rounded-full text-xs ${filter === tab.id ? 'bg-white/20' : 'bg-black/30'
+                    }`}>
                     {tab.count}
                   </span>
                 </button>
@@ -206,11 +204,10 @@ const MatchCenterPage = () => {
             {filteredMatches.map((match) => (
               <div
                 key={match.id}
-                className={`group relative rounded-2xl overflow-hidden backdrop-blur-md border transition-all hover:scale-[1.02] cursor-pointer ${
-                  ['IN_PLAY', 'PAUSED', 'HALFTIME'].includes(match.status)
+                className={`group relative rounded-2xl overflow-hidden backdrop-blur-md border transition-all hover:scale-[1.02] cursor-pointer ${['IN_PLAY', 'PAUSED', 'HALFTIME'].includes(match.status)
                     ? 'bg-red-500/10 border-red-500/30 hover:border-red-400/50'
                     : 'bg-white/[0.05] border-white/[0.1] hover:border-cyan-400/30'
-                }`}
+                  }`}
                 onClick={() => setSelectedMatch(selectedMatch?.id === match.id ? null : match)}
               >
                 {/* Status badge */}

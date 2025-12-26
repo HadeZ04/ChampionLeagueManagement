@@ -1178,6 +1178,7 @@ export const createBulkMatches = async (matches: DraftMatch[]): Promise<number> 
   const teamSeasonMap = new Map<string, number>(); // "seasonId:teamId" -> seasonTeamId
   const roundMap = new Map<string, number>(); // "seasonId:roundNum" -> roundId
   const rulesetMap = new Map<number, number>(); // seasonId -> rulesetId
+  const existingMatchSet = new Set<string>();
 
   for (const sId of uniqueSeasonIds) {
     // A. Ruleset
@@ -1225,6 +1226,15 @@ export const createBulkMatches = async (matches: DraftMatch[]): Promise<number> 
       const rId = await ensureRoundForSeason(sId, rn);
       roundMap.set(`${sId}:${rn}`, rId);
     }
+
+    // D. Fetch existing matches to prevent duplicates
+    const existingMatchesResult = await query<{ season_id: number, round_id: number, home_season_team_id: number, away_season_team_id: number }>(
+      `SELECT season_id, round_id, home_season_team_id, away_season_team_id FROM matches WHERE season_id = @sId`,
+      { sId }
+    );
+    existingMatchesResult.recordset.forEach(r => {
+      existingMatchSet.add(`${r.season_id}:${r.round_id}:${r.home_season_team_id}:${r.away_season_team_id}`);
+    });
   }
 
   // 2. Batch Insert
@@ -1244,20 +1254,35 @@ export const createBulkMatches = async (matches: DraftMatch[]): Promise<number> 
       const awaySeasonTeamId = teamSeasonMap.get(`${sId}:${m.awayTeamId}`);
       const rulesetId = rulesetMap.get(sId) ?? 1;
 
+      if (!roundId || !homeSeasonTeamId || !awaySeasonTeamId) {
+        console.warn(`[BulkCreate] Skipping invalid match data: Season ${sId}, Round ${rNum}, Home ${m.homeTeamId}, Away ${m.awayTeamId}`);
+        return;
+      }
+
+      // Check for duplicates
+      const compositeKey = `${sId}:${roundId}:${homeSeasonTeamId}:${awaySeasonTeamId}`;
+      if (existingMatchSet.has(compositeKey)) {
+        // console.log(`[BulkCreate] Skipping duplicate match: ${compositeKey}`);
+        return;
+      }
+
       // Generate unique match code
       const matchCode = `M${sId}-${roundId}-${homeSeasonTeamId}-${awaySeasonTeamId}-${Math.floor(Math.random() * 10000000)}`;
 
       params[`s${idx}`] = sId;
       params[`r${idx}`] = roundId;
       params[`md${idx}`] = m.matchday || 1;
-      params[`ht${idx}`] = homeSeasonTeamId ?? null;
-      params[`at${idx}`] = awaySeasonTeamId ?? null;
+      params[`ht${idx}`] = homeSeasonTeamId;
+      params[`at${idx}`] = awaySeasonTeamId;
       // params[`stad${idx}`] = m.venue ? defaultStadiumId : defaultStadiumId; // removed unused venue
       params[`rs${idx}`] = rulesetId;
       params[`k${idx}`] = m.utcDate;
       params[`mc${idx}`] = matchCode;
 
       valuesPart.push(`(@s${idx}, @r${idx}, @md${idx}, @ht${idx}, @at${idx}, @defaultStadiumId, @rs${idx}, @k${idx}, 'scheduled', @mc${idx})`);
+
+      // Add to set to prevent duplicates within the same bulk batch
+      existingMatchSet.add(compositeKey);
     });
 
     if (valuesPart.length === 0) continue;

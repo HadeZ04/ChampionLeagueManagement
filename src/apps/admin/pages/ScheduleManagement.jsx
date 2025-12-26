@@ -24,12 +24,11 @@ const ScheduleManagement = () => {
 
   const fetchSeasons = async () => {
     try {
-      const response = await ApiService.get('/seasons'); // Using ApiService directly is simpler here if service not avail
-      // Or if SeasonService exists, use it. But I don't see SeasonService in imports.
-      // Let's assume response.data is the array
-      setSeasons(response.data || []);
-      // Set default to first or current
-      const current = (response.data || []).find(s => s.isCurrent) || (response.data || [])[0];
+      const response = await ApiService.get('/seasons');
+      const seasonsData = Array.isArray(response) ? response : (response.data || []);
+      setSeasons(seasonsData);
+
+      const current = seasonsData.find(s => s.isCurrent) || seasonsData[0];
       if (current) setSelectedSeasonId(current.id || current.seasonId);
     } catch (err) {
       console.error("Failed to fetch seasons", err);
@@ -169,7 +168,20 @@ const ScheduleManagement = () => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Schedule Management</h1>
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
+          <select
+            value={selectedSeasonId}
+            onChange={(e) => setSelectedSeasonId(e.target.value)}
+            className="border p-2 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="" disabled>-- Select Season --</option>
+            {seasons.map(s => (
+              <option key={s.id || s.seasonId} value={s.id || s.seasonId}>
+                {s.name} ({s.code})
+              </option>
+            ))}
+          </select>
+          <div className="h-8 w-px bg-gray-300 mx-2"></div>
           <button
             onClick={handleClearDatabase}
             disabled={loading}
@@ -184,7 +196,7 @@ const ScheduleManagement = () => {
           )}
           <button
             onClick={handleGenerate}
-            disabled={loading || selectedTeamIds.length < 2}
+            disabled={loading || selectedTeamIds.length < 2 || !selectedSeasonId}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             <CalendarCheck size={18} /> {loading ? 'Processing...' : 'Generate Schedule'}
@@ -209,20 +221,6 @@ const ScheduleManagement = () => {
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold">Select Teams for Season ({selectedTeamIds.length} selected)</h2>
             <div>
-              <label className="mr-2 font-medium">Season:</label>
-              <select
-                value={selectedSeasonId}
-                onChange={(e) => setSelectedSeasonId(e.target.value)}
-                className="border p-1 rounded mr-4"
-              >
-                <option value="">-- Auto --</option>
-                {seasons.map(s => (
-                  <option key={s.id || s.seasonId} value={s.id || s.seasonId}>
-                    {s.name} ({s.code})
-                  </option>
-                ))}
-              </select>
-
               <label className="mr-2 font-medium">Start Date:</label>
               <input
                 type="date"
@@ -278,8 +276,9 @@ const ScheduleManagement = () => {
             </div>
           ))}
         </div>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 };
 
