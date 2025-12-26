@@ -10,10 +10,15 @@ import {
   listLiveMatches,
   listMatches,
   generateRandomMatches,
+  generateRoundRobinSchedule,
+  createBulkMatches,
   updateMatch,
   listFootballMatches,
+  deleteAllMatches,
+
 } from "../services/matchService";
 import { syncMatchesOnly } from "../services/syncService";
+import { createMatchEvent, deleteMatchEvent, disallowMatchEvent } from "../services/matchEventService";
 
 const router = Router();
 const requireMatchManagement = [requireAuth, requirePermission("manage_matches")] as const;
@@ -199,6 +204,7 @@ router.get("/:id/events", async (req, res, next) => {
           stp.team_id AS teamId,
           me.player_name AS player,
           me.event_type AS type,
+          me.card_type AS cardType,
           me.event_minute AS minute,
           me.description
         FROM match_events me
@@ -231,6 +237,7 @@ router.post("/:id/events", ...requireMatchManagement, async (req: any, res, next
       homeSeasonTeamId: number;
       awaySeasonTeamId: number;
       status: string;
+      rulesetId: number; // Fetch rulesetId
     }>(
       `SELECT
           m.season_id AS seasonId,
@@ -238,7 +245,8 @@ router.post("/:id/events", ...requireMatchManagement, async (req: any, res, next
           astp.team_id AS awayTeamId,
           m.home_season_team_id AS homeSeasonTeamId,
           m.away_season_team_id AS awaySeasonTeamId,
-          m.status
+          m.status,
+          m.ruleset_id AS rulesetId 
         FROM matches m
         INNER JOIN season_team_participants hstp ON m.home_season_team_id = hstp.season_team_id
         INNER JOIN season_team_participants astp ON m.away_season_team_id = astp.season_team_id
@@ -251,81 +259,24 @@ router.post("/:id/events", ...requireMatchManagement, async (req: any, res, next
       return res.status(404).json({ message: "Match not found" });
     }
 
-    let seasonTeamId: number | null = null;
-    let isHome = false;
-    if (payload.teamId === match.homeTeamId) {
-      seasonTeamId = match.homeSeasonTeamId;
-      isHome = true;
-    } else if (payload.teamId === match.awayTeamId) {
-      seasonTeamId = match.awaySeasonTeamId;
-      isHome = false;
-    } else {
-      return res.status(400).json({ message: "teamId does not belong to this match" });
-    }
+    // Call Service
+    const newEvent = await createMatchEvent({
+      matchId,
+      teamId: payload.teamId,
+      type: eventType as any,
+      minute: payload.minute,
+      description: payload.description ?? undefined,
+      playerId: payload.playerId ?? undefined // Pass raw player ID, service resolves name/seasonPlayerId
+    });
 
-    let playerName: string | null = payload.playerName ? payload.playerName.trim() : null;
-    if (!playerName && payload.playerId) {
-      const player = await query<{ full_name: string }>(
-        `SELECT TOP 1 full_name FROM players WHERE player_id = @playerId;`,
-        { playerId: payload.playerId },
-      );
-      playerName = player.recordset[0]?.full_name ?? null;
-    }
+    // Update score for goal-type events (Keep this logic here or move to service? 
+    // Service returns the event, but updating Match Score is side effect. 
+    // Ideally this should be in service too, but let's keep it here for minimal disruption or move it.)
+    // Actually, createMatchEvent in service DOES NOT update match score. I should probably keep this logic here for now
+    // BUT wait, createMatchEvent in service does NOT return "isHome" info easily unless we re-derive it.
 
-    const insertResult = await query<{ match_event_id: number }>(
-      `INSERT INTO match_events (
-          match_id,
-          season_id,
-          season_team_id,
-          player_name,
-          event_type,
-          event_minute,
-          description
-        )
-        OUTPUT INSERTED.match_event_id
-        VALUES (
-          @matchId,
-          @seasonId,
-          @seasonTeamId,
-          @playerName,
-          @eventType,
-          @minute,
-          @description
-        );`,
-      {
-        matchId,
-        seasonId: match.seasonId,
-        seasonTeamId,
-        playerName,
-        eventType,
-        minute: payload.minute,
-        description: payload.description ?? null,
-      },
-    );
-
-    const eventId = insertResult.recordset[0]?.match_event_id;
-
-    // Update score for goal-type events.
-    let homeInc = 0;
-    let awayInc = 0;
-    if (eventType === "GOAL") {
-      homeInc = isHome ? 1 : 0;
-      awayInc = isHome ? 0 : 1;
-    } else if (eventType === "OWN_GOAL") {
-      homeInc = isHome ? 0 : 1;
-      awayInc = isHome ? 1 : 0;
-    }
-
-    if (homeInc || awayInc) {
-      await query(
-        `UPDATE matches
-          SET home_score = COALESCE(home_score, 0) + @homeInc,
-              away_score = COALESCE(away_score, 0) + @awayInc,
-              updated_at = SYSUTCDATETIME()
-          WHERE match_id = @matchId;`,
-        { matchId, homeInc, awayInc },
-      );
-    }
+    // Let's rely on the service to do the INSERT.
+    // And here do the update based on what we know.
 
     // Auto-transition scheduled -> in_progress once an event arrives.
     if (match.status === "scheduled") {
@@ -344,24 +295,91 @@ router.post("/:id/events", ...requireMatchManagement, async (req: any, res, next
       entityType: "MATCH",
       entityId: String(matchId),
       payload: {
-        id: eventId,
+        id: newEvent.matchEventId,
         teamId: payload.teamId,
         type: eventType,
         minute: payload.minute,
-        player: playerName,
+        playerId: payload.playerId,
       },
     });
 
     res.status(201).json({
       data: {
-        id: eventId,
+        id: newEvent.matchEventId,
         teamId: payload.teamId,
-        player: playerName,
+        player: (newEvent as any).playerName, // Service adds this
         type: eventType,
         minute: payload.minute,
         description: payload.description ?? null,
       },
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/events/:id/disallow", ...requireMatchManagement, async (req, res, next) => {
+  try {
+    const eventId = Number(req.params.id);
+    const { reason } = req.body;
+
+    if (!Number.isInteger(eventId) || eventId <= 0) {
+      return res.status(400).json({ message: "Invalid event id" });
+    }
+    if (!reason) {
+      return res.status(400).json({ message: "Reason is required" });
+    }
+
+    const disallowedEvent = await disallowMatchEvent(eventId, reason);
+    if (!disallowedEvent) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+
+
+    await logEvent({
+      eventType: "MATCH_EVENT_UPDATED",
+      severity: "info",
+      actorId: (req as any).user?.sub,
+      actorUsername: (req as any).user?.username,
+      actorRole: Array.isArray((req as any).user?.roles) ? (req as any).user.roles[0] : undefined,
+      entityType: "MATCH",
+      entityId: String(disallowedEvent.matchId),
+      payload: { id: eventId, type: 'DISALLOWED', reason },
+    });
+
+    res.json({ message: "Goal disallowed successfully" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete("/events/:id", ...requireMatchManagement, async (req, res, next) => {
+  try {
+    const eventId = Number(req.params.id);
+    if (!Number.isInteger(eventId) || eventId <= 0) {
+      return res.status(400).json({ message: "Invalid event id" });
+    }
+
+    const deletedEvent = await deleteMatchEvent(eventId);
+    if (!deletedEvent) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+
+
+    await logEvent({
+      eventType: "MATCH_EVENT_DELETED",
+      severity: "info",
+      actorId: (req as any).user?.sub,
+      actorUsername: (req as any).user?.username,
+      actorRole: Array.isArray((req as any).user?.roles) ? (req as any).user.roles[0] : undefined,
+      entityType: "MATCH",
+      entityId: String(deletedEvent.matchId),
+      payload: { id: eventId, type: deletedEvent.type },
+    });
+
+    res.status(204).send();
   } catch (error) {
     next(error);
   }
@@ -387,6 +405,53 @@ router.post("/generate/random", ...requireMatchManagement, async (req, res, next
     });
   } catch (error) {
     next(error);
+  }
+});
+
+const generateRoundRobinSchema = z.object({
+  teamIds: z.array(z.number().int().positive()).min(2),
+  seasonId: z.number().int().positive().nullable().optional(),
+  startDate: z
+    .string()
+    .trim()
+    .nullable()
+    .optional()
+    .refine((value) => (value ? isValidDate(value) : true), { message: "startDate must be a valid ISO date" }),
+});
+
+router.post("/generate/round-robin", ...requireMatchManagement, async (req, res, next) => {
+  try {
+    const payload = generateRoundRobinSchema.parse(req.body ?? {});
+    const result = await generateRoundRobinSchedule({
+      teamIds: payload.teamIds,
+      seasonId: payload.seasonId ?? undefined,
+      startDate: payload.startDate ?? undefined,
+    });
+    res.json({
+      message: "Round robin schedule generated successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/bulk", ...requireMatchManagement, async (req, res, next) => {
+  try {
+    const payload = req.body;
+    const matches = Array.isArray(payload) ? payload : payload.matches;
+
+    if (!Array.isArray(matches)) {
+      return res.status(400).json({ message: "Body must be an array of matches or an object with a 'matches' array property" });
+    }
+    const count = await createBulkMatches(matches);
+    res.status(201).json({ count });
+  } catch (error) {
+    console.error('[BulkCreate] Error:', error);
+    res.status(500).json({
+      message: "Failed to create bulk matches",
+      error: error instanceof Error ? error.message : String(error)
+    });
   }
 });
 
@@ -463,6 +528,16 @@ router.post("/:id/results", ...requireMatchManagement, async (req, res, next) =>
       return res.status(404).json({ message: "Match not found" });
     }
     res.json({ data: updated });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete("/bulk", ...requireMatchManagement, async (req, res, next) => {
+  try {
+    const seasonId = req.query.seasonId ? Number(req.query.seasonId) : undefined;
+    const count = await deleteAllMatches(seasonId);
+    res.json({ message: "Matches deleted successfully", count });
   } catch (error) {
     next(error);
   }

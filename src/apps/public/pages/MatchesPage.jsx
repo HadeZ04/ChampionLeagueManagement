@@ -69,9 +69,10 @@ const MatchesPage = () => {
       setIsLoading(true);
       try {
         // 1. Fetch matches from both sources (Removed SeasonService dependency as we want ALL matches)
-        const [systemData, externalData] = await Promise.all([
+        const [systemData, externalData, liveMatches] = await Promise.all([
           matchService.getAllMatches({ limit: 100 }),
-          matchService.getExternalMatches({ limit: 100 })
+          matchService.getExternalMatches({ limit: 100 }),
+          matchService.getLiveMatches()
         ]);
 
         const formatMatch = (m, isExternal) => ({
@@ -104,14 +105,30 @@ const MatchesPage = () => {
           matchday: m.matchday || m.round || 0,
           venue: m.venue || 'TBC',
           city: 'Europe',
-          tvChannels: isExternal ? ['UEFA.tv'] : []
+          tvChannels: isExternal ? ['UEFA.tv'] : [],
+          events: m.events || [],
+          stats: m.stats || {},
+          mvp: m.mvp || null
         });
 
         const systemMatches = (systemData.matches || []).map(m => formatMatch(m, false));
         const externalMatches = (externalData.matches || []).map(m => formatMatch(m, true));
+        const formattedLiveMatches = (liveMatches || []).map(m => formatMatch(m, false));
+
+        // Create a map to ensure uniqueness by ID
+        const matchMap = new Map();
+
+        // Add system matches
+        systemMatches.forEach(m => matchMap.set(m.id, m));
+        // Add external matches
+        externalMatches.forEach(m => matchMap.set(m.id, m));
+        // Add live matches (override if duplicates, though unlikely to clash with external)
+        formattedLiveMatches.forEach(m => matchMap.set(m.id, m));
+
+        const uniqueMatches = Array.from(matchMap.values());
 
         // Merge and sort
-        const allMatches = [...systemMatches, ...externalMatches].sort((a, b) => new Date(a.date) - new Date(b.date));
+        const allMatches = uniqueMatches.sort((a, b) => new Date(a.date) - new Date(b.date));
 
         setMatches(allMatches);
         setError(null);

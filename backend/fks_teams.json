@@ -1,0 +1,38 @@
+[
+  {
+    "ForeignKeyName": "FK__players__current__3429BB53",
+    "ParentTable": "players",
+    "ReferencedTable": "teams",
+    "ParentColumn": "current_team_id"
+  },
+  {
+    "ForeignKeyName": "FK__season_in__team___567ED357",
+    "ParentTable": "season_invitations",
+    "ReferencedTable": "teams",
+    "ParentColumn": "team_id"
+  },
+  {
+    "ForeignKeyName": "FK__season_te__team___7226EDCC",
+    "ParentTable": "season_team_participants",
+    "ReferencedTable": "teams",
+    "ParentColumn": "team_id"
+  },
+  {
+    "ForeignKeyName": "FK__season_te__team___62E4AA3C",
+    "ParentTable": "season_team_registrations",
+    "ReferencedTable": "teams",
+    "ParentColumn": "team_id"
+  },
+  {
+    "ForeignKeyName": "FK__team_kits__team___2B947552",
+    "ParentTable": "team_kits",
+    "ReferencedTable": "teams",
+    "ParentColumn": "team_id"
+  },
+  {
+    "ForeignKeyName": "FK_user_team_assignments_team",
+    "ParentTable": "user_team_assignments",
+    "ReferencedTable": "teams",
+    "ParentColumn": "team_id"
+  }
+]

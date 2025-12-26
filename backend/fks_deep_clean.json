@@ -1,0 +1,62 @@
+[
+  {
+    "ForeignKeyName": "FK__match_lin__lineu__3E723F9C",
+    "ParentTable": "match_lineup_players",
+    "ReferencedTable": "match_lineups"
+  },
+  {
+    "ForeignKeyName": "FK_match_lineup_players_lineup",
+    "ParentTable": "match_lineup_players",
+    "ReferencedTable": "match_lineups"
+  },
+  {
+    "ForeignKeyName": "FK__match_eve__seaso__5555A4F4",
+    "ParentTable": "match_events",
+    "ReferencedTable": "season_player_registrations"
+  },
+  {
+    "ForeignKeyName": "FK__match_eve__relat__5649C92D",
+    "ParentTable": "match_events",
+    "ReferencedTable": "season_player_registrations"
+  },
+  {
+    "ForeignKeyName": "FK_match_events_player",
+    "ParentTable": "match_events",
+    "ReferencedTable": "season_player_registrations"
+  },
+  {
+    "ForeignKeyName": "FK_match_events_related_player",
+    "ParentTable": "match_events",
+    "ReferencedTable": "season_player_registrations"
+  },
+  {
+    "ForeignKeyName": "FK_match_lineup_players_player",
+    "ParentTable": "match_lineup_players",
+    "ReferencedTable": "season_player_registrations"
+  },
+  {
+    "ForeignKeyName": "FK__match_lin__seaso__405A880E",
+    "ParentTable": "match_lineup_players",
+    "ReferencedTable": "season_player_registrations"
+  },
+  {
+    "ForeignKeyName": "FK_match_reports_player",
+    "ParentTable": "match_reports",
+    "ReferencedTable": "season_player_registrations"
+  },
+  {
+    "ForeignKeyName": "FK__match_rep__playe__7E57BA87",
+    "ParentTable": "match_reports",
+    "ReferencedTable": "season_player_registrations"
+  },
+  {
+    "ForeignKeyName": "FK__player_ma__seaso__6774552F",
+    "ParentTable": "player_match_stats",
+    "ReferencedTable": "season_player_registrations"
+  },
+  {
+    "ForeignKeyName": "FK_player_match_stats_player",
+    "ParentTable": "player_match_stats",
+    "ReferencedTable": "season_player_registrations"
+  }
+]

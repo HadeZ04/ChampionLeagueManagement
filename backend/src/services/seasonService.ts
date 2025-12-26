@@ -389,13 +389,32 @@ export async function updateSeason(seasonId: number, input: UpdateSeasonInput): 
 }
 
 export async function deleteSeason(seasonId: number): Promise<boolean> {
+  // 1. Delete dependent match data
+  await query(`
+    DELETE FROM match_events WHERE match_id IN (SELECT match_id FROM matches WHERE season_id = @seasonId);
+    DELETE FROM match_mvps WHERE match_id IN (SELECT match_id FROM matches WHERE season_id = @seasonId);
+    DELETE FROM match_team_statistics WHERE match_id IN (SELECT match_id FROM matches WHERE season_id = @seasonId);
+    DELETE FROM match_audit_logs WHERE match_id IN (SELECT match_id FROM matches WHERE season_id = @seasonId);
+  `, { seasonId });
+
+  // 2. Delete matches
+  await query(`DELETE FROM matches WHERE season_id = @seasonId`, { seasonId });
+
+  // 3. Delete season-specific team data
+  await query(`DELETE FROM season_team_statistics WHERE season_id = @seasonId`, { seasonId });
+
+  // 4. Delete rounds
+  await query(`DELETE FROM season_rounds WHERE season_id = @seasonId`, { seasonId });
+
+  // 5. Delete participants (and implicitly their roles in this season if any, usually purely relational)
+  await query(`DELETE FROM season_team_participants WHERE season_id = @seasonId`, { seasonId });
+
+  // 6. Delete season
   const result = await query(
-    `
-      DELETE FROM seasons
-      WHERE season_id = @seasonId
-    `,
+    `DELETE FROM seasons WHERE season_id = @seasonId`,
     { seasonId }
   );
+
   const affected = result.rowsAffected?.[0] ?? 0;
   return affected > 0;
 }
@@ -494,7 +513,7 @@ export async function getInternalStandings(filters: { seasonId?: number; season?
   try {
     // Get season info
     let seasonId = filters.seasonId;
-    
+
     // If season year provided (like "2024"), find the corresponding seasonId
     if (!seasonId && filters.season) {
       try {
@@ -508,12 +527,12 @@ export async function getInternalStandings(filters: { seasonId?: number; season?
            )
            AND status IN ('in_progress', 'completed')
            ORDER BY start_date DESC`,
-          { 
+          {
             seasonPattern: `%${filters.season}%`,
             seasonYear: isNaN(Number(filters.season)) ? 0 : Number(filters.season)
           }
         );
-        
+
         if (seasonByYear.recordset && seasonByYear.recordset.length > 0) {
           seasonId = seasonByYear.recordset[0].season_id;
         }
@@ -521,7 +540,7 @@ export async function getInternalStandings(filters: { seasonId?: number; season?
         console.log('[getInternalStandings] Season lookup by year failed:', err);
       }
     }
-    
+
     if (!seasonId) {
       // Get latest season
       try {
@@ -531,7 +550,7 @@ export async function getInternalStandings(filters: { seasonId?: number; season?
            WHERE status IN ('in_progress', 'completed')
            ORDER BY start_date DESC, season_id DESC`
         );
-        
+
         if (!latestSeason.recordset || latestSeason.recordset.length === 0) {
           console.log('[getInternalStandings] No active season found, returning empty standings');
           return {
@@ -545,7 +564,7 @@ export async function getInternalStandings(filters: { seasonId?: number; season?
             table: []
           };
         }
-        
+
         seasonId = latestSeason.recordset[0].season_id;
       } catch (err) {
         console.log('[getInternalStandings] Latest season query failed:', err);
@@ -565,7 +584,7 @@ export async function getInternalStandings(filters: { seasonId?: number; season?
     // Get season details
     let season: any;
     let startYear: number;
-    
+
     try {
       const seasonInfo = await query<{
         season_id: number;

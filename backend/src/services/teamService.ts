@@ -541,11 +541,77 @@ export const updateTeam = async (
 };
 
 export const deleteTeam = async (id: number): Promise<boolean> => {
-  // Delete related competitions first
-  await query("DELETE FROM dbo.FootballTeamCompetitions WHERE team_id = @id;", { id });
+  // Cascading delete implementation
 
+  // 1. Delete detailed match data for matches involving this team
+  // Identifying matches first to target dependent tables
+  // We uses season_team_participants to link team_id -> season_team_id -> matches
+  const matchSubquery = `
+    SELECT match_id FROM matches 
+    WHERE home_season_team_id IN (SELECT season_team_id FROM season_team_participants WHERE team_id = @id) 
+       OR away_season_team_id IN (SELECT season_team_id FROM season_team_participants WHERE team_id = @id)
+  `;
+
+  await query(
+    `
+    DELETE FROM match_events WHERE match_id IN (${matchSubquery});
+    DELETE FROM match_mvps WHERE match_id IN (${matchSubquery});
+    DELETE FROM match_team_statistics WHERE match_id IN (${matchSubquery});
+    DELETE FROM match_audit_logs WHERE match_id IN (${matchSubquery});
+    DELETE FROM match_lineup_players WHERE lineup_id IN (SELECT lineup_id FROM match_lineups WHERE match_id IN (${matchSubquery}));
+    DELETE FROM match_lineups WHERE match_id IN (${matchSubquery});
+    DELETE FROM match_official_assignments WHERE match_id IN (${matchSubquery});
+    DELETE FROM match_reports WHERE match_id IN (${matchSubquery});
+    DELETE FROM player_match_stats WHERE match_id IN (${matchSubquery});
+    `,
+    { id }
+  );
+
+  // 2. Delete the matches themselves
+  await query(
+    `DELETE FROM matches 
+     WHERE home_season_team_id IN (SELECT season_team_id FROM season_team_participants WHERE team_id = @id) 
+        OR away_season_team_id IN (SELECT season_team_id FROM season_team_participants WHERE team_id = @id);`,
+    { id }
+  );
+
+  // 3. Delete season participation data
+  // Delete statistics and player registrations first as they reference season_team_participants
+  await query(
+    `
+    DELETE FROM season_team_statistics WHERE season_team_id IN (SELECT season_team_id FROM season_team_participants WHERE team_id = @id);
+    DELETE FROM season_player_registrations WHERE season_team_id IN (SELECT season_team_id FROM season_team_participants WHERE team_id = @id);
+    `,
+    { id }
+  );
+
+  // 4. Delete season participation
+  // This must be done after matches because matches reference season_team_participants
+  await query(
+    "DELETE FROM season_team_participants WHERE team_id = @id;",
+    { id }
+  );
+
+  // 5. Delete direct team dependencies
+  await query(
+    `
+    DELETE FROM season_invitations WHERE team_id = @id;
+    DELETE FROM season_team_registrations WHERE team_id = @id;
+    DELETE FROM team_kits WHERE team_id = @id;
+    UPDATE players SET current_team_id = NULL WHERE current_team_id = @id;
+    DELETE FROM user_team_assignments WHERE team_id = @id;
+    DELETE FROM FootballTeamCompetitions WHERE team_id = @id;
+    `,
+    { id }
+  );
+
+  // 6. Finally delete the team (try both generic and internal tables)
+  // We use a transaction-like approach or just best-effort delete for both.
   const result = await query<{ rowsAffected: number }>(
-    "DELETE FROM dbo.FootballTeams WHERE id = @id;",
+    `
+    DELETE FROM dbo.FootballTeams WHERE id = @id;
+    DELETE FROM teams WHERE team_id = @id;
+    `,
     { id },
   );
   const rowsAffected = result.rowsAffected?.[0] ?? 0;

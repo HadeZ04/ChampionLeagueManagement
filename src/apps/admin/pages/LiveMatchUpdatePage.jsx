@@ -72,22 +72,41 @@ const LiveMatchUpdatePage = () => {
         }
     };
 
-    // Event Handling
-    const handleAddEvent = async (type, teamId, playerId = null, extraData = {}) => {
+    // Event Modal State
+    const [showModal, setShowModal] = useState(false);
+    const [selectedEventType, setSelectedEventType] = useState(null);
+    const [selectedTeamId, setSelectedTeamId] = useState(null);
+    const [selectedPlayerId, setSelectedPlayerId] = useState('');
+
+    // Open Modal logic
+    const openEventModal = (type, teamId) => {
+        setSelectedEventType(type);
+        setSelectedTeamId(teamId);
+        setSelectedPlayerId(''); // Reset selection
+        setShowModal(true);
+    };
+
+    // Submit Event Logic (Renamed from handleAddEvent)
+    const submitEvent = async () => {
+        if (!selectedPlayerId) {
+            toast.error('Please select a player');
+            return;
+        }
+
         try {
             const time = matchTime || 0;
             const payload = {
                 matchId,
-                teamId,
-                playerId,
-                type,
+                teamId: selectedTeamId,
+                playerId: parseInt(selectedPlayerId),
+                type: selectedEventType,
                 minute: time,
-                ...extraData
             };
 
             await MatchesService.createMatchEvent(matchId, payload);
-            toast.success(`${type} recorded!`);
-            fetchMatchData(); // Refresh to get updated score/events
+            toast.success(`${selectedEventType} recorded!`);
+            fetchMatchData();
+            setShowModal(false); // Close modal
         } catch (error) {
             console.error('Error saving event:', error);
             toast.error('Failed to save event');
@@ -106,6 +125,49 @@ const LiveMatchUpdatePage = () => {
         }
     };
 
+    // Helper to get squad for selected team
+    const getActiveSquad = () => {
+        if (selectedTeamId === match?.homeTeamId) return homeSquad;
+        if (selectedTeamId === match?.awayTeamId) return awaySquad;
+        return [];
+    };
+
+    const handleDeleteEvent = async (event) => {
+        const isGoal = event.type === 'GOAL' || event.type === 'OWN_GOAL';
+
+        let shouldDisallow = false;
+        if (isGoal) {
+            // Choice: Delete or Disallow?
+            // Simple approach: Custom confirm/prompt flow
+            // Ideally we'd use a nice modal, but for now we can rely on confirm/prompt behavior or 
+            // maybe just checking if the user wants to provide a reason implies "Disallow".
+            // Let's ask specifically.
+            const choice = window.confirm("Is this a disallowed goal (Offside/Foul)?\n\nClick OK to DISALLOW (with reason).\nClick Cancel to just DELETE (mistake).");
+            if (choice) {
+                shouldDisallow = true;
+            }
+        } else {
+            if (!window.confirm('Are you sure you want to delete this event?')) return;
+        }
+
+        try {
+            if (shouldDisallow) {
+                const reason = window.prompt("Enter reason for disallowance (e.g. Offside):");
+                if (!reason) return; // Cancelled
+
+                await MatchesService.disallowMatchEvent(event.id, reason);
+                toast.success('Goal disallowed!');
+            } else {
+                await MatchesService.deleteMatchEvent(event.id);
+                toast.success('Event deleted successfully');
+            }
+            fetchMatchData();
+        } catch (error) {
+            console.error('Failed to update event:', error);
+            toast.error('Failed to update event');
+        }
+    };
+
     if (loading) return <div className="p-8 text-center">Loading Match Data...</div>;
     if (!match) return <div className="p-8 text-center text-red-500">Match not found</div>;
 
@@ -116,7 +178,7 @@ const LiveMatchUpdatePage = () => {
     ];
 
     return (
-        <div className="max-w-7xl mx-auto p-4 space-y-6">
+        <div className="max-w-7xl mx-auto p-4 space-y-6 relative">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <button onClick={() => navigate('/admin/matches-today')} className="text-gray-600 hover:text-gray-900 flex items-center gap-2">
@@ -148,7 +210,7 @@ const LiveMatchUpdatePage = () => {
                     </div>
                     <div className="text-center px-8">
                         <div className="text-6xl font-black font-mono tracking-wider mb-2">
-                            {match.scoreHome} - {match.scoreAway}
+                            {match.homeScore ?? match.scoreHome} - {match.awayScore ?? match.scoreAway}
                         </div>
                         <div className="flex items-center justify-center gap-2 text-yellow-400 text-xl font-mono bg-black/30 px-4 py-1 rounded-full w-fit mx-auto">
                             <Clock size={20} />
@@ -171,25 +233,25 @@ const LiveMatchUpdatePage = () => {
                             <h3 className="font-bold text-gray-700 border-b pb-2">{match.homeTeamName} Actions</h3>
                             <div className="grid grid-cols-2 gap-3">
                                 <button
-                                    onClick={() => handleAddEvent('GOAL', match.homeTeamId)}
+                                    onClick={() => openEventModal('GOAL', match.homeTeamId)}
                                     className="p-4 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg border border-green-200 flex flex-col items-center gap-2 transition-colors"
                                 >
                                     <Goal size={24} /> <span>Goal</span>
                                 </button>
                                 <button
-                                    onClick={() => handleAddEvent('YELLOW_CARD', match.homeTeamId)}
+                                    onClick={() => openEventModal('YELLOW_CARD', match.homeTeamId)}
                                     className="p-4 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 rounded-lg border border-yellow-200 flex flex-col items-center gap-2 transition-colors"
                                 >
                                     <Square fill="currentColor" size={24} /> <span>Yellow Card</span>
                                 </button>
                                 <button
-                                    onClick={() => handleAddEvent('RED_CARD', match.homeTeamId)}
+                                    onClick={() => openEventModal('RED_CARD', match.homeTeamId)}
                                     className="p-4 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg border border-red-200 flex flex-col items-center gap-2 transition-colors"
                                 >
                                     <Square fill="currentColor" size={24} /> <span>Red Card</span>
                                 </button>
                                 <button
-                                    onClick={() => handleAddEvent('SUBSTITUTION', match.homeTeamId)}
+                                    onClick={() => openEventModal('SUBSTITUTION', match.homeTeamId)}
                                     className="p-4 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg border border-blue-200 flex flex-col items-center gap-2 transition-colors"
                                 >
                                     <Replace size={24} /> <span>Sub</span>
@@ -208,12 +270,20 @@ const LiveMatchUpdatePage = () => {
                                         <div key={event.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
                                             <div className="font-mono text-sm font-bold w-8 text-gray-500">{event.minute}'</div>
                                             <div className="flex-1">
-                                                <div className="font-semibold text-sm">{event.type.replace('_', ' ')}</div>
+                                                <div className="font-semibold text-sm">
+                                                    {event.type === 'CARD'
+                                                        ? `${event.cardType} Card`
+                                                        : (event.type === 'OTHER' && event.description ? event.description : event.type.replace('_', ' '))}
+                                                </div>
                                                 <div className="text-xs text-gray-500">
-                                                    {event.teamId === match.homeTeamId ? match.homeTeamName : match.awayTeamName}
+                                                    {event.player || 'Unknown Player'} ({event.teamId === match.homeTeamId ? match.homeTeamName : match.awayTeamName})
                                                 </div>
                                             </div>
-                                            <button className="text-red-400 hover:text-red-600 p-1">
+                                            <button
+                                                onClick={() => handleDeleteEvent(event)}
+                                                className="text-red-400 hover:text-red-600 p-1"
+                                                title="Delete or Disallow"
+                                            >
                                                 <Trash2 size={14} />
                                             </button>
                                         </div>
@@ -244,25 +314,25 @@ const LiveMatchUpdatePage = () => {
                             <h3 className="font-bold text-gray-700 border-b pb-2 text-right">{match.awayTeamName} Actions</h3>
                             <div className="grid grid-cols-2 gap-3">
                                 <button
-                                    onClick={() => handleAddEvent('GOAL', match.awayTeamId)}
+                                    onClick={() => openEventModal('GOAL', match.awayTeamId)}
                                     className="p-4 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg border border-green-200 flex flex-col items-center gap-2 transition-colors"
                                 >
                                     <Goal size={24} /> <span>Goal</span>
                                 </button>
                                 <button
-                                    onClick={() => handleAddEvent('YELLOW_CARD', match.awayTeamId)}
+                                    onClick={() => openEventModal('YELLOW_CARD', match.awayTeamId)}
                                     className="p-4 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 rounded-lg border border-yellow-200 flex flex-col items-center gap-2 transition-colors"
                                 >
                                     <Square fill="currentColor" size={24} /> <span>Yellow Card</span>
                                 </button>
                                 <button
-                                    onClick={() => handleAddEvent('RED_CARD', match.awayTeamId)}
+                                    onClick={() => openEventModal('RED_CARD', match.awayTeamId)}
                                     className="p-4 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg border border-red-200 flex flex-col items-center gap-2 transition-colors"
                                 >
                                     <Square fill="currentColor" size={24} /> <span>Red Card</span>
                                 </button>
                                 <button
-                                    onClick={() => handleAddEvent('SUBSTITUTION', match.awayTeamId)}
+                                    onClick={() => openEventModal('SUBSTITUTION', match.awayTeamId)}
                                     className="p-4 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg border border-blue-200 flex flex-col items-center gap-2 transition-colors"
                                 >
                                     <Replace size={24} /> <span>Sub</span>
@@ -319,6 +389,50 @@ const LiveMatchUpdatePage = () => {
                     </div>
                 )}
             </div>
+
+            {/* EVENT MODAL */}
+            {showModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+                        <div className="bg-slate-900 text-white p-4 flex justify-between items-center">
+                            <h3 className="font-bold text-lg">Record {selectedEventType?.replace('_', ' ')}</h3>
+                            <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-white">&times;</button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Select Player</label>
+                                <select
+                                    className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"
+                                    value={selectedPlayerId}
+                                    onChange={(e) => setSelectedPlayerId(e.target.value)}
+                                >
+                                    <option value="">-- Choose Player --</option>
+                                    {getActiveSquad().map(player => (
+                                        <option key={player.id} value={player.id}>
+                                            #{player.shirtNumber} - {player.name} ({player.position})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="flex justify-end gap-3 pt-4">
+                                <button
+                                    onClick={() => setShowModal(false)}
+                                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={submitEvent}
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium"
+                                >
+                                    Confirm
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -1,0 +1,26 @@
+[
+  {
+    "TableName": "match_official_assignments",
+    "ColumnName": "match_id"
+  },
+  {
+    "TableName": "match_reports",
+    "ColumnName": "match_id"
+  },
+  {
+    "TableName": "player_match_stats",
+    "ColumnName": "match_id"
+  },
+  {
+    "TableName": "season_invitations",
+    "ColumnName": "team_id"
+  },
+  {
+    "TableName": "season_team_registrations",
+    "ColumnName": "team_id"
+  },
+  {
+    "TableName": "team_kits",
+    "ColumnName": "team_id"
+  }
+]

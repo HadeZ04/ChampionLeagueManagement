@@ -87,13 +87,13 @@ const MatchCard = ({ match }) => {
           </div>
         </div>
         <div className="text-center min-w-[140px] flex flex-col items-center justify-center score-flip">
-          {match.status === 'finished' && (match.scoreHome !== undefined || match.score?.home !== undefined) ? (
+          {(match.status === 'finished' || match.status === 'live' || match.status === 'in_progress') && (match.scoreHome !== undefined || match.score?.home !== undefined) ? (
             <>
               <div className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-slate-800 to-slate-600 mb-1">
                 {match.scoreHome ?? match.score?.home} : {match.scoreAway ?? match.score?.away}
               </div>
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded-full">
-                Full Time
+              <div className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${match.status === 'finished' ? 'text-slate-400 bg-slate-100' : 'text-red-600 bg-red-100 animate-pulse'}`}>
+                {match.status === 'finished' ? 'Full Time' : 'Live Match'}
               </div>
             </>
           ) : (
@@ -152,26 +152,73 @@ const MatchCard = ({ match }) => {
             </div>
           )}
 
-          {/* EVENTS */}
-          {(match.events && match.events.length > 0) && (
+          {/* EVENTS TIMELINE */}
+          {(match.events && match.events.length > 0) ? (
             <div className="mb-4">
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1">
-                <Activity size={12} /> Match Events
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center justify-center gap-1">
+                <Activity size={12} /> Match Timeline
               </h4>
-              <div className="space-y-2">
-                {match.events.map((event, idx) => (
-                  <div key={idx} className={`flex items-center text-sm ${match.homeTeam.name.includes(event.teamId) ? '' : '' /* Matching logic needs fix */}`}>
-                    <span className="font-mono text-slate-400 w-8">{event.minute}'</span>
-                    <span className={`flex-1 ${event.type === 'GOAL' ? 'font-bold text-slate-800' : 'text-slate-600'}`}>
-                      {event.player}
-                      {event.type === 'GOAL' && ' ⚽'}
-                      {event.type === 'card_yellow' && ' 🟨'}
-                      {event.type === 'card_red' && ' 🟥'}
-                    </span>
-                    {/* We need better team identification. For now showing list. */}
-                  </div>
-                ))}
+              <div className="space-y-1 relative before:absolute before:left-1/2 before:-translate-x-1/2 before:h-full before:w-px before:bg-slate-100 before:content-['']">
+                {(() => {
+                  let currentHomeScore = 0;
+                  let currentAwayScore = 0;
+
+                  return match.events.map((event, idx) => {
+                    const isHome = event.teamId === match.homeTeam.id;
+                    const isGoal = event.type === 'GOAL';
+                    const isOwnGoal = event.type === 'OWN_GOAL';
+                    const isRedCard = event.type === 'RED_CARD' || (event.type === 'CARD' && event.cardType === 'Red');
+                    const isYellowCard = event.type === 'YELLOW_CARD' || (event.type === 'CARD' && event.cardType === 'Yellow');
+                    const isSub = event.type === 'SUBSTITUTION';
+                    const isDisallowed = event.type === 'OTHER' && event.description?.includes('Disallowed');
+
+                    // Score Calculation
+                    if (isGoal) {
+                      if (isHome) currentHomeScore++; else currentAwayScore++;
+                    } else if (isOwnGoal) {
+                      if (isHome) currentAwayScore++; else currentHomeScore++;
+                    }
+                    const displayScore = `${currentHomeScore} - ${currentAwayScore}`;
+
+                    let icon = '•';
+                    if (isGoal) icon = '⚽';
+                    if (isOwnGoal) icon = '⚽ (OG)';
+                    if (isRedCard) icon = '🟥';
+                    if (isYellowCard) icon = '🟨';
+                    if (isSub) icon = '🔄';
+                    if (isDisallowed) icon = '🚫';
+
+                    return (
+                      <div key={idx} className={`flex items-center gap-4 text-xs ${isHome ? 'flex-row' : 'flex-row-reverse'}`}>
+                        <div className={`flex-1 ${isHome ? 'text-right' : 'text-left'}`}>
+                          <div className={`font-semibold ${isGoal ? 'text-slate-900' : 'text-slate-600'}`}>
+                            {event.player || 'Unknown'}
+                            {isDisallowed && <span className="block text-[10px] text-red-500 font-normal italic">{event.description}</span>}
+                          </div>
+                          {isSub && <div className="text-slate-400 text-[10px]">In for {event.assistPlayerId || '?'}</div>}
+                        </div>
+
+                        <div className="z-10 bg-white border border-slate-100 rounded-full w-8 h-8 flex items-center justify-center text-xs shadow-sm font-mono font-bold text-slate-500">
+                          {event.minute}'
+                        </div>
+
+                        <div className="flex-1 flex gap-2 items-center">
+                          <span className="text-lg leading-none" title={event.type}>{icon}</span>
+                          {(isGoal || isOwnGoal) && !isDisallowed && (
+                            <span className="font-mono font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap">
+                              {displayScore}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
+            </div>
+          ) : (
+            <div className="mb-4 text-center py-4 bg-slate-50 rounded-lg border border-dashed border-slate-200">
+              <p className="text-xs text-slate-400 italic">No events recorded yet</p>
             </div>
           )}
 

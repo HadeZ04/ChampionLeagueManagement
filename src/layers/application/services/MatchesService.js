@@ -64,7 +64,35 @@ class MatchesService {
   async getLiveMatches() {
     try {
       const response = await ApiService.get(APP_CONFIG.API.ENDPOINTS.MATCHES.LIVE)
-      return response?.data || []
+
+      const rawMatches = response?.data || []
+      return rawMatches.map(match => ({
+        id: match.matchId,
+        homeTeamId: match.homeTeamId,
+        homeTeamName: match.homeTeamName,
+        homeTeamShortName: match.homeTeamShortName,
+        homeTeamLogo: match.homeTeamName?.includes("Monaco")
+          ? "https://tmssl.akamaized.net/images/wappen/head/162.png"
+          : match.homeTeamLogo,
+        awayTeamId: match.awayTeamId,
+        awayTeamName: match.awayTeamName,
+        awayTeamShortName: match.awayTeamShortName,
+        awayTeamLogo: match.awayTeamName?.includes("Monaco")
+          ? "https://tmssl.akamaized.net/images/wappen/head/162.png"
+          : match.awayTeamLogo,
+        utcDate: match.scheduledKickoff && !match.scheduledKickoff.endsWith('Z') ? match.scheduledKickoff + 'Z' : match.scheduledKickoff,
+        scheduledKickoff: match.scheduledKickoff && !match.scheduledKickoff.endsWith('Z') ? match.scheduledKickoff + 'Z' : match.scheduledKickoff,
+        status: match.status,
+        scoreHome: match.homeScore,
+        scoreAway: match.awayScore,
+        venue: match.stadiumName,
+        matchday: match.matchdayNumber,
+        updatedAt: match.updatedAt,
+        seasonId: match.seasonId,
+        mvp: match.mvp,
+        events: match.events || [],
+        stats: match.stats || { home: null, away: null }
+      }))
     } catch (error) {
       logger.error('Failed to fetch live matches:', error)
       throw error
@@ -290,6 +318,16 @@ class MatchesService {
       return response?.data
     } catch (error) {
       logger.error('Failed to create match event:', error)
+      throw error
+    }
+  }
+
+  async disallowMatchEvent(eventId, reason) {
+    try {
+      const response = await ApiService.post(`/matches/events/${eventId}/disallow`, { reason })
+      return response?.data
+    } catch (error) {
+      logger.error('Failed to disallow match event:', error)
       throw error
     }
   }

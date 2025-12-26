@@ -1,0 +1,202 @@
+﻿Current CWD: D:\ChampionLeagueManagement-main\backend
+Dotenv loaded: {
+  PORT: '4000',
+  DB_HOST: 'thang2309.database.windows.net',
+  DB_PORT: '1433',
+  DB_USER: 'thang2309',
+  DB_PASS: '***',
+  DB_NAME: 'ChampionLeagueManagement',
+  DB_ENCRYPT: 'true',
+  DB_TRUST_SERVER_CERTIFICATE: 'true',
+  JWT_SECRET: '***',
+  JWT_EXPIRES_IN: '2h',
+  FOOTBALL_DATA_API_TOKEN: '***',
+  FOOTBALL_DATA_COMPETITION_CODE: 'CL'
+}
+Reading SQL file from: D:\ChampionLeagueManagement-main\backend\list_dups.sql
+Executing SQL...
+Database connection pool established
+--- Result Set 1 ---
+[
+  {
+    "id": 1,
+    "name": "Bayer 04 Leverkusen",
+    "external_id": 3
+  },
+  {
+    "id": 37,
+    "name": "Bayer 04 Leverkusen",
+    "external_id": 3
+  },
+  {
+    "id": 2,
+    "name": "Borussia Dortmund",
+    "external_id": 4
+  },
+  {
+    "id": 38,
+    "name": "Borussia Dortmund",
+    "external_id": 4
+  },
+  {
+    "id": 3,
+    "name": "FC Bayern MĂ¼nchen",
+    "external_id": 5
+  },
+  {
+    "id": 39,
+    "name": "FC Bayern MĂ¼nchen",
+    "external_id": 5
+  },
+  {
+    "id": 5,
+    "name": "Arsenal FC",
+    "external_id": 57
+  },
+  {
+    "id": 41,
+    "name": "Arsenal FC",
+    "external_id": 57
+  },
+  {
+    "id": 7,
+    "name": "Liverpool FC",
+    "external_id": 64
+  },
+  {
+    "id": 43,
+    "name": "Liverpool FC",
+    "external_id": 64
+  },
+  {
+    "id": 8,
+    "name": "Manchester City FC",
+    "external_id": 65
+  },
+  {
+    "id": 44,
+    "name": "Manchester City FC",
+    "external_id": 65
+  },
+  {
+    "id": 12,
+    "name": "Club AtlĂ©tico de Madrid",
+    "external_id": 78
+  },
+  {
+    "id": 45,
+    "name": "Club AtlĂ©tico de Madrid",
+    "external_id": 78
+  },
+  {
+    "id": 13,
+    "name": "FC Barcelona",
+    "external_id": 81
+  },
+  {
+    "id": 46,
+    "name": "FC Barcelona",
+    "external_id": 81
+  },
+  {
+    "id": 14,
+    "name": "Real Madrid CF",
+    "external_id": 86
+  },
+  {
+    "id": 47,
+    "name": "Real Madrid CF",
+    "external_id": 86
+  },
+  {
+    "id": 16,
+    "name": "Atalanta BC",
+    "external_id": 102
+  },
+  {
+    "id": 49,
+    "name": "Atalanta BC",
+    "external_id": 102
+  },
+  {
+    "id": 17,
+    "name": "FC Internazionale Milano",
+    "external_id": 108
+  },
+  {
+    "id": 51,
+    "name": "FC Internazionale Milano",
+    "external_id": 108
+  },
+  {
+    "id": 18,
+    "name": "Juventus FC",
+    "external_id": 109
+  },
+  {
+    "id": 52,
+    "name": "Juventus FC",
+    "external_id": 109
+  },
+  {
+    "id": 20,
+    "name": "Sporting Clube de Portugal",
+    "external_id": 498
+  },
+  {
+    "id": 54,
+    "name": "Sporting Clube de Portugal",
+    "external_id": 498
+  },
+  {
+    "id": 22,
+    "name": "Paris Saint-Germain FC",
+    "external_id": 524
+  },
+  {
+    "id": 57,
+    "name": "Paris Saint-Germain FC",
+    "external_id": 524
+  },
+  {
+    "id": 23,
+    "name": "AS Monaco FC",
+    "external_id": 548
+  },
+  {
+    "id": 58,
+    "name": "AS Monaco FC",
+    "external_id": 548
+  },
+  {
+    "id": 27,
+    "name": "PSV",
+    "external_id": 674
+  },
+  {
+    "id": 59,
+    "name": "PSV",
+    "external_id": 674
+  },
+  {
+    "id": 29,
+    "name": "Club Brugge KV",
+    "external_id": 851
+  },
+  {
+    "id": 64,
+    "name": "Club Brugge KV",
+    "external_id": 851
+  },
+  {
+    "id": 32,
+    "name": "Sport Lisboa e Benfica",
+    "external_id": 1903
+  },
+  {
+    "id": 69,
+    "name": "Sport Lisboa e Benfica",
+    "external_id": 1903
+  }
+]
+âœ… SQL executed successfully!
