@@ -125,7 +125,7 @@ const TopScorers = () => {
               </div>
 
               <div className="text-right">
-                <div className="text-2xl font-black text-cyan-400" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                <div className="text-2xl font-black text-cyan-400">
                   {scorer.goals || 0}
                 </div>
                 <div className="text-white/50 text-xs">

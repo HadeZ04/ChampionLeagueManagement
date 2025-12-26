@@ -143,7 +143,7 @@ const StandingsPage = () => {
                 <span className="uppercase tracking-wider font-bold">Champions League</span>
               </div>
               
-              <h1 className="text-3xl md:text-4xl font-black text-white leading-tight" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+              <h1 className="text-3xl md:text-4xl font-black text-white leading-tight">
                 Bảng xếp hạng
               </h1>
               

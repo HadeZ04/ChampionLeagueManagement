@@ -25,7 +25,7 @@ let pool: sql.ConnectionPool | null = null;
 let poolConnect: Promise<sql.ConnectionPool> | null = null;
 let isConnecting = false;
 
-async function getPool(): Promise<sql.ConnectionPool> {
+export async function getPool(): Promise<sql.ConnectionPool> {
   // If pool exists and is connected, return it
   if (pool && pool.connected) {
     return pool;

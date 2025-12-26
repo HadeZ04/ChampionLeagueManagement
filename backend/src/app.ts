@@ -29,6 +29,8 @@ import newsRoutes from "./routes/newsRoutes";
 import mediaRoutes from "./routes/mediaRoutes";
 import settingsRoutes from "./routes/settingsRoutes";
 import officialRoutes from "./routes/officialRoutes";
+import awardsRoutes from "./routes/awardsRoutes";
+import disciplineRoutes from "./routes/disciplineRoutes";
 
 const app = express();
 
@@ -46,6 +48,10 @@ app.use("/api/users", userRoutes);
 app.use("/api/roles", roleRoutes);
 app.use("/api/permissions", permissionRoutes);
 app.use("/api/rulesets", rulesetRoutes);
+// IMPORTANT: Mount specific season sub-routes BEFORE generic seasonRoutes
+// to prevent /:id from matching /:seasonId/awards or /:seasonId/discipline
+app.use("/api/seasons", awardsRoutes);
+app.use("/api/seasons", disciplineRoutes);
 app.use("/api/seasons", seasonRoutes);
 app.use("/api/audit-events", auditRoutes);
 app.use("/api/season-players", seasonRegistrationRoutes);

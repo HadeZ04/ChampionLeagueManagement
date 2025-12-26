@@ -21,7 +21,9 @@ import {
   History,
   KeyRound,
   Sparkles,
-  Zap
+  Zap,
+  Award,
+  AlertTriangle
 } from 'lucide-react'
 
 const MENU_SECTIONS = [
@@ -59,7 +61,9 @@ const MENU_SECTIONS = [
       },
       { name: 'Thống kê cầu thủ', path: '/admin/player-stats', icon: Target, permission: 'manage_matches' },
       { name: 'Bảng xếp hạng', path: '/admin/standings', icon: Trophy, permission: 'manage_matches' },
-      { name: 'Trọng tài & Giám sát', path: '/admin/officials', icon: Shield, permission: 'manage_matches' }
+      { name: 'Trọng tài & Giám sát', path: '/admin/officials', icon: Shield, permission: 'manage_matches' },
+      { name: 'Giải thưởng', path: '/admin/awards', icon: Award, permission: 'view_reports' },
+      { name: 'Kỷ luật', path: '/admin/discipline', icon: AlertTriangle, permission: 'manage_matches' }
     ]
   },
   {

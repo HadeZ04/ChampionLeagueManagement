@@ -25,6 +25,7 @@ const StandingsManagement = () => {
   const [seasons, setSeasons] = useState([]);
   const [selectedSeason, setSelectedSeason] = useState(null);
   const [standings, setStandings] = useState([]);
+  const [standingsMode, setStandingsMode] = useState('live'); // 'live' or 'final'
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
@@ -61,7 +62,7 @@ const StandingsManagement = () => {
     if (selectedSeason) {
       loadStandings();
     }
-  }, [selectedSeason]);
+  }, [selectedSeason, standingsMode]); // Also reload when mode changes
 
   const loadSeasons = async (preferredSeasonId = null) => {
     try {
@@ -181,7 +182,7 @@ const StandingsManagement = () => {
     setError(null);
     
     try {
-      const response = await StandingsAdminService.getStandingsBySeason(selectedSeason);
+      const response = await StandingsAdminService.getStandingsBySeason(selectedSeason, standingsMode);
       setStandings(response.data || []);
     } catch (err) {
       setError('Không thể tải bảng xếp hạng: ' + err.message);
@@ -441,6 +442,27 @@ const StandingsManagement = () => {
             </select>
           </div>
 
+          {/* Mode Selector */}
+          <div className="w-full md:max-w-xs">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Chế Độ Xếp Hạng
+            </label>
+            <select
+              value={standingsMode}
+              onChange={(e) => setStandingsMode(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={!selectedSeason}
+            >
+              <option value="live">Trong Mùa (LIVE)</option>
+              <option value="final">Cuối Mùa (FINAL)</option>
+            </select>
+            <p className="mt-1 text-xs text-gray-500">
+              {standingsMode === 'live' 
+                ? 'Chỉ xét điểm và hiệu số' 
+                : 'Áp dụng đối đầu trực tiếp'}
+            </p>
+          </div>
+
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => handleOpenSeasonModal()}
@@ -474,6 +496,22 @@ const StandingsManagement = () => {
             <Loader className="h-4 w-4 animate-spin" />
             <span>Đang tải dữ liệu mùa giải...</span>
           </p>
+        )}
+
+        {/* Mode Info Banner */}
+        {selectedSeason && standingsMode === 'final' && (
+          <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <div className="flex items-start gap-3">
+              <Info size={20} className="text-amber-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-amber-800">
+                <p className="font-medium mb-1">Chế độ xếp hạng cuối mùa (FINAL)</p>
+                <p className="text-amber-700">
+                  Áp dụng đầy đủ quy tắc phân hạng: Điểm → Hiệu số → Đối đầu trực tiếp (H2H) → Bốc thăm (nếu cần).
+                  Các đội có biểu tượng ⚖ được xếp hạng theo kết quả đối đầu.
+                </p>
+              </div>
+            </div>
+          </div>
         )}
       </div>
 
@@ -552,6 +590,11 @@ const StandingsManagement = () => {
                     <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Điểm
                     </th>
+                    {standingsMode === 'final' && (
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Tie-Break
+                      </th>
+                    )}
                     <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Trạng Thái
                     </th>
@@ -564,10 +607,10 @@ const StandingsManagement = () => {
                   {standings.map((team, index) => (
                     <tr key={team.seasonTeamId} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {index + 1}
+                        {team.rank || index + 1}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
+                        <div className="flex items-center gap-2">
                           <div>
                             <div className="text-sm font-medium text-gray-900">
                               {team.teamName}
@@ -578,10 +621,29 @@ const StandingsManagement = () => {
                               </div>
                             )}
                           </div>
+                          {/* Head-to-Head Indicator */}
+                          {standingsMode === 'final' && team.tieBreakInfo?.usedHeadToHead && (
+                            <div className="group relative">
+                              <span className="text-lg cursor-help" title="Xếp hạng theo đối đầu">
+                                ⚖
+                              </span>
+                              <div className="hidden group-hover:block absolute z-10 left-0 top-8 bg-gray-800 text-white text-xs rounded-lg p-2 w-64 shadow-lg">
+                                <p className="font-semibold mb-1">Đối đầu trực tiếp (H2H)</p>
+                                {team.tieBreakInfo.headToHeadRecords?.map((record, idx) => (
+                                  <p key={idx} className="text-gray-200">
+                                    vs {record.opponentTeamName}: {record.teamGoals}-{record.opponentGoals}
+                                  </p>
+                                ))}
+                                {team.tieBreakInfo.tieBreakNote && (
+                                  <p className="text-gray-300 mt-1 italic">{team.tieBreakInfo.tieBreakNote}</p>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">
-                        {team.matchesPlayed}
+                        {team.played || team.matchesPlayed}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">
                         {team.wins}
@@ -601,8 +663,30 @@ const StandingsManagement = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-gray-900">
                         {team.points}
                       </td>
+                      {/* Tie-Break Status Column */}
+                      {standingsMode === 'final' && (
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                          {team.tieBreakInfo?.drawLotsRequired ? (
+                            <span 
+                              className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold bg-amber-100 text-amber-800 rounded"
+                              title="Cần bốc thăm để xếp hạng cuối cùng"
+                            >
+                              🎲 Bốc Thăm
+                            </span>
+                          ) : team.tieBreakInfo?.usedHeadToHead ? (
+                            <span 
+                              className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded"
+                              title="Xếp theo đối đầu"
+                            >
+                              ⚖ H2H
+                            </span>
+                          ) : (
+                            <span className="text-gray-400 text-xs">-</span>
+                          )}
+                        </td>
+                      )}
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        {getStatusBadge(index + 1)}
+                        {getStatusBadge(team.rank || index + 1)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
                         <div className="flex items-center justify-center gap-2">

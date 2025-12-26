@@ -8,6 +8,7 @@ import PlayersService from '../../../layers/application/services/PlayersService'
 import MatchesService from '../../../layers/application/services/MatchesService';
 import TeamsService from '../../../layers/application/services/TeamsService';
 import { toCompetitionStageLabel, toCountryLabel, toMatchStatusLabel, toPlayerPositionLabel } from '../../../shared/utils/vi';
+import BestXI from '../../../components/BestXI';
 
 const HomePage = () => {
   // Search states
@@ -473,7 +474,7 @@ const HomePage = () => {
                     <Award size={14} />
                     Chiếc cúp danh giá
                   </span>
-                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-white leading-tight mb-4" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-white leading-tight mb-4">
                     <span className="bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent drop-shadow-lg">
                       "Big Ears"
                     </span>
@@ -492,19 +493,19 @@ const HomePage = () => {
                 {/* Trophy Stats */}
                 <div className="grid grid-cols-3 gap-3">
                   <div className="p-4 rounded-2xl backdrop-blur-md bg-black/30 border border-white/10 text-center hover:bg-black/40 hover:border-amber-500/30 transition-all">
-                    <p className="text-2xl md:text-3xl font-black text-amber-400 mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                    <p className="text-2xl md:text-3xl font-black text-amber-400 mb-1">
                       1955
                     </p>
                     <p className="text-[10px] uppercase tracking-wider text-white/60">Khởi đầu</p>
                   </div>
                   <div className="p-4 rounded-2xl backdrop-blur-md bg-black/30 border border-white/10 text-center hover:bg-black/40 hover:border-amber-500/30 transition-all">
-                    <p className="text-2xl md:text-3xl font-black text-amber-400 mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                    <p className="text-2xl md:text-3xl font-black text-amber-400 mb-1">
                       15
                     </p>
                     <p className="text-[10px] uppercase tracking-wider text-white/60">Real Madrid</p>
                   </div>
                   <div className="p-4 rounded-2xl backdrop-blur-md bg-black/30 border border-white/10 text-center hover:bg-black/40 hover:border-amber-500/30 transition-all">
-                    <p className="text-2xl md:text-3xl font-black text-amber-400 mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                    <p className="text-2xl md:text-3xl font-black text-amber-400 mb-1">
                       7.5kg
                     </p>
                     <p className="text-[10px] uppercase tracking-wider text-white/60">Trọng lượng</p>
@@ -585,7 +586,7 @@ const HomePage = () => {
                           <p className="text-xs text-white/50 uppercase tracking-wider">Nhà</p>
                         </div>
                       </div>
-                      <p className="text-5xl font-black text-white" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                      <p className="text-5xl font-black text-white">
                         {featuredMatch.scoreHome ?? '-'}
                       </p>
                     </div>
@@ -612,7 +613,7 @@ const HomePage = () => {
                           <p className="text-xs text-white/50 uppercase tracking-wider">Khách</p>
                         </div>
                       </div>
-                      <p className="text-5xl font-black text-white" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                      <p className="text-5xl font-black text-white">
                         {featuredMatch.scoreAway ?? '-'}
                       </p>
                     </div>
@@ -644,7 +645,7 @@ const HomePage = () => {
               <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 backdrop-blur-md flex items-center justify-center mb-4 border border-emerald-400/30">
                 <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_12px_rgba(52,211,153,0.8)]" />
               </div>
-              <p className="text-4xl font-black text-white mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+              <p className="text-4xl font-black text-white mb-1">
                 {loading ? '—' : liveMatches.length}
               </p>
               <p className="text-xs uppercase tracking-[0.2em] text-white/60 font-semibold">Đang Diễn Ra</p>
@@ -666,7 +667,7 @@ const HomePage = () => {
                     <p className="text-sm text-white/50">{topScorer.teamName || 'N/A'}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-4xl font-black text-amber-300" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                    <p className="text-4xl font-black text-amber-300">
                       {topScorer.goals || 0}
                     </p>
                     <p className="text-xs text-white/50 uppercase tracking-wider">Bàn</p>
@@ -728,7 +729,7 @@ const HomePage = () => {
         <div className="relative z-10">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
           <div>
-              <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'Barlow, sans-serif' }}>
+              <h2 className="text-2xl font-bold text-white mb-2">
                 Tìm Kiếm Nhanh
               </h2>
               <p className="text-white/50 text-sm">
@@ -999,7 +1000,7 @@ const HomePage = () => {
             </div>
 
             {/* Title */}
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-white leading-tight" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-white leading-tight">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-300 via-white to-rose-300">
                 ADIDAS UCL
               </span>
@@ -1096,6 +1097,9 @@ const HomePage = () => {
           </Link>
         ))}
       </section>
+
+      {/* ========== ĐỘI HÌNH TIÊU BIỂU - BEST XI ========== */}
+      <BestXI />
     </div>
   );
 };

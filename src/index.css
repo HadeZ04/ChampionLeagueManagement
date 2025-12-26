@@ -63,8 +63,11 @@
     scroll-behavior: smooth;
   }
   
+  /* Import Manrope - Optimized for Vietnamese */
+  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
+  
   body {
-    font-family: 'Inter', 'Space Grotesk', system-ui, sans-serif;
+    font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     line-height: 1.6;
     min-height: 100vh;
     position: relative;
@@ -79,6 +82,81 @@
     background-attachment: fixed;
     color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Typography System - Headings */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Manrope', system-ui, sans-serif;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 4rem);
+    font-weight: 900;
+  }
+
+  h2 {
+    font-size: clamp(1.75rem, 4vw, 3rem);
+    font-weight: 800;
+  }
+
+  h3 {
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    font-weight: 700;
+  }
+
+  h4 {
+    font-size: clamp(1.25rem, 2.5vw, 1.875rem);
+    font-weight: 700;
+  }
+
+  h5 {
+    font-size: clamp(1.125rem, 2vw, 1.5rem);
+    font-weight: 600;
+  }
+
+  h6 {
+    font-size: clamp(1rem, 1.5vw, 1.25rem);
+    font-weight: 600;
+  }
+
+  /* Body Text */
+  p {
+    font-family: 'Manrope', system-ui, sans-serif;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+
+  /* Numbers & Stats */
+  .font-numbers {
+    font-family: 'Manrope', system-ui, sans-serif;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Buttons & Labels */
+  button, .btn {
+    font-family: 'Manrope', system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  /* Form Elements */
+  input, textarea, select {
+    font-family: 'Manrope', system-ui, sans-serif;
+    font-weight: 400;
+  }
+
+  /* Badge & Tags */
+  .badge, .tag {
+    font-family: 'Manrope', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 0.875rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
   }
   
   body::before {
@@ -95,6 +173,235 @@
     z-index: -1;
   }
   
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: var(--pattern-soccer);
+    background-size: var(--pattern-field-size);
+    mix-blend-mode: overlay;
+    opacity: 0.18;
+    pointer-events: none;
+    z-index: -1;
+  }
+}
+
+/* ========== BEST XI / TEAM OF THE WEEK ANIMATIONS ========== */
+@layer utilities {
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes float {
+    0%, 100% { 
+      transform: translateY(0); 
+    }
+    50% { 
+      transform: translateY(-10px); 
+    }
+  }
+
+  @keyframes bounce-rotate {
+    0%, 100% {
+      transform: translateY(0) rotate(0deg);
+    }
+    25% {
+      transform: translateY(-8px) rotate(-2deg);
+    }
+    50% {
+      transform: translateY(-15px) rotate(0deg);
+    }
+    75% {
+      transform: translateY(-8px) rotate(2deg);
+    }
+  }
+
+  @keyframes pulse-slow {
+    0%, 100% { 
+      opacity: 0.6; 
+      transform: scale(1);
+    }
+    50% { 
+      opacity: 1; 
+      transform: scale(1.05);
+    }
+  }
+
+  @keyframes pulse-medium {
+    0%, 100% { 
+      opacity: 0.4; 
+    }
+    50% { 
+      opacity: 0.8; 
+    }
+  }
+
+  @keyframes glow-pulse {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(0, 217, 255, 0.3), 0 0 40px rgba(0, 217, 255, 0.1);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(0, 217, 255, 0.6), 0 0 60px rgba(0, 217, 255, 0.3);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+
+  @keyframes spin-slow {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .animate-fadeInUp {
+    animation: fadeInUp 0.6s ease-out both;
+  }
+
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+
+  .animate-float-slow {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-float-medium {
+    animation: float 5s ease-in-out infinite;
+  }
+
+  .animate-float-fast {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-bounce-rotate {
+    animation: bounce-rotate 6s ease-in-out infinite;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse-slow 6s ease-in-out infinite;
+  }
+
+  .animate-pulse-medium {
+    animation: pulse-medium 4s ease-in-out infinite;
+  }
+
+  .animate-glow-pulse {
+    animation: glow-pulse 3s ease-in-out infinite;
+  }
+
+  .animate-shimmer {
+    animation: shimmer 3s linear infinite;
+    background-size: 1000px 100%;
+  }
+
+  .animate-spin-slow {
+    animation: spin-slow 20s linear infinite;
+  }
+
+  /* Text 3D Effects */
+  .text-3d {
+    text-shadow: 
+      0 1px 0 rgba(0, 0, 0, 0.3),
+      0 2px 2px rgba(0, 0, 0, 0.2),
+      0 3px 4px rgba(0, 0, 0, 0.15),
+      0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .text-3d-gold {
+    text-shadow: 
+      0 1px 0 rgba(251, 191, 36, 0.6),
+      0 2px 2px rgba(251, 191, 36, 0.4),
+      0 3px 4px rgba(251, 191, 36, 0.3),
+      0 4px 8px rgba(251, 191, 36, 0.2),
+      0 0 20px rgba(251, 191, 36, 0.4);
+  }
+
+  /* Hover Glow Effects */
+  .hover-glow-cyan:hover {
+    box-shadow: 
+      0 0 20px rgba(0, 217, 255, 0.4),
+      0 0 40px rgba(0, 217, 255, 0.2),
+      0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  .hover-glow-amber:hover {
+    box-shadow: 
+      0 0 20px rgba(251, 191, 36, 0.4),
+      0 0 40px rgba(251, 191, 36, 0.2),
+      0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  .hover-glow-green:hover {
+    box-shadow: 
+      0 0 20px rgba(34, 197, 94, 0.4),
+      0 0 40px rgba(34, 197, 94, 0.2),
+      0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Shooting Star Animation */
+  @keyframes shooting {
+    0% {
+      transform: translateX(-100px) translateY(-100px) rotate(-45deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(1000px) translateY(1000px) rotate(-45deg);
+      opacity: 0;
+    }
+  }
+
+  .shooting-star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.8), transparent);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+    animation: shooting 3s ease-in-out infinite;
+  }
+
+  .shooting-star:nth-child(1) {
+    top: 10%;
+    left: 20%;
+    animation-delay: 0s;
+  }
+
+  .shooting-star:nth-child(2) {
+    top: 40%;
+    left: 60%;
+    animation-delay: 1.5s;
+  }
+
+  .shooting-star:nth-child(3) {
+    top: 70%;
+    left: 30%;
+    animation-delay: 3s;
+  }
+}
+
+@layer base {
   body::after {
     content: "";
     position: fixed;

@@ -140,7 +140,7 @@ const HistoryPage = () => {
             <Sparkles size={14} />
             Từ 1955 đến nay
           </span>
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-6" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-6">
             <span className="bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
               Lịch Sử
             </span>
@@ -175,7 +175,7 @@ const HistoryPage = () => {
       <section className="max-w-7xl mx-auto px-6 pb-16">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
-            <h2 className="text-3xl md:text-4xl font-bold text-white" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+            <h2 className="text-3xl md:text-4xl font-bold text-white">
               Giải đấu danh giá nhất
               <span className="block text-amber-400">Bóng đá câu lạc bộ</span>
             </h2>
@@ -193,22 +193,22 @@ const HistoryPage = () => {
           <div className="grid grid-cols-2 gap-4">
             <div className="p-6 rounded-2xl backdrop-blur-md bg-white/[0.05] border border-white/[0.1] text-center">
               <Calendar className="w-8 h-8 text-amber-400 mx-auto mb-3" />
-              <p className="text-3xl font-black text-white mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>69</p>
+              <p className="text-3xl font-black text-white mb-1">69</p>
               <p className="text-xs uppercase tracking-wider text-white/50">Năm lịch sử</p>
             </div>
             <div className="p-6 rounded-2xl backdrop-blur-md bg-white/[0.05] border border-white/[0.1] text-center">
               <Trophy className="w-8 h-8 text-amber-400 mx-auto mb-3" />
-              <p className="text-3xl font-black text-white mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>22</p>
+              <p className="text-3xl font-black text-white mb-1">22</p>
               <p className="text-xs uppercase tracking-wider text-white/50">Đội vô địch</p>
             </div>
             <div className="p-6 rounded-2xl backdrop-blur-md bg-white/[0.05] border border-white/[0.1] text-center">
               <Globe className="w-8 h-8 text-amber-400 mx-auto mb-3" />
-              <p className="text-3xl font-black text-white mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>12</p>
+              <p className="text-3xl font-black text-white mb-1">12</p>
               <p className="text-xs uppercase tracking-wider text-white/50">Quốc gia</p>
             </div>
             <div className="p-6 rounded-2xl backdrop-blur-md bg-white/[0.05] border border-white/[0.1] text-center">
               <Target className="w-8 h-8 text-amber-400 mx-auto mb-3" />
-              <p className="text-3xl font-black text-white mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>15,000+</p>
+              <p className="text-3xl font-black text-white mb-1">15,000+</p>
               <p className="text-xs uppercase tracking-wider text-white/50">Bàn thắng</p>
             </div>
           </div>
@@ -260,7 +260,7 @@ const HistoryPage = () => {
             </div>
 
             {/* Title */}
-            <h2 className="text-4xl md:text-6xl lg:text-7xl font-black mb-4" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+            <h2 className="text-4xl md:text-6xl lg:text-7xl font-black mb-4">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-white to-purple-300">
                 THE ULTIMATE
               </span>
@@ -279,19 +279,19 @@ const HistoryPage = () => {
             {/* Trophy Stats */}
             <div className="flex flex-wrap justify-center gap-6">
               <div className="px-6 py-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
-                <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
                   7.5 KG
                 </p>
                 <p className="text-white/60 text-xs uppercase tracking-wider">Trọng lượng</p>
               </div>
               <div className="px-6 py-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
-                <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
                   74 CM
                 </p>
                 <p className="text-white/60 text-xs uppercase tracking-wider">Chiều cao</p>
               </div>
               <div className="px-6 py-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
-                <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-400" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-400">
                   €20M
                 </p>
                 <p className="text-white/60 text-xs uppercase tracking-wider">Giá trị</p>
@@ -328,7 +328,7 @@ const HistoryPage = () => {
             <Play size={14} />
             Khoảnh khắc huyền thoại
           </span>
-          <h2 className="text-3xl md:text-4xl font-bold text-white" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+          <h2 className="text-3xl md:text-4xl font-bold text-white">
             Những đêm không thể quên
           </h2>
         </div>
@@ -382,7 +382,7 @@ const HistoryPage = () => {
             <Calendar size={14} />
             Dòng thời gian
           </span>
-          <h2 className="text-3xl md:text-4xl font-bold text-white" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+          <h2 className="text-3xl md:text-4xl font-bold text-white">
             Những mốc son lịch sử
           </h2>
         </div>
@@ -453,7 +453,7 @@ const HistoryPage = () => {
             <Crown size={14} />
             Bảng vàng
           </span>
-          <h2 className="text-3xl md:text-4xl font-bold text-white" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+          <h2 className="text-3xl md:text-4xl font-bold text-white">
             Những đội bóng vĩ đại nhất
           </h2>
         </div>
@@ -471,7 +471,7 @@ const HistoryPage = () => {
                   <Crown className="w-6 h-6 text-amber-400" />
                 </div>
               )}
-              <p className="text-4xl font-black text-amber-400 mb-2" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+              <p className="text-4xl font-black text-amber-400 mb-2">
                 {club.titles}
               </p>
               <h3 className="text-white font-bold mb-1">{club.name}</h3>
@@ -488,7 +488,7 @@ const HistoryPage = () => {
             <Star size={14} />
             Huyền thoại
           </span>
-          <h2 className="text-3xl md:text-4xl font-bold text-white" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+          <h2 className="text-3xl md:text-4xl font-bold text-white">
             Những cầu thủ vĩ đại nhất
           </h2>
         </div>
@@ -510,13 +510,13 @@ const HistoryPage = () => {
               </div>
               <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
                 <div className="text-center">
-                  <p className="text-2xl font-black text-purple-400" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                  <p className="text-2xl font-black text-purple-400">
                     {player.goals}
                   </p>
                   <p className="text-[10px] uppercase tracking-wider text-white/50">Bàn thắng</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-black text-purple-400" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                  <p className="text-2xl font-black text-purple-400">
                     {player.apps}
                   </p>
                   <p className="text-[10px] uppercase tracking-wider text-white/50">Trận đấu</p>
@@ -530,7 +530,7 @@ const HistoryPage = () => {
       {/* CTA Section */}
       <section className="max-w-7xl mx-auto px-6 py-16">
         <div className="rounded-3xl p-8 md:p-12 backdrop-blur-xl bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-cyan-500/10 border border-white/10 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
             Sẵn sàng theo dõi mùa giải mới?
           </h2>
           <p className="text-white/60 mb-8 max-w-xl mx-auto">
