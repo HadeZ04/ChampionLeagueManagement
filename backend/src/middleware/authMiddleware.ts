@@ -32,10 +32,6 @@ export function requirePermission(permission: string) {
     if (!req.user) {
       throw UnauthorizedError("Authentication required");
     }
-    if (Array.isArray(req.user.roles) && req.user.roles.includes("super_admin")) {
-      next();
-      return;
-    }
     if (!req.user.permissions || !req.user.permissions.includes(permission)) {
       throw ForbiddenError("You are not allowed to perform this action");
     }
@@ -49,11 +45,6 @@ export function requireAnyPermission(...permissions: string[]) {
   return (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
     if (!req.user) {
       throw UnauthorizedError("Authentication required");
-    }
-
-    if (Array.isArray(req.user.roles) && req.user.roles.includes("super_admin")) {
-      next();
-      return;
     }
 
     if (requested.length === 0) {
@@ -72,32 +63,52 @@ export function requireAnyPermission(...permissions: string[]) {
   };
 }
 
-// Alias for compatibility with other modules
-export const authenticate = requireAuth;
+/**
+ * Row-level authorization: ClubManager chỉ được quản lý team của họ.
+ * Expects req.params.id (team_id) or req.body.teamId to be set.
+ * Global admins (manage_teams permission) bypass this check.
+ */
+export function requireTeamOwnership(req: AuthenticatedRequest, _res: Response, next: NextFunction): void {
+  if (!req.user) {
+    throw UnauthorizedError("Authentication required");
+  }
 
-// Role-based access control
-export function requireRole(roles: string | string[]) {
-  const allowedRoles = Array.isArray(roles) ? roles : [roles];
-  
-  return (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
-    if (!req.user) {
-      throw UnauthorizedError("Authentication required");
-    }
-
-    const userRoles = Array.isArray(req.user.roles) ? req.user.roles : [];
-    
-    // Super admin has access to everything
-    if (userRoles.includes("super_admin")) {
-      next();
-      return;
-    }
-
-    const hasRole = allowedRoles.some((role) => userRoles.includes(role));
-
-    if (!hasRole) {
-      throw ForbiddenError("You do not have the required role to perform this action");
-    }
-
+  // Global admins bypass ownership check
+  if (req.user.permissions?.includes("manage_teams")) {
     next();
-  };
+    return;
+  }
+
+  // Non-admins: must have club_manager role and managed_team_id in JWT
+  const managedTeamId = (req.user as any).managed_team_id;
+  const requestedTeamId = req.params.id ? parseInt(req.params.id, 10) : req.body?.teamId;
+
+  if (!managedTeamId || requestedTeamId !== managedTeamId) {
+    throw ForbiddenError("You can only manage your assigned team");
+  }
+
+  next();
+}
+
+/**
+ * Row-level authorization: match_official chỉ được thao tác match được phân công.
+ * Expects req.params.id (match_id) to be set.
+ * Global admins (manage_matches permission) bypass this check.
+ */
+export function requireMatchOfficialAssignment(req: AutheonticatedRequest, _res: Response, next: NextFunction): void {
+  if (!req.user) {
+    throw UnauthorizedError("Authentication required");
+  }
+
+  // Global admins bypass assignment check
+  if (req.user.permissions?.includes("manage_matches")) {
+    next();
+    return;
+  }
+
+  // match_official: store officialId in JWT and verify assignment in route handler
+  // For now, mark that this check should happen
+  // Route handler will call a service function to verify assignment
+  (req as any)._requireOfficialAssignmentCheck = true;
+  next();
 }

@@ -1,14 +1,14 @@
 import { Router } from "express";
 import { z } from "zod";
 import { query } from "../db/sqlServer";
-import { requireAuth, requirePermission } from "../middleware/authMiddleware";
+import { requireAuth, requirePermission, requireTeamOwnership } from "../middleware/authMiddleware";
 import { logEvent } from "../services/auditService";
 import { getInternalSeasons, getInternalStandings } from "../services/seasonService";
-import { deleteTeam } from "../services/teamService";
 import { AuthenticatedRequest } from "../types";
 
 const router = Router();
 const requireTeamManagement = [requireAuth, requirePermission("manage_teams")] as const;
+const requireTeamOwnershipCheck = [requireAuth, requireTeamOwnership] as const;
 
 const teamCreateSchema = z.object({
   name: z.string().trim().min(1).max(255),
@@ -24,8 +24,10 @@ const teamUpdateSchema = teamCreateSchema.partial();
 
 /**
  * GET /internal/teams - Get teams from internal database (not Football* tables)
+ * ClubManager: only sees their own team
+ * Admin: sees all teams
  */
-router.get("/", async (req, res, next) => {
+router.get("/", async (req: AuthenticatedRequest, res, next) => {
   try {
     const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
     const page = typeof req.query.page === "string" ? parseInt(req.query.page, 10) : 1;
@@ -35,7 +37,14 @@ router.get("/", async (req, res, next) => {
     let whereClause = "";
     const params: Record<string, unknown> = { offset, limit };
 
-    if (search) {
+    // ClubManager: only see their managed team
+    const managedTeamId = (req.user as any)?.managed_team_id;
+    const isAdmin = req.user?.permissions?.includes("manage_teams");
+    
+    if (!isAdmin && managedTeamId) {
+      whereClause = "WHERE team_id = @managedTeamId";
+      params.managedTeamId = managedTeamId;
+    } else if (search) {
       whereClause = "WHERE name LIKE @search OR short_name LIKE @search OR code LIKE @search";
       params.search = `%${search}%`;
     }
@@ -207,12 +216,21 @@ router.post("/", ...requireTeamManagement, async (req: AuthenticatedRequest, res
 
 /**
  * GET /internal/teams/:id - Get team by internal ID
+ * ClubManager: only see their own team
  */
-router.get("/:id", async (req, res, next) => {
+router.get("/:id", async (req: AuthenticatedRequest, res, next) => {
   try {
     const teamId = parseInt(req.params.id, 10);
     if (isNaN(teamId)) {
       return res.status(400).json({ error: "Invalid team ID" });
+    }
+
+    // ClubManager: check if this team is their managed team
+    const managedTeamId = (req.user as any)?.managed_team_id;
+    const isAdmin = req.user?.permissions?.includes("manage_teams");
+    
+    if (!isAdmin && managedTeamId && teamId !== managedTeamId) {
+      return res.status(403).json({ error: "You can only view your assigned team" });
     }
 
     const result = await query<{
@@ -262,12 +280,21 @@ router.get("/:id", async (req, res, next) => {
 
 /**
  * GET /internal/teams/:id/players - Get players of a team
+ * ClubManager: only see players of their managed team
  */
-router.get("/:id/players", async (req, res, next) => {
+router.get("/:id/players", async (req: AuthenticatedRequest, res, next) => {
   try {
     const teamId = parseInt(req.params.id, 10);
     if (isNaN(teamId)) {
       return res.status(400).json({ error: "Invalid team ID" });
+    }
+
+    // ClubManager: check if this team is their managed team
+    const managedTeamId = (req.user as any)?.managed_team_id;
+    const isAdmin = req.user?.permissions?.includes("manage_teams");
+    
+    if (!isAdmin && managedTeamId && teamId !== managedTeamId) {
+      return res.status(403).json({ error: "You can only view players of your assigned team" });
     }
 
     const result = await query<{
@@ -317,7 +344,7 @@ router.get("/:id/players", async (req, res, next) => {
 /**
  * PUT /internal/teams/:id - Update team
  */
-router.put("/:id", ...requireTeamManagement, async (req: AuthenticatedRequest, res, next) => {
+router.put("/:id", ...requireTeamOwnershipCheck, async (req: AuthenticatedRequest, res, next) => {
   try {
     const teamId = parseInt(req.params.id, 10);
     if (isNaN(teamId)) {
@@ -447,7 +474,7 @@ router.put("/:id", ...requireTeamManagement, async (req: AuthenticatedRequest, r
 /**
  * DELETE /internal/teams/:id - Delete team
  */
-router.delete("/:id", ...requireTeamManagement, async (req: AuthenticatedRequest, res, next) => {
+router.delete("/:id", ...requireTeamOwnershipCheck, async (req: AuthenticatedRequest, res, next) => {
   try {
     const teamId = parseInt(req.params.id, 10);
     if (isNaN(teamId)) {
@@ -478,7 +505,13 @@ router.delete("/:id", ...requireTeamManagement, async (req: AuthenticatedRequest
     }
 
     try {
-      await deleteTeam(teamId);
+      await query(
+        `
+          DELETE FROM teams
+          WHERE team_id = @teamId;
+        `,
+        { teamId },
+      );
     } catch (error: any) {
       if (error?.number === 547) {
         return res.status(409).json({ error: "Team is referenced and cannot be deleted" });
