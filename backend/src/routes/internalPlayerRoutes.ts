@@ -1,10 +1,45 @@
 import { Router } from "express";
 import { query } from "../db/sqlServer";
 import { createPlayerHandler } from "../controllers/internalPlayerController";
-import { requireAuth, requirePermission } from "../middleware/authMiddleware";
-import { getOrFetchPlayerAvatar, batchFetchPlayerAvatars } from "../services/playerAvatarService";
+import { requireAuth, requirePermission, requireTeamOwnership } from "../middleware/authMiddleware";
+import { AuthenticatedRequest } from "../types";
 
 const router = Router();
+const requireTeamOwnershipCheck = [requireAuth, requireTeamOwnership] as const;
+
+/**
+ * Middleware to check if player belongs to managed team
+ */
+async function checkPlayerTeamOwnership(req: AuthenticatedRequest, _res: any, next: any) {
+  // Global admins bypass
+  if (req.user?.permissions?.includes("manage_teams")) {
+    next();
+    return;
+  }
+
+  const playerId = parseInt(req.params.id, 10);
+  if (isNaN(playerId)) {
+    return _res.status(400).json({ error: "Invalid player ID" });
+  }
+
+  const managedTeamId = (req.user as any).managed_team_id;
+  if (!managedTeamId) {
+    return _res.status(403).json({ error: "You don't have a managed team" });
+  }
+
+  // Get player's current team
+  const result = await query<{ current_team_id: number | null }>(
+    `SELECT current_team_id FROM players WHERE player_id = @playerId;`,
+    { playerId }
+  );
+
+  const player = result.recordset[0];
+  if (!player || player.current_team_id !== managedTeamId) {
+    return _res.status(403).json({ error: "This player does not belong to your managed team" });
+  }
+
+  next();
+}
 
 /**
  * POST /internal/players - Create a new player
@@ -12,7 +47,7 @@ const router = Router();
 router.post("/", requireAuth, requirePermission("manage_teams"), createPlayerHandler);
 
 
-router.get("/", async (req, res, next) => {
+router.get("/", async (req: AuthenticatedRequest, res, next) => {
   try {
     const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
     const teamId = typeof req.query.teamId === "string" ? parseInt(req.query.teamId, 10) : null;
@@ -25,14 +60,23 @@ router.get("/", async (req, res, next) => {
     const conditions: string[] = [];
     const params: Record<string, unknown> = { offset, limit };
 
-    if (search) {
-      conditions.push("(LOWER(p.full_name) LIKE LOWER(@search) OR LOWER(p.display_name) LIKE LOWER(@search) OR LOWER(t.name) LIKE LOWER(@search))");
-      params.search = `%${search}%`;
-    }
-
-    if (teamId && !isNaN(teamId)) {
+    // ClubManager: only see players of their managed team
+    const managedTeamId = (req.user as any)?.managed_team_id;
+    const isAdmin = req.user?.permissions?.includes("manage_teams");
+    
+    if (!isAdmin && managedTeamId) {
+      // ClubManager can only see their team's players
+      conditions.push("current_team_id = @managedTeamId");
+      params.managedTeamId = managedTeamId;
+    } else if (teamId && !isNaN(teamId)) {
+      // Admin can filter by any team
       conditions.push("current_team_id = @teamId");
       params.teamId = teamId;
+    }
+
+    if (search) {
+      conditions.push("(LOWER(full_name) LIKE LOWER(@search) OR LOWER(display_name) LIKE LOWER(@search))");
+      params.search = `%${search}%`;
     }
 
     if (position) {
@@ -90,7 +134,6 @@ router.get("/", async (req, res, next) => {
       `
         SELECT COUNT(*) as total
         FROM players p
-        LEFT JOIN teams t ON p.current_team_id = t.team_id
         ${whereClause};
       `,
       params,
@@ -115,8 +158,9 @@ router.get("/", async (req, res, next) => {
 
 /**
  * GET /internal/players/:id - Get player by internal ID
+ * ClubManager: only see players of their managed team
  */
-router.get("/:id", async (req, res, next) => {
+router.get("/:id", async (req: AuthenticatedRequest, res, next) => {
   try {
     const playerId = parseInt(req.params.id, 10);
     if (isNaN(playerId)) {
@@ -167,6 +211,14 @@ router.get("/:id", async (req, res, next) => {
       return res.status(404).json({ error: "Player not found" });
     }
 
+    // ClubManager: check if player belongs to their managed team
+    const managedTeamId = (req.user as any)?.managed_team_id;
+    const isAdmin = req.user?.permissions?.includes("manage_teams");
+    
+    if (!isAdmin && managedTeamId && player.current_team_id !== managedTeamId) {
+      return res.status(403).json({ error: "This player does not belong to your managed team" });
+    }
+
     res.json({ data: player });
   } catch (error) {
     next(error);
@@ -176,7 +228,7 @@ router.get("/:id", async (req, res, next) => {
 /**
  * PUT /internal/players/:id - Update player
  */
-router.put("/:id", requireAuth, requirePermission("manage_teams"), async (req, res, next) => {
+router.put("/:id", requireAuth, requireTeamOwnership, checkPlayerTeamOwnership, async (req, res, next) => {
   try {
     const playerId = parseInt(req.params.id, 10);
     if (isNaN(playerId)) {
@@ -232,7 +284,7 @@ router.put("/:id", requireAuth, requirePermission("manage_teams"), async (req, r
 /**
  * DELETE /internal/players/:id - Delete player
  */
-router.delete("/:id", requireAuth, requirePermission("manage_teams"), async (req, res, next) => {
+router.delete("/:id", requireAuth, requireTeamOwnership, checkPlayerTeamOwnership, async (req, res, next) => {
   try {
     const playerId = parseInt(req.params.id, 10);
     if (isNaN(playerId)) {
@@ -248,62 +300,6 @@ router.delete("/:id", requireAuth, requirePermission("manage_teams"), async (req
     );
 
     res.status(204).send();
-  } catch (error) {
-    next(error);
-  }
-});
-
-/**
- * GET /api/players/:id/avatar - Get player avatar URL
- * Fetches from database or TheSportsDB if not cached
- */
-router.get("/:id/avatar", async (req, res, next) => {
-  try {
-    const playerId = parseInt(req.params.id, 10);
-    if (isNaN(playerId)) {
-      return res.status(400).json({ error: "Invalid player ID" });
-    }
-
-    const avatarUrl = await getOrFetchPlayerAvatar(playerId);
-
-    if (!avatarUrl) {
-      return res.status(404).json({ error: "Avatar not found" });
-    }
-
-    res.json({ avatarUrl });
-  } catch (error) {
-    next(error);
-  }
-});
-
-/**
- * POST /api/players/avatars/batch - Batch fetch avatars for multiple players
- * Body: { playerIds: number[] }
- */
-router.post("/avatars/batch", async (req, res, next) => {
-  try {
-    const { playerIds } = req.body;
-
-    if (!Array.isArray(playerIds) || playerIds.length === 0) {
-      return res.status(400).json({ error: "playerIds must be a non-empty array" });
-    }
-
-    // Validate all IDs are numbers
-    const validIds = playerIds
-      .map(id => typeof id === 'number' ? id : parseInt(String(id), 10))
-      .filter(id => !isNaN(id) && id > 0);
-
-    if (validIds.length === 0) {
-      return res.status(400).json({ error: "No valid player IDs provided" });
-    }
-
-    // Limit batch size to prevent timeout
-    const maxBatchSize = 50;
-    const idsToProcess = validIds.slice(0, maxBatchSize);
-
-    const avatars = await batchFetchPlayerAvatars(idsToProcess);
-
-    res.json({ avatars });
   } catch (error) {
     next(error);
   }

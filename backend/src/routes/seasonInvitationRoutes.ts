@@ -1,62 +1,179 @@
-import { Router } from "express";
-import { requireAuth, requireAnyPermission } from "../middleware/authMiddleware";
-import * as invitationController from "../controllers/seasonInvitationController";
+import { Router, Request, Response } from "express";
+import { requireAuth, requirePermission } from "../middleware/authMiddleware";
+import * as seasonInvitationService from "../services/seasonInvitationService";
 
 const router = Router();
 
-// All routes require authentication
-router.use(requireAuth);
-
-// Require season/team management permissions
-const requireSeasonManagement = requireAnyPermission("manage_rulesets", "manage_teams");
-
-// GET /api/seasons/:seasonId/invitations - List all invitations for a season
-router.get("/:seasonId/invitations", requireSeasonManagement, invitationController.list);
-
-// POST /api/seasons/:seasonId/invitations - Create a single invitation
-router.post("/:seasonId/invitations", requireSeasonManagement, invitationController.create);
-
-// POST /api/seasons/:seasonId/invitations/auto-create - Auto-create invitations from previous season
-router.post(
-  "/:seasonId/invitations/auto-create",
-  requireSeasonManagement,
-  invitationController.autoCreate
-);
-
-// GET /api/seasons/:seasonId/invitations/:invitationId/eligibility - Check team eligibility
+/**
+ * GET /api/season-invitations/season/:seasonId
+ * Get all invitations for a season (Admin only)
+ */
 router.get(
-  "/:seasonId/invitations/:invitationId/eligibility",
-  requireSeasonManagement,
-  invitationController.checkEligibility
+  "/season/:seasonId",
+  requireAuth,
+  requirePermission("manage_season_invitations"),
+  async (req: Request, res: Response) => {
+    try {
+      const seasonId = parseInt(req.params.seasonId, 10);
+      const invitations =
+        await seasonInvitationService.getSeasonInvitations(seasonId);
+      res.json(invitations);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch invitations" });
+    }
+  }
 );
 
-// PATCH /api/seasons/:seasonId/invitations/:invitationId/status - Update invitation status
-router.patch(
-  "/:seasonId/invitations/:invitationId/status",
-  requireSeasonManagement,
-  invitationController.updateStatus
-);
-
-// GET /api/seasons/:seasonId/invitations/stats - Get invitation statistics
+/**
+ * GET /api/season-invitations/team/:teamId
+ * Get pending invitations for a team
+ */
 router.get(
-  "/:seasonId/invitations/stats",
-  requireSeasonManagement,
-  invitationController.getStats
+  "/team/:teamId",
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const teamId = parseInt(req.params.teamId, 10);
+      const invitations =
+        await seasonInvitationService.getPendingInvitationsForTeam(teamId);
+      res.json(invitations);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch pending invitations" });
+    }
+  }
 );
 
-// POST /api/seasons/:seasonId/invitations/:invitationId/create-replacement - Create replacement invitation
-router.post(
-  "/:seasonId/invitations/:invitationId/create-replacement",
-  requireSeasonManagement,
-  invitationController.createReplacement
+/**
+ * GET /api/season-invitations/summary/:seasonId
+ * Get invitations summary for a season
+ */
+router.get(
+  "/summary/:seasonId",
+  requireAuth,
+  requirePermission("view_season_statistics"),
+  async (req: Request, res: Response) => {
+    try {
+      const seasonId = parseInt(req.params.seasonId, 10);
+      const summary =
+        await seasonInvitationService.getInvitationsSummary(seasonId);
+      res.json(summary);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch invitations summary" });
+    }
+  }
 );
 
-// POST /api/seasons/:seasonId/invitations/ensure-minimum-teams - Ensure minimum accepted teams
+/**
+ * GET /api/season-invitations/:invitationId
+ * Get invitation details
+ */
+router.get(
+  "/:invitationId",
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const invitationId = parseInt(req.params.invitationId, 10);
+      const invitation =
+        await seasonInvitationService.getInvitationDetails(invitationId);
+
+      if (!invitation) {
+        return res.status(404).json({ error: "Invitation not found" });
+      }
+
+      res.json(invitation);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch invitation details" });
+    }
+  }
+);
+
+/**
+ * POST /api/season-invitations/send
+ * Send invitations for a season (Auto-invite 14 previous + 2 promoted teams)
+ */
 router.post(
-  "/:seasonId/invitations/ensure-minimum-teams",
-  requireSeasonManagement,
-  invitationController.ensureMinimumTeams
+  "/send",
+  requireAuth,
+  requirePermission("manage_season_invitations"),
+  async (req: Request, res: Response) => {
+    try {
+      const { seasonId } = req.body;
+
+      if (!seasonId) {
+        return res.status(400).json({ error: "Season ID is required" });
+      }
+
+      const userId = req.user?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+
+      await seasonInvitationService.createSeasonInvitations(seasonId, userId);
+      res.json({
+        message: "Invitations sent successfully",
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to send invitations" });
+    }
+  }
+);
+
+/**
+ * POST /api/season-invitations/:invitationId/accept
+ * Accept an invitation
+ */
+router.post(
+  "/:invitationId/accept",
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const invitationId = parseInt(req.params.invitationId, 10);
+      const { notes } = req.body;
+
+      await seasonInvitationService.acceptInvitation(invitationId, notes);
+      res.json({ message: "Invitation accepted successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to accept invitation" });
+    }
+  }
+);
+
+/**
+ * POST /api/season-invitations/:invitationId/reject
+ * Reject an invitation
+ */
+router.post(
+  "/:invitationId/reject",
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const invitationId = parseInt(req.params.invitationId, 10);
+      const { notes } = req.body;
+
+      await seasonInvitationService.rejectInvitation(invitationId, notes);
+      res.json({ message: "Invitation rejected successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to reject invitation" });
+    }
+  }
+);
+
+/**
+ * POST /api/season-invitations/expire/check
+ * Mark expired invitations (Admin task - can be run via cron)
+ */
+router.post(
+  "/expire/check",
+  requireAuth,
+  requirePermission("manage_season_invitations"),
+  async (req: Request, res: Response) => {
+    try {
+      await seasonInvitationService.markExpiredInvitations();
+      res.json({ message: "Expired invitations marked" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to mark expired invitations" });
+    }
+  }
 );
 
 export default router;
-
