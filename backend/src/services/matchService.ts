@@ -1137,7 +1137,28 @@ export const syncMatchesFromUpstream = async (options: {
   syncedMatches: number;
   skippedMatches: number;
 }> => {
-  const matches = await getCompetitionMatches(options);
+  let matches: MatchSummary[] = [];
+  
+  try {
+    matches = await getCompetitionMatches(options);
+  } catch (error: any) {
+    const errorMessage = error?.message || String(error);
+    console.error('Failed to fetch matches from Football-Data API:', errorMessage);
+    
+    // Provide more specific error messages
+    if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
+      throw new Error('API key không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra FOOTBALL_DATA_API_TOKEN trong cấu hình.');
+    } else if (errorMessage.includes('429') || errorMessage.includes('rate limit')) {
+      throw new Error('Đã vượt quá giới hạn API. Vui lòng thử lại sau vài phút.');
+    } else if (errorMessage.includes('404') || errorMessage.includes('Not Found')) {
+      throw new Error('Không tìm thấy giải đấu. Vui lòng kiểm tra FOOTBALL_DATA_COMPETITION_CODE trong cấu hình.');
+    } else if (errorMessage.includes('network') || errorMessage.includes('timeout')) {
+      throw new Error('Lỗi kết nối với API. Vui lòng kiểm tra kết nối mạng và thử lại.');
+    } else {
+      throw new Error(`Lỗi khi lấy dữ liệu từ API: ${errorMessage}`);
+    }
+  }
+  
   let syncedCount = 0;
   let skippedCount = 0;
 

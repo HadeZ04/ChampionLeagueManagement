@@ -36,9 +36,14 @@ router.get('/:seasonId/discipline/cards', authenticate, async (req: Request, res
     });
   } catch (error: any) {
     console.error('Error fetching card summary:', error);
-    res.status(500).json({ 
+    const errorMessage = error.message || 'Unknown error';
+    const statusCode = error.message?.includes('Invalid object name') || error.message?.includes('does not exist') 
+      ? 404 
+      : 500;
+    res.status(statusCode).json({ 
       error: 'Failed to fetch card summary',
-      details: error.message 
+      details: errorMessage,
+      suggestion: statusCode === 404 ? 'Database tables may not be initialized. Please run migrations.' : undefined
     });
   }
 });
@@ -70,9 +75,14 @@ router.get('/:seasonId/discipline/suspensions', authenticate, async (req: Reques
     });
   } catch (error: any) {
     console.error('Error fetching suspensions:', error);
-    res.status(500).json({ 
+    const errorMessage = error.message || 'Unknown error';
+    const statusCode = error.message?.includes('Invalid object name') || error.message?.includes('does not exist') 
+      ? 404 
+      : 500;
+    res.status(statusCode).json({ 
       error: 'Failed to fetch suspensions',
-      details: error.message 
+      details: errorMessage,
+      suggestion: statusCode === 404 ? 'Database tables may not be initialized. Please run migrations.' : undefined
     });
   }
 });
@@ -156,9 +166,22 @@ router.post('/:seasonId/discipline/recalculate', authenticate, requireRole(['adm
     });
   } catch (error: any) {
     console.error('Error recalculating disciplinary records:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      number: error.number,
+      originalError: error.originalError,
+      info: error.info
+    });
+    
+    const errorMessage = error.message || 'Unknown error';
+    const errorDetails = error.originalError?.message || error.info?.message || errorMessage;
+    
     res.status(500).json({ 
       error: 'Failed to recalculate disciplinary records',
-      details: error.message 
+      details: errorDetails,
+      message: errorMessage
     });
   }
 });

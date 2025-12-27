@@ -70,11 +70,21 @@ export async function getPool(): Promise<sql.ConnectionPool> {
       console.log('Database connection pool established');
       return connectedPool;
     }).catch((error) => {
-      // eslint-disable-next-line no-console
-      console.error("Database connection failed:", error);
       pool = null;
       poolConnect = null;
       isConnecting = false;
+      
+      // Check for Azure SQL firewall error
+      const err = error as Record<string, unknown>;
+      if (err.code === 'ELOGIN' || 
+          (err.message && String(err.message).includes('firewall')) ||
+          (err.originalError && (err.originalError as Record<string, unknown>).code === 'ELOGIN')) {
+        // eslint-disable-next-line no-console
+        console.error("Azure SQL Database firewall error - IP address not allowed:", error);
+      } else {
+        // eslint-disable-next-line no-console
+        console.error("Database connection failed:", error);
+      }
       throw error;
     });
   }

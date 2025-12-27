@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Trophy, Target, Users, TrendingUp, Award, Zap, Shield, Clock, X } from 'lucide-react'
 import StatsService from '../layers/application/services/StatsService'
 import logger from '../shared/utils/logger'
+import PlayerAvatar from '../shared/components/PlayerAvatar'
 
 const Stats = () => {
   const [selectedCategory, setSelectedCategory] = useState('goals')
@@ -306,7 +307,14 @@ const Stats = () => {
                       {player.rank}
                     </td>
                     <td className="uefa-table-cell">
-                      <div className="font-semibold text-uefa-dark">{player.player}</div>
+                      <div className="flex items-center space-x-3">
+                        <PlayerAvatar
+                          playerId={player.playerId || player.id}
+                          playerName={player.player}
+                          size="sm"
+                        />
+                        <div className="font-semibold text-uefa-dark">{player.player}</div>
+                      </div>
                     </td>
                     <td className="uefa-table-cell">
                       <div className="flex items-center space-x-2">
@@ -353,13 +361,12 @@ const Stats = () => {
               detailData && (
                 <div className="space-y-6">
                   <div className="flex flex-col gap-4 md:flex-row md:items-center">
-                    <div className="h-24 w-24 overflow-hidden rounded-full bg-uefa-light-gray flex items-center justify-center text-2xl font-bold text-uefa-dark">
-                      {detailData.avatar ? (
-                        <img src={detailData.avatar} alt={detailData.player} className="h-full w-full object-cover" />
-                      ) : (
-                        detailData.player?.slice(0, 2)?.toUpperCase()
-                      )}
-                    </div>
+                    <PlayerAvatar
+                      playerId={detailData.playerId || detailData.id}
+                      playerName={detailData.player}
+                      size="2xl"
+                      className="border-4 border-uefa-light-gray"
+                    />
                     <div>
                       <div className="text-sm uppercase tracking-wide text-uefa-gray">{detailData.category}</div>
                       <h3 className="text-2xl font-bold text-uefa-dark">{detailData.player}</h3>

@@ -77,16 +77,16 @@ const LiveMatchTicker = () => {
               <div className="flex items-center gap-6 whitespace-nowrap animate-scroll-ticker">
                 {/* Duplicate content for seamless loop */}
                 {[...liveMatches, ...liveMatches].map((match, index) => (
-                  <React.Fragment key={`${match.matchId}-${index}`}>
+                  <React.Fragment key={`${match.id || match.matchId}-${index}`}>
                     <span className="inline-flex items-center gap-2">
                       <span className="font-semibold">
-                        {match.homeTeam?.shortName || match.homeTeam?.name || 'TBD'}
+                        {match.homeTeamShortName || match.homeTeamName || 'TBD'}
                       </span>
                       <span className="text-[#00d4ff] font-bold">
-                        {match.homeScore ?? 0}-{match.awayScore ?? 0}
+                        {match.scoreHome ?? match.homeScore ?? 0}-{match.scoreAway ?? match.awayScore ?? 0}
                       </span>
                       <span className="font-semibold">
-                        {match.awayTeam?.shortName || match.awayTeam?.name || 'TBD'}
+                        {match.awayTeamShortName || match.awayTeamName || 'TBD'}
                       </span>
                       {match.minute && (
                         <span className="text-white/80">• {match.minute}'</span>

@@ -2,6 +2,7 @@ import { Router } from "express";
 import { query } from "../db/sqlServer";
 import { createPlayerHandler } from "../controllers/internalPlayerController";
 import { requireAuth, requirePermission } from "../middleware/authMiddleware";
+import { getOrFetchPlayerAvatar, batchFetchPlayerAvatars } from "../services/playerAvatarService";
 
 const router = Router();
 
@@ -247,6 +248,62 @@ router.delete("/:id", requireAuth, requirePermission("manage_teams"), async (req
     );
 
     res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/players/:id/avatar - Get player avatar URL
+ * Fetches from database or TheSportsDB if not cached
+ */
+router.get("/:id/avatar", async (req, res, next) => {
+  try {
+    const playerId = parseInt(req.params.id, 10);
+    if (isNaN(playerId)) {
+      return res.status(400).json({ error: "Invalid player ID" });
+    }
+
+    const avatarUrl = await getOrFetchPlayerAvatar(playerId);
+
+    if (!avatarUrl) {
+      return res.status(404).json({ error: "Avatar not found" });
+    }
+
+    res.json({ avatarUrl });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/players/avatars/batch - Batch fetch avatars for multiple players
+ * Body: { playerIds: number[] }
+ */
+router.post("/avatars/batch", async (req, res, next) => {
+  try {
+    const { playerIds } = req.body;
+
+    if (!Array.isArray(playerIds) || playerIds.length === 0) {
+      return res.status(400).json({ error: "playerIds must be a non-empty array" });
+    }
+
+    // Validate all IDs are numbers
+    const validIds = playerIds
+      .map(id => typeof id === 'number' ? id : parseInt(String(id), 10))
+      .filter(id => !isNaN(id) && id > 0);
+
+    if (validIds.length === 0) {
+      return res.status(400).json({ error: "No valid player IDs provided" });
+    }
+
+    // Limit batch size to prevent timeout
+    const maxBatchSize = 50;
+    const idsToProcess = validIds.slice(0, maxBatchSize);
+
+    const avatars = await batchFetchPlayerAvatars(idsToProcess);
+
+    res.json({ avatars });
   } catch (error) {
     next(error);
   }

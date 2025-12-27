@@ -22,6 +22,7 @@ import {
   toPlayerPositionLabel
 } from '../shared/utils/vi'
 import logger from '../shared/utils/logger'
+import PlayerAvatar from '../shared/components/PlayerAvatar'
 
 const PlayerLookup = () => {
   const [ref, inView] = useInView({
@@ -315,15 +316,12 @@ const PlayerLookup = () => {
                           {selectedPlayer.teamName || 'Chưa rõ đội'}
                         </p>
                       </div>
-                      <div className="w-20 h-20 bg-football-green rounded-full flex items-center justify-center">
-                        <span className="text-white text-2xl font-bold">
-                          {selectedPlayer.name
-                            .split(' ')
-                            .map((n) => n[0])
-                            .join('')
-                            .substring(0, 2)}
-                        </span>
-                      </div>
+                      <PlayerAvatar
+                        playerId={selectedPlayer.id || selectedPlayer.player_id}
+                        playerName={selectedPlayer.name}
+                        size="xl"
+                        className="border-2 border-football-green"
+                      />
                     </div>
 
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">

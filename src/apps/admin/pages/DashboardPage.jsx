@@ -30,24 +30,40 @@ import uclLogo from '@/assets/images/UEFA_CHAMPIONS_LEAGUE.png'
 const DashboardPage = () => {
   const [overview, setOverview] = useState(null)
   const [activities, setActivities] = useState([])
-  const [upcomingMatches, setUpcomingMatches] = useState([])
+  const [todayMatches, setTodayMatches] = useState([])
   const [pendingTasks, setPendingTasks] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  const getTodayRange = () => {
+    const start = new Date()
+    start.setHours(0, 0, 0, 0)
+    const end = new Date()
+    end.setHours(23, 59, 59, 999)
+    return {
+      dateFrom: start.toISOString(),
+      dateTo: end.toISOString()
+    }
+  }
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true)
       setError('')
       try {
+        const { dateFrom, dateTo } = getTodayRange()
         const [ov, audit, matches] = await Promise.all([
           StatsService.getOverview(),
           AuditLogService.listEvents({ page: 1, pageSize: 5 }),
-          MatchesService.getExternalMatches({ status: 'SCHEDULED', limit: 3 })
+          MatchesService.getAllMatches({ 
+            dateFrom, 
+            dateTo, 
+            limit: 10 
+          })
         ])
         setOverview(ov)
         setActivities(audit.data ?? [])
-        setUpcomingMatches(matches.matches ?? [])
+        setTodayMatches(matches.matches ?? [])
         setPendingTasks(ov?.pendingTasks ?? [])
       } catch (err) {
         console.error(err)
@@ -401,49 +417,65 @@ const DashboardPage = () => {
               </div>
 
               <div className="space-y-3">
-                {upcomingMatches.map((match, idx) => (
-                  <div
-                    key={match.id}
-                    className="group ucl-match-card p-4 transition-all duration-300 cursor-pointer"
-                    style={{ animationDelay: `${idx * 100}ms` }}
-                  >
-                    <div className="flex justify-between items-center mb-3 text-[10px] font-bold uppercase tracking-wider">
-                      <span className="text-blue-200/50 flex items-center gap-1.5">
-                        <Clock size={12} />
-                        {new Date(match.utcDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                      <span className="text-emerald-400 flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 rounded-full">
-                        <Zap size={10} className="animate-pulse" />
-                        {formatMatchStatus(match.status)}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex-1">
-                        <div className="text-sm font-bold text-white group-hover:text-cyan-200 transition-colors truncate">
-                          {match.homeTeamName}
-                        </div>
-                      </div>
-                      <div className="flex-shrink-0 px-3 py-1.5 bg-gradient-to-r from-blue-500/20 via-cyan-500/30 to-blue-500/20 rounded-lg border border-cyan-500/30">
-                        <span className="text-xs font-black text-cyan-300 uppercase tracking-widest">VS</span>
-                      </div>
-                      <div className="flex-1 text-right">
-                        <div className="text-sm font-bold text-white group-hover:text-cyan-200 transition-colors truncate">
-                          {match.awayTeamName}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between">
-                      <span className="text-[10px] text-blue-200/40 truncate max-w-[70%] flex items-center gap-1">
-                        <Star size={10} className="text-amber-400/50" />
-                        {match.venue || 'Địa điểm chưa xác định'}
-                      </span>
-                      <ChevronRight size={14} className="text-blue-200/30 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all" />
-                    </div>
+                {loading && todayMatches.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-cyan-400 mx-auto mb-3" />
+                    <p className="text-xs text-blue-200/40">Đang tải trận đấu...</p>
                   </div>
-                ))}
-                {upcomingMatches.length === 0 && !loading && (
+                ) : todayMatches.length > 0 ? (
+                  todayMatches.map((match, idx) => (
+                    <div
+                      key={match.id}
+                      className="group ucl-match-card p-4 transition-all duration-300 cursor-pointer"
+                      style={{ animationDelay: `${idx * 100}ms` }}
+                    >
+                      <div className="flex justify-between items-center mb-3 text-[10px] font-bold uppercase tracking-wider">
+                        <span className="text-blue-200/50 flex items-center gap-1.5">
+                          <Clock size={12} />
+                          {match.utcDate || match.scheduledKickoff 
+                            ? new Date(match.utcDate || match.scheduledKickoff).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                            : '--:--'}
+                        </span>
+                        <span className="text-emerald-400 flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 rounded-full">
+                          <Zap size={10} className="animate-pulse" />
+                          {formatMatchStatus(match.status)}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex-1">
+                          <div className="text-sm font-bold text-white group-hover:text-cyan-200 transition-colors truncate">
+                            {match.homeTeamName}
+                          </div>
+                        </div>
+                        {(match.scoreHome !== null && match.scoreHome !== undefined) || (match.scoreAway !== null && match.scoreAway !== undefined) ? (
+                          <div className="flex-shrink-0 px-3 py-1.5 bg-gradient-to-r from-blue-500/20 via-cyan-500/30 to-blue-500/20 rounded-lg border border-cyan-500/30">
+                            <span className="text-xs font-black text-cyan-300">
+                              {match.scoreHome ?? 0} - {match.scoreAway ?? 0}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex-shrink-0 px-3 py-1.5 bg-gradient-to-r from-blue-500/20 via-cyan-500/30 to-blue-500/20 rounded-lg border border-cyan-500/30">
+                            <span className="text-xs font-black text-cyan-300 uppercase tracking-widest">VS</span>
+                          </div>
+                        )}
+                        <div className="flex-1 text-right">
+                          <div className="text-sm font-bold text-white group-hover:text-cyan-200 transition-colors truncate">
+                            {match.awayTeamName}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between">
+                        <span className="text-[10px] text-blue-200/40 truncate max-w-[70%] flex items-center gap-1">
+                          <Star size={10} className="text-amber-400/50" />
+                          {match.venue || 'Địa điểm chưa xác định'}
+                        </span>
+                        <ChevronRight size={14} className="text-blue-200/30 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all" />
+                      </div>
+                    </div>
+                  ))
+                ) : (
                   <div className="text-center py-8">
                     <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-white/5 flex items-center justify-center">
                       <Calendar size={24} className="text-blue-200/30" />

@@ -253,11 +253,11 @@ shared/          Shared utilities
 # Backend
 cd backend
 npm install
-npm run dev           # Port 4000
+npm run dev           # Port 4001
 
 # Frontend
 npm install
-npm run dev           # Port 3000 (proxies /api to backend:4000)
+npm run dev           # Port 3000 (proxies /api to backend:4001)
 ```
 
 ### Build

@@ -197,9 +197,14 @@ class MatchesService {
 
   async syncMatches(options = {}) {
     const payload = {
+      ...(options.season ? { season: options.season } : {}),
+      ...(options.status ? { status: options.status } : {}),
+      ...(options.dateFrom ? { dateFrom: options.dateFrom } : {}),
+      ...(options.dateTo ? { dateTo: options.dateTo } : {}),
+      // Legacy support
       ...(options.count ? { count: options.count } : {}),
-      ...(options.seasonId ? { seasonId: options.seasonId } : {}),
-      ...(options.startDate ? { startDate: options.startDate } : {})
+      ...(options.seasonId ? { season: String(options.seasonId) } : {}),
+      ...(options.startDate ? { dateFrom: options.startDate } : {})
     }
     return ApiService.post('/matches/sync', payload)
   }

@@ -20,7 +20,7 @@ export const APP_CONFIG = {
 
   // API Configuration
   API: {
-    BASE_URL: getEnvVar(['VITE_API_URL', 'REACT_APP_API_URL'], 'http://localhost:4000/api'),
+    BASE_URL: getEnvVar(['VITE_API_URL', 'REACT_APP_API_URL'], 'http://localhost:4001/api'),
     TIMEOUT: 30000,
     RETRY_ATTEMPTS: 3,
     ENDPOINTS: {

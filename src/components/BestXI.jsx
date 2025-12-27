@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Trophy, Star, Zap, Award, TrendingUp, ChevronDown } from 'lucide-react';
 import PlayersService from '../layers/application/services/PlayersService';
+import { getAvatarWithFallback } from '../shared/utils/playerAvatar';
 
 // Player Card Component - FIFA Style
 const PlayerCard = ({ player, position, delay = 0 }) => {
@@ -177,6 +178,7 @@ const BestXI = () => {
   const [showPeriodDropdown, setShowPeriodDropdown] = useState(false);
   const [loading, setLoading] = useState(true);
   const [allPlayers, setAllPlayers] = useState([]);
+  const [playerAvatars, setPlayerAvatars] = useState({});
 
   // Fetch players from API
   useEffect(() => {
@@ -188,7 +190,22 @@ const BestXI = () => {
           sortBy: 'goals',
           sortOrder: 'desc'
         });
-        setAllPlayers(response?.players || []);
+        const players = response?.players || [];
+        setAllPlayers(players);
+        
+        // Fetch avatars for all players
+        if (players.length > 0) {
+          const playerIds = players.map(p => p.id || p.player_id).filter(Boolean);
+          if (playerIds.length > 0) {
+            try {
+              const { batchGetPlayerAvatars } = await import('../shared/utils/playerAvatar');
+              const avatars = await batchGetPlayerAvatars(playerIds);
+              setPlayerAvatars(avatars);
+            } catch (error) {
+              console.warn('Failed to fetch player avatars:', error);
+            }
+          }
+        }
       } catch (error) {
         console.error('Failed to fetch players:', error);
         setAllPlayers([]);
@@ -236,11 +253,13 @@ const BestXI = () => {
     allPlayers.forEach(player => {
       const role = getPlayerRole(player.position);
       const rating = calculateRating(player);
+      const playerId = player.id || player.player_id;
+      const avatarUrl = playerAvatars[playerId] || player.photoUrl || null;
       playersByRole[role].push({
         ...player,
         role,
         rating,
-        avatar: player.photoUrl || null,
+        avatar: getAvatarWithFallback(avatarUrl, player.name || player.fullName),
         teamLogo: player.teamLogoUrl || null,
         flag: player.nationalityFlag || null,
         team: player.teamName || 'N/A',

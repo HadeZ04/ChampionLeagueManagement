@@ -1,10 +1,17 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Bell, Search, Settings, User, LogOut, Sparkles, Menu, X } from 'lucide-react'
 import { toRoleLabel } from '../../../shared/utils/vi'
+import NotificationService from '../../../layers/application/services/NotificationService'
 
 const AdminHeader = ({ onLogout, currentUser }) => {
+  const navigate = useNavigate()
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
+  const [notifications, setNotifications] = useState([])
+  const [loadingNotifications, setLoadingNotifications] = useState(false)
+  const notificationRef = useRef(null)
+  const profileRef = useRef(null)
 
   const displayName = useMemo(() => {
     if (!currentUser) {
@@ -22,11 +29,46 @@ const AdminHeader = ({ onLogout, currentUser }) => {
     return toRoleLabel(role)
   }, [currentUser])
 
-  const notifications = [
-    { id: 1, title: 'Có kết quả trận mới được gửi', time: '5 phút trước', type: 'info' },
-    { id: 2, title: 'Đăng ký đội đang chờ phê duyệt', time: '15 phút trước', type: 'warning' },
-    { id: 3, title: 'Sao lưu hệ thống đã hoàn tất', time: '1 giờ trước', type: 'success' }
-  ]
+  // Load notifications on mount and periodically
+  useEffect(() => {
+    const loadNotifications = async () => {
+      setLoadingNotifications(true)
+      try {
+        const data = await NotificationService.getNotifications({ pageSize: 10 })
+        setNotifications(data)
+      } catch (error) {
+        console.error('Failed to load notifications:', error)
+        // Keep empty array on error
+        setNotifications([])
+      } finally {
+        setLoadingNotifications(false)
+      }
+    }
+
+    loadNotifications()
+    
+    // Refresh notifications every 30 seconds
+    const interval = setInterval(loadNotifications, 30000)
+    
+    return () => clearInterval(interval)
+  }, [])
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setIsNotificationOpen(false)
+      }
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setIsProfileDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   const getNotificationColor = (type) => {
     switch (type) {
@@ -77,7 +119,7 @@ const AdminHeader = ({ onLogout, currentUser }) => {
           </div>
 
           {/* Notifications */}
-          <div className="relative">
+          <div className="relative" ref={notificationRef}>
             <button
               onClick={() => setIsNotificationOpen(!isNotificationOpen)}
               className="relative p-2.5 text-blue-200/60 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 hover:border-white/20 transition-all"
@@ -102,18 +144,39 @@ const AdminHeader = ({ onLogout, currentUser }) => {
                   </span>
                 </div>
                 <div className="max-h-72 overflow-y-auto ucl-scrollbar">
-                  {notifications.map((notification) => (
-                    <div 
-                      key={notification.id} 
-                      className={`p-4 border-l-4 ${getNotificationColor(notification.type)} hover:bg-white/5 transition-all cursor-pointer group`}
-                    >
-                      <div className="font-medium text-slate-100 text-sm group-hover:text-cyan-200 transition-colors">{notification.title}</div>
-                      <div className="text-blue-200/40 text-xs mt-1">{notification.time}</div>
+                  {loadingNotifications ? (
+                    <div className="p-4 text-center text-blue-200/50 text-sm">
+                      Đang tải thông báo...
                     </div>
-                  ))}
+                  ) : notifications.length === 0 ? (
+                    <div className="p-4 text-center text-blue-200/50 text-sm">
+                      Không có thông báo mới
+                    </div>
+                  ) : (
+                    notifications.map((notification) => (
+                      <div 
+                        key={notification.id} 
+                        className={`p-4 border-l-4 ${getNotificationColor(notification.type)} hover:bg-white/5 transition-all cursor-pointer group`}
+                        onClick={() => {
+                          // Navigate to audit log when clicking notification
+                          navigate('/admin/audit-log')
+                          setIsNotificationOpen(false)
+                        }}
+                      >
+                        <div className="font-medium text-slate-100 text-sm group-hover:text-cyan-200 transition-colors">{notification.title}</div>
+                        <div className="text-blue-200/40 text-xs mt-1">{notification.time}</div>
+                      </div>
+                    ))
+                  )}
                 </div>
                 <div className="p-3 border-t border-white/10 text-center bg-white/[0.02]">
-                  <button className="text-cyan-400 hover:text-cyan-300 text-xs font-bold uppercase tracking-wider hover:underline transition-all">
+                  <button 
+                    onClick={() => {
+                      navigate('/admin/audit-log')
+                      setIsNotificationOpen(false)
+                    }}
+                    className="text-cyan-400 hover:text-cyan-300 text-xs font-bold uppercase tracking-wider hover:underline transition-all"
+                  >
                     Xem tất cả thông báo →
                   </button>
                 </div>
@@ -122,12 +185,16 @@ const AdminHeader = ({ onLogout, currentUser }) => {
           </div>
 
           {/* Settings */}
-          <button className="p-2.5 text-blue-200/60 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 hover:border-white/20 transition-all">
+          <button 
+            onClick={() => navigate('/settings')}
+            className="p-2.5 text-blue-200/60 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 hover:border-white/20 transition-all"
+            title="Cài đặt"
+          >
             <Settings size={18} />
           </button>
 
           {/* Profile Dropdown */}
-          <div className="relative">
+          <div className="relative" ref={profileRef}>
             <button
               onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
               className="flex items-center gap-3 p-1.5 pr-4 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 hover:border-white/20 transition-all"

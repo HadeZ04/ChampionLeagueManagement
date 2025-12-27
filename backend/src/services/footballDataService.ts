@@ -456,11 +456,30 @@ export const getCompetitionMatches = async (options: {
 } = {}): Promise<MatchSummary[]> => {
   const { season, status, dateFrom, dateTo } = options;
   
+  // Helper to format date to yyyy-MM-dd
+  const formatDateForAPI = (dateStr: string): string => {
+    if (!dateStr) return dateStr;
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return dateStr; // Invalid date, return as-is
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    } catch {
+      // If already in yyyy-MM-dd format, return as-is
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        return dateStr;
+      }
+      return dateStr;
+    }
+  };
+  
   const params: Record<string, string | number | undefined> = {};
   if (season) params.season = season;
   if (status) params.status = status;
-  if (dateFrom) params.dateFrom = dateFrom;
-  if (dateTo) params.dateTo = dateTo;
+  if (dateFrom) params.dateFrom = formatDateForAPI(dateFrom);
+  if (dateTo) params.dateTo = formatDateForAPI(dateTo);
 
   const data = await fetchFromFootballData<{
     matches: Array<{

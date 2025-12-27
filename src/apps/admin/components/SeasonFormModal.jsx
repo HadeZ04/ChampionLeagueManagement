@@ -18,7 +18,7 @@ const DEFAULT_FORM = {
 }
 
 const NUMERIC_FIELDS = new Set(['tournamentId', 'rulesetId', 'participationFee', 'maxTeams', 'expectedRounds'])
-const LOCKED_STATUSES = new Set(['locked', 'completed', 'archived'])
+const LOCKED_STATUSES = new Set(['completed', 'archived'])
 
 const toDateValue = (value) => (value ? String(value).slice(0, 10) : '')
 const toDateTimeValue = (value) => (value ? String(value).slice(0, 16) : '')
@@ -35,9 +35,12 @@ const SeasonFormModal = ({
   const [formErrors, setFormErrors] = useState([])
 
   const statusOptions = useMemo(() => {
-    const defaults = ['draft', 'in_progress', 'active', 'completed', 'locked', 'archived']
+    // Chỉ dùng các status hợp lệ theo backend schema
+    const validStatuses = ['draft', 'inviting', 'registering', 'scheduled', 'in_progress', 'completed', 'archived']
     const fromMetadata = Array.isArray(metadata.statuses) && metadata.statuses.length > 0 ? metadata.statuses : []
-    return Array.from(new Set([...fromMetadata, ...defaults]))
+    // Lọc chỉ lấy các status hợp lệ
+    const filteredMetadata = fromMetadata.filter(s => validStatuses.includes(s))
+    return Array.from(new Set([...filteredMetadata, ...validStatuses]))
   }, [metadata.statuses])
 
   useEffect(() => {
@@ -110,15 +113,32 @@ const SeasonFormModal = ({
 
     const validationMessages = []
 
-    if (!payload.name) {
-      validationMessages.push('Cần nhập tên mùa giải.')
+    // Required fields
+    if (!payload.name || payload.name.trim().length < 3) {
+      validationMessages.push('Tên mùa giải phải có ít nhất 3 ký tự.')
     }
-    if (!payload.code) {
-      validationMessages.push('Cần nhập mã mùa giải.')
+    if (!payload.code || payload.code.trim().length < 2) {
+      validationMessages.push('Mã mùa giải phải có ít nhất 2 ký tự.')
     }
     if (!payload.startDate) {
       validationMessages.push('Cần chọn ngày bắt đầu.')
     }
+
+    // Validate tournamentId và rulesetId
+    if (!payload.tournamentId || payload.tournamentId <= 0 || isNaN(payload.tournamentId)) {
+      validationMessages.push('Cần chọn giải đấu.')
+    }
+    if (!payload.rulesetId || payload.rulesetId <= 0 || isNaN(payload.rulesetId)) {
+      validationMessages.push('Cần chọn bộ điều lệ.')
+    }
+
+    // Validate status hợp lệ
+    const validStatuses = ['draft', 'inviting', 'registering', 'scheduled', 'in_progress', 'completed', 'archived']
+    if (!validStatuses.includes(payload.status)) {
+      validationMessages.push('Trạng thái không hợp lệ.')
+    }
+
+    // Date validations
     if (payload.endDate && payload.startDate && payload.endDate < payload.startDate) {
       validationMessages.push('Ngày kết thúc không được trước ngày bắt đầu.')
     }
@@ -228,7 +248,7 @@ const SeasonFormModal = ({
                 <option value="" disabled>
                   Chọn giải đấu
                 </option>
-                {metadata.tournaments?.map((tournament) => (
+                {Array.from(new Map(metadata.tournaments?.map(t => [t.id, t]) || []).values()).map((tournament) => (
                   <option key={tournament.id} value={tournament.id}>
                     {tournament.name}
                   </option>
@@ -248,7 +268,7 @@ const SeasonFormModal = ({
                 <option value="" disabled>
                   Chọn điều lệ
                 </option>
-                {metadata.rulesets?.map((ruleset) => (
+                {Array.from(new Map(metadata.rulesets?.map(r => [r.id, r]) || []).values()).map((ruleset) => (
                   <option key={ruleset.id} value={ruleset.id}>
                     {ruleset.name}
                   </option>

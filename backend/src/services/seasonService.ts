@@ -439,23 +439,38 @@ export async function listSeasonMetadata(): Promise<SeasonMetadata> {
   try {
     const [tournamentsResult, rulesetsResult] = await Promise.all([
       query<{ tournament_id: number; name: string }>(
-        `SELECT tournament_id, name FROM tournaments ORDER BY name`
+        `SELECT DISTINCT tournament_id, name FROM tournaments ORDER BY name`
       ),
       query<{ ruleset_id: number; name: string }>(
-        `SELECT ruleset_id, name FROM rulesets ORDER BY name`
+        `SELECT DISTINCT ruleset_id, name FROM rulesets ORDER BY name`
       ),
     ]);
 
+    // Remove duplicates by ID (in case DISTINCT doesn't catch all cases)
+    const tournamentsMap = new Map<number, { id: number; name: string }>();
+    tournamentsResult.recordset.forEach((row) => {
+      if (!tournamentsMap.has(row.tournament_id)) {
+        tournamentsMap.set(row.tournament_id, {
+          id: row.tournament_id,
+          name: row.name,
+        });
+      }
+    });
+
+    const rulesetsMap = new Map<number, { id: number; name: string }>();
+    rulesetsResult.recordset.forEach((row) => {
+      if (!rulesetsMap.has(row.ruleset_id)) {
+        rulesetsMap.set(row.ruleset_id, {
+          id: row.ruleset_id,
+          name: row.name,
+        });
+      }
+    });
+
     return {
       statuses: SEASON_STATUSES,
-      tournaments: tournamentsResult.recordset.map((row) => ({
-        id: row.tournament_id,
-        name: row.name,
-      })),
-      rulesets: rulesetsResult.recordset.map((row) => ({
-        id: row.ruleset_id,
-        name: row.name,
-      })),
+      tournaments: Array.from(tournamentsMap.values()),
+      rulesets: Array.from(rulesetsMap.values()),
     };
   } catch (error) {
     if (isMissingSeasonTableError(error)) {

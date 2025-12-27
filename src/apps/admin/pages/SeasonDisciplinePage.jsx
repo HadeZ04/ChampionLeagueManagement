@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { AlertTriangle, Ban, RefreshCw, Loader2, AlertCircle, FileText } from 'lucide-react';
 import axios from 'axios';
+import SeasonService from '../../../layers/application/services/SeasonService';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4001/api';
 
 const SeasonDisciplinePage = () => {
   const [seasons, setSeasons] = useState([]);
@@ -10,6 +11,7 @@ const SeasonDisciplinePage = () => {
   const [cardSummary, setCardSummary] = useState([]);
   const [suspensions, setSuspensions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingSeasons, setLoadingSeasons] = useState(true);
   const [error, setError] = useState(null);
   const [recalculating, setRecalculating] = useState(false);
   const [activeTab, setActiveTab] = useState('cards'); // 'cards' or 'suspensions'
@@ -29,20 +31,22 @@ const SeasonDisciplinePage = () => {
   }, [selectedSeasonId, statusFilter]);
 
   const loadSeasons = async () => {
+    setLoadingSeasons(true);
+    setError(null);
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_BASE_URL}/seasons`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setSeasons(response.data.data || []);
+      const data = await SeasonService.listSeasons();
+      setSeasons(data);
       
       // Auto-select first season
-      if (response.data.data?.length > 0) {
-        setSelectedSeasonId(response.data.data[0].seasonId);
+      if (data?.length > 0) {
+        setSelectedSeasonId(data[0].id);
       }
     } catch (err) {
       console.error('Error loading seasons:', err);
       setError('Không thể tải danh sách mùa giải');
+      setSeasons([]);
+    } finally {
+      setLoadingSeasons(false);
     }
   };
 
@@ -53,7 +57,12 @@ const SeasonDisciplinePage = () => {
     setError(null);
     
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        setError('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+        return;
+      }
+      
       const headers = { Authorization: `Bearer ${token}` };
       
       const suspensionsUrl = statusFilter === 'all' 
@@ -69,7 +78,14 @@ const SeasonDisciplinePage = () => {
       setSuspensions(suspensionsRes.data.data || []);
     } catch (err) {
       console.error('Error loading discipline data:', err);
-      setError(err.response?.data?.error || 'Không thể tải dữ liệu kỷ luật');
+      if (err.response?.status === 401) {
+        setError('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+      } else if (err.response?.status === 403) {
+        setError('Bạn không có quyền xem dữ liệu kỷ luật.');
+      } else {
+        const errorMsg = err.response?.data?.error || err.response?.data?.details || err.message || 'Không thể tải dữ liệu kỷ luật';
+        setError(errorMsg);
+      }
     } finally {
       setLoading(false);
     }
@@ -86,24 +102,41 @@ const SeasonDisciplinePage = () => {
     setError(null);
     
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        setError('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+        return;
+      }
+      
       const response = await axios.post(
         `${API_BASE_URL}/seasons/${selectedSeasonId}/discipline/recalculate`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      alert(`Hoàn tất! ${response.data.data.created} treo giò mới, ${response.data.data.archived} bản ghi cũ đã lưu trữ.`);
+      const result = response.data.data || response.data;
+      const message = result.errors && result.errors.length > 0
+        ? `Hoàn tất với cảnh báo: ${result.created} treo giò mới, ${result.archived} bản ghi cũ đã lưu trữ. Có ${result.errors.length} lỗi: ${result.errors.slice(0, 3).join(', ')}`
+        : `Hoàn tất! ${result.created} treo giò mới, ${result.archived} bản ghi cũ đã lưu trữ.`;
+      
+      alert(message);
       await loadDisciplineData(); // Reload data
     } catch (err) {
       console.error('Error recalculating:', err);
-      setError(err.response?.data?.error || 'Không thể tính toán lại');
+      if (err.response?.status === 401) {
+        setError('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+      } else if (err.response?.status === 403) {
+        setError('Bạn không có quyền thực hiện thao tác này. Chỉ admin mới có thể tính toán lại kỷ luật.');
+      } else {
+        const errorMsg = err.response?.data?.error || err.response?.data?.details || err.message || 'Không thể tính toán lại dữ liệu kỷ luật';
+        setError(errorMsg);
+      }
     } finally {
       setRecalculating(false);
     }
   };
 
-  const selectedSeason = seasons.find(s => s.seasonId === selectedSeasonId);
+  const selectedSeason = seasons.find(s => s.id === selectedSeasonId);
 
   // Get unique teams for filter
   const teams = [...new Set(cardSummary.map(c => c.teamName))].sort();
@@ -169,13 +202,21 @@ const SeasonDisciplinePage = () => {
             <select
               value={selectedSeasonId || ''}
               onChange={(e) => setSelectedSeasonId(Number(e.target.value))}
-              className="w-full md:w-96 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={loadingSeasons}
+              className="w-full md:w-96 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
             >
-              {seasons.map(season => (
-                <option key={season.seasonId} value={season.seasonId}>
-                  {season.name} ({season.seasonYear})
-                </option>
-              ))}
+              {loadingSeasons ? (
+                <option value="">Đang tải...</option>
+              ) : (
+                <>
+                  <option value="">-- Chọn mùa giải --</option>
+                  {seasons.map(season => (
+                    <option key={season.id} value={season.id}>
+                      {season.name} {season.startDate ? `(${new Date(season.startDate).getFullYear()})` : ''}
+                    </option>
+                  ))}
+                </>
+              )}
             </select>
             {selectedSeason && (
               <div className="mt-2 text-sm text-gray-600">

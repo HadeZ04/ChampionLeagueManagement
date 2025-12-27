@@ -25,6 +25,7 @@ import playerRegistrationRoutes from "./routes/playerRegistrationRoutes";
 import adminStandingsRoutes from "./routes/adminStandingsRoutes";
 import seasonRegistrationRoutes from "./routes/seasonRegistrationRoutes";
 import seasonPlayerRoutes from "./routes/seasonPlayerRoutes";
+import seasonInvitationRoutes from "./routes/seasonInvitationRoutes";
 import newsRoutes from "./routes/newsRoutes";
 import mediaRoutes from "./routes/mediaRoutes";
 import settingsRoutes from "./routes/settingsRoutes";
@@ -52,6 +53,7 @@ app.use("/api/rulesets", rulesetRoutes);
 // to prevent /:id from matching /:seasonId/awards or /:seasonId/discipline
 app.use("/api/seasons", awardsRoutes);
 app.use("/api/seasons", disciplineRoutes);
+app.use("/api/seasons", seasonInvitationRoutes);
 app.use("/api/seasons", seasonRoutes);
 app.use("/api/audit-events", auditRoutes);
 app.use("/api/season-players", seasonRegistrationRoutes);

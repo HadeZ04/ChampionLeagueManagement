@@ -43,10 +43,11 @@ export const USER_STATUS_LABELS = {
 
 export const SEASON_STATUS_LABELS = {
   draft: 'Bản nháp',
+  inviting: 'Mời tham dự',
+  registering: 'Đang đăng ký',
+  scheduled: 'Đã lên lịch',
   in_progress: 'Đang diễn ra',
-  active: 'Đang hoạt động',
   completed: 'Đã kết thúc',
-  locked: 'Đã khóa',
   archived: 'Lưu trữ'
 }
 

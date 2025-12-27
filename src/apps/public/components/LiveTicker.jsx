@@ -111,9 +111,20 @@ const LiveTicker = () => {
     return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
   };
 
-  const getTeamName = (team) => {
-    if (!team) return 'TBD';
-    return team.shortName || team.tla || team.name?.slice(0, 3).toUpperCase() || 'TBD';
+  const getTeamName = (match, isHome) => {
+    if (isHome) {
+      return match.homeTeamShortName || match.homeTeamName || 'TBD';
+    } else {
+      return match.awayTeamShortName || match.awayTeamName || 'TBD';
+    }
+  };
+
+  const getTeamLogo = (match, isHome) => {
+    if (isHome) {
+      return match.homeTeamLogo;
+    } else {
+      return match.awayTeamLogo;
+    }
   };
 
   const matches = activeTab === 'live' ? liveMatches : upcomingMatches;
@@ -253,7 +264,7 @@ const LiveTicker = () => {
               <div className="max-h-72 overflow-y-auto custom-scrollbar">
                 {matches.map((match, index) => (
                   <div 
-                    key={match.matchId || index}
+                    key={match.id || match.matchId || index}
                     className="group border-b border-slate-800 last:border-b-0 hover:bg-slate-800/50 transition-colors"
                   >
                     <div className="p-3">
@@ -291,16 +302,16 @@ const LiveTicker = () => {
                       <div className="flex items-center justify-between">
                         {/* Home Team */}
                         <div className="flex items-center gap-2 flex-1 min-w-0">
-                          {match.homeTeam?.crest && (
+                          {getTeamLogo(match, true) && (
                             <img 
-                              src={match.homeTeam.crest} 
-                              alt=""
+                              src={getTeamLogo(match, true)} 
+                              alt={match.homeTeamName || ''}
                               className="h-6 w-6 object-contain flex-shrink-0"
                               onError={(e) => e.target.style.display = 'none'}
                             />
                           )}
                           <span className="text-white text-sm font-semibold truncate">
-                            {getTeamName(match.homeTeam)}
+                            {getTeamName(match, true)}
                           </span>
                         </div>
 
@@ -309,11 +320,11 @@ const LiveTicker = () => {
                           {activeTab === 'live' ? (
                             <div className="flex items-center gap-2 bg-slate-800 rounded-lg px-3 py-1">
                               <span className="text-white font-bold text-lg tabular-nums">
-                                {match.score?.fullTime?.home ?? match.homeScore ?? 0}
+                                {match.scoreHome ?? match.homeScore ?? 0}
                               </span>
                               <span className="text-slate-500 text-sm">-</span>
                               <span className="text-white font-bold text-lg tabular-nums">
-                                {match.score?.fullTime?.away ?? match.awayScore ?? 0}
+                                {match.scoreAway ?? match.awayScore ?? 0}
                               </span>
                             </div>
                           ) : (
@@ -324,12 +335,12 @@ const LiveTicker = () => {
                         {/* Away Team */}
                         <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
                           <span className="text-white text-sm font-semibold truncate text-right">
-                            {getTeamName(match.awayTeam)}
+                            {getTeamName(match, false)}
                           </span>
-                          {match.awayTeam?.crest && (
+                          {getTeamLogo(match, false) && (
                             <img 
-                              src={match.awayTeam.crest} 
-                              alt=""
+                              src={getTeamLogo(match, false)} 
+                              alt={match.awayTeamName || ''}
                               className="h-6 w-6 object-contain flex-shrink-0"
                               onError={(e) => e.target.style.display = 'none'}
                             />

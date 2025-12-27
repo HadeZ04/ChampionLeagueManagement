@@ -33,7 +33,7 @@ const CONFIG = {
   INTERNAL_API_URL: 'http://localhost:3000',
   
   // Mock data for testing (replace with real API call)
-  USE_MOCK_DATA: true,
+  USE_MOCK_DATA: false, // Set to true to use mock data, false to fetch from real API
 };
 
 // ========================
@@ -113,12 +113,58 @@ async function fetchPlayersFromInternalAPI() {
   }
   
   try {
-    const response = await axios.get(`${CONFIG.INTERNAL_API_URL}/api/players`, {
-      timeout: 5000,
-    });
-    return response.data;
+    console.log(`📡 Fetching players from ${CONFIG.INTERNAL_API_URL}/api/players...`);
+    
+    // Fetch all players with pagination
+    let allPlayers = [];
+    let page = 1;
+    const limit = 100; // Fetch 100 players per page
+    let hasMore = true;
+    
+    while (hasMore) {
+      const response = await axios.get(`${CONFIG.INTERNAL_API_URL}/api/players`, {
+        params: {
+          page: page,
+          limit: limit
+        },
+        timeout: 10000,
+      });
+      
+      const { data: players, total, pagination } = response.data;
+      
+      if (!players || players.length === 0) {
+        break;
+      }
+      
+      // Map API response to script format
+      const mappedPlayers = players.map(player => ({
+        playerId: player.player_id,
+        fullName: player.full_name || player.display_name || 'Unknown',
+        team: player.team_name || 'Unknown'
+      }));
+      
+      allPlayers = allPlayers.concat(mappedPlayers);
+      console.log(`   📄 Fetched page ${page}/${pagination.totalPages} (${mappedPlayers.length} players)`);
+      
+      // Check if there are more pages
+      hasMore = page < pagination.totalPages;
+      page++;
+      
+      // Small delay to avoid overwhelming the API
+      if (hasMore) {
+        await sleep(100);
+      }
+    }
+    
+    console.log(`✅ Total players fetched: ${allPlayers.length}`);
+    return allPlayers;
+    
   } catch (error) {
     console.error('❌ Failed to fetch from internal API:', error.message);
+    if (error.response) {
+      console.error(`   Status: ${error.response.status}`);
+      console.error(`   Data:`, error.response.data);
+    }
     console.log('🎭 Falling back to mock data');
     return MOCK_PLAYERS;
   }

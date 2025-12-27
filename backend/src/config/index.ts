@@ -44,7 +44,7 @@ const parseBoolean = (value: string | undefined, defaultValue: boolean): boolean
 
 export const appConfig = {
   env: NODE_ENV,
-  port: Number(process.env.PORT ?? 4000),
+  port: Number(process.env.PORT ?? 4001),
   jwt: {
     secret: process.env.JWT_SECRET ?? "dev-secret",
     expiresIn: process.env.JWT_EXPIRES_IN ?? "2h",

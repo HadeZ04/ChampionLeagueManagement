@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Shirt, Footprints, Hash, Calendar, Flag, BarChart2 } from 'lucide-react';
 import { toCountryLabel, toPlayerPositionLabel } from '../../../shared/utils/vi';
+import { usePlayerAvatar } from '../../../shared/hooks/usePlayerAvatar';
 
 // --- Giả lập API Service ---
 const FAKE_PLAYER_DATA = {
@@ -37,6 +38,8 @@ const playerService = {
 const PlayerProfilePage = () => {
     const { playerId } = useParams();
     const [player, setPlayer] = useState(null);
+    const numericPlayerId = playerId ? parseInt(playerId, 10) : null;
+    const { avatarUrl, loading: avatarLoading } = usePlayerAvatar(numericPlayerId, player?.fullName);
 
     useEffect(() => {
         playerService.getPlayerById(playerId).then(response => setPlayer(response.data));
@@ -50,7 +53,31 @@ const PlayerProfilePage = () => {
         <div className="uefa-container py-8">
             {/* Player Header */}
             <div className="flex items-end gap-6 mb-8">
-                <img src={player.portraitUrl} alt={player.fullName} className="w-40 h-40 rounded-full border-4 border-white shadow-lg" loading="lazy" />
+                {avatarLoading ? (
+                    <div className="w-40 h-40 rounded-full border-4 border-white shadow-lg bg-gray-200 animate-pulse flex items-center justify-center">
+                        <span className="text-gray-400">Loading...</span>
+                    </div>
+                ) : (
+                    <img 
+                        src={avatarUrl} 
+                        alt={player.fullName} 
+                        className="w-40 h-40 rounded-full border-4 border-white shadow-lg object-cover" 
+                        loading="lazy"
+                        onError={(e) => {
+                            // Fallback to initials if image fails to load
+                            e.target.style.display = 'none';
+                            const fallback = e.target.nextElementSibling;
+                            if (fallback) fallback.style.display = 'flex';
+                        }}
+                    />
+                )}
+                {!avatarLoading && (
+                    <div className="w-40 h-40 rounded-full border-4 border-white shadow-lg bg-uefa-blue hidden items-center justify-center">
+                        <span className="text-white text-2xl font-bold">
+                            {player.fullName.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                        </span>
+                    </div>
+                )}
                 <div>
                     <p className="text-gray-500">{toPlayerPositionLabel(player.position)}</p>
                     <h1 className="text-5xl font-bold text-uefa-dark">{player.fullName}</h1>
