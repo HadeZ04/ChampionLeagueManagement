@@ -5,7 +5,6 @@ import { query } from "../db/sqlServer";
 import { appConfig } from "../config";
 import { HttpError, UnauthorizedError } from "../utils/httpError";
 import { logEvent } from "./auditService";
-import { getUserTeamIds } from "./userTeamService";
 
 interface UserRecord {
   user_id: number;
@@ -157,6 +156,36 @@ async function clearLockout(userId: number) {
   await query(`DELETE FROM user_session_lockouts WHERE user_id = @userId`, { userId });
 }
 
+/**
+ * Get managed team ID for a user (if they are a club manager)
+ */
+async function getManagedTeamId(userId: number): Promise<number | null> {
+  const result = await query<{ team_id: number | null }>(
+    `
+    SELECT TOP 1 ua.team_id
+    FROM user_accounts ua
+    WHERE ua.user_id = @userId
+    `,
+    { userId }
+  );
+  return result.recordset[0]?.team_id ?? null;
+}
+
+/**
+ * Get official ID for a user (if they are a match official)
+ */
+async function getOfficialId(userId: number): Promise<number | null> {
+  const result = await query<{ official_id: number }>(
+    `
+    SELECT TOP 1 o.official_id
+    FROM officials o
+    WHERE o.user_id = @userId
+    `,
+    { userId }
+  );
+  return result.recordset[0]?.official_id ?? null;
+}
+
 export async function login(username: string, password: string) {
   const user = await getUserByUsername(username);
   if (!user) {
@@ -201,15 +230,25 @@ export async function login(username: string, password: string) {
 
   const roles = await getUserRoles(user.user_id);
   const permissions = await getUserPermissions(user.user_id);
-  const teamIds = await getUserTeamIds(user.user_id);
-  const payload = {
+  const managedTeamId = await getManagedTeamId(user.user_id);
+  const officialId = await getOfficialId(user.user_id);
+
+  const payload: any = {
     sub: user.user_id,
     username: user.username,
     roles,
     permissions,
-    teamIds,
     type: "access" as const,
   };
+
+  // Add row-level authorization fields if applicable
+  if (managedTeamId) {
+    payload.managed_team_id = managedTeamId;
+  }
+  if (officialId) {
+    payload.official_id = officialId;
+  }
+
   const secret: Secret = appConfig.jwt.secret;
   const options: SignOptions = {
     expiresIn: appConfig.jwt.expiresIn as SignOptions["expiresIn"],
@@ -236,7 +275,6 @@ export async function login(username: string, password: string) {
       lastName: user.last_name,
       roles,
       permissions,
-      teamIds,
       lastLoginAt: new Date(),
     },
   };
@@ -265,8 +303,10 @@ export async function getProfile(userId: number) {
 
   const roles = await getUserRoles(user.user_id);
   const permissions = await getUserPermissions(user.user_id);
-  const teamIds = await getUserTeamIds(user.user_id);
-  return {
+  const managedTeamId = await getManagedTeamId(user.user_id);
+  const officialId = await getOfficialId(user.user_id);
+
+  const profile: any = {
     id: user.user_id,
     username: user.username,
     email: user.email,
@@ -278,6 +318,14 @@ export async function getProfile(userId: number) {
     mfaEnabled: user.mfa_enabled,
     roles,
     permissions,
-    teamIds,
   };
+
+  if (managedTeamId) {
+    profile.managed_team_id = managedTeamId;
+  }
+  if (officialId) {
+    profile.official_id = officialId;
+  }
+
+  return profile;
 }
