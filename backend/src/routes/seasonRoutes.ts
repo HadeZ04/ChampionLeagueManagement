@@ -10,9 +10,11 @@ import {
   listSeasonMetadata,
   listSeasons,
   updateSeason,
+  addTeamToSeason,
+  bulkAddTeamsToSeason,
 } from "../services/seasonService";
 import { AuthenticatedRequest } from "../types";
-import { query } from "../db/sqlServer";
+
 
 const router = Router();
 const requireSeasonManagement = requireAnyPermission("manage_rulesets", "manage_teams");
@@ -87,7 +89,6 @@ router.get(
  */
 router.get(
   "/",
-  requireAuth,
   requireAuth,
   // Allow all authenticated users to list seasons (needed for Team Admin My Team page)
   async (_req, res) => {
@@ -257,33 +258,23 @@ router.post(
 
     const { teamId, status } = req.body;
 
-    // Check if team already in season
-    const existing = await query<{ season_team_id: number }>(
-      `SELECT season_team_id FROM season_team_participants 
-       WHERE season_id = @seasonId AND team_id = @teamId`,
-      { seasonId, teamId }
-    );
-
-    if (existing.recordset.length > 0) {
-      return res.status(400).json({
-        error: "Team already participating in this season",
-        seasonTeamId: existing.recordset[0].season_team_id
+    // Single Add Team
+    try {
+      const { seasonTeamId } = await addTeamToSeason(seasonId, teamId, status);
+      res.status(201).json({
+        success: true,
+        message: "Added team to season",
+        data: { seasonTeamId }
       });
+    } catch (error: any) {
+      if (error.status) {
+        return res.status(error.status).json({
+          error: error.message,
+          code: error.code // Include code for frontend
+        });
+      }
+      res.status(500).json({ error: "Failed to add team to season" });
     }
-
-    // Add team to season
-    const result = await query<{ season_team_id: number }>(
-      `INSERT INTO season_team_participants (season_id, team_id, status)
-       OUTPUT INSERTED.season_team_id
-       VALUES (@seasonId, @teamId, @status)`,
-      { seasonId, teamId, status }
-    );
-
-    res.status(201).json({
-      success: true,
-      message: "Team added to season successfully",
-      data: { seasonTeamId: result.recordset[0].season_team_id }
-    });
   }
 );
 
@@ -308,47 +299,26 @@ router.post(
     }
 
     const { teamIds, status } = req.body;
-    let addedCount = 0;
-    const results: { teamId: number; seasonTeamId: number | null; error?: string }[] = [];
 
-    for (const teamId of teamIds) {
-      try {
-        // Check if already exists
-        const existing = await query<{ season_team_id: number }>(
-          `SELECT season_team_id FROM season_team_participants 
-           WHERE season_id = @seasonId AND team_id = @teamId`,
-          { seasonId, teamId }
-        );
-
-        if (existing.recordset.length > 0) {
-          results.push({
-            teamId,
-            seasonTeamId: existing.recordset[0].season_team_id,
-            error: "Already exists"
-          });
-          continue;
-        }
-
-        // Add team
-        const result = await query<{ season_team_id: number }>(
-          `INSERT INTO season_team_participants (season_id, team_id, status)
-           OUTPUT INSERTED.season_team_id
-           VALUES (@seasonId, @teamId, @status)`,
-          { seasonId, teamId, status }
-        );
-
-        results.push({ teamId, seasonTeamId: result.recordset[0].season_team_id });
-        addedCount++;
-      } catch (err) {
-        results.push({ teamId, seasonTeamId: null, error: String(err) });
+    try {
+      const { addedCount, results } = await bulkAddTeamsToSeason(seasonId, teamIds, status);
+      res.json({
+        success: true,
+        message: `Added ${addedCount} teams to season`,
+        data: { addedCount, results }
+      });
+    } catch (error: any) {
+      if (error.status) {
+        // Requirement 2.2 Bulk Error Format
+        return res.status(error.status).json({
+          error: error.message,
+          details: error.details,
+          code: error.code
+        });
       }
+      console.error("Bulk Add Error:", error);
+      res.status(500).json({ error: "Failed to bulk add teams" });
     }
-
-    res.json({
-      success: true,
-      message: `Added ${addedCount} teams to season`,
-      data: { addedCount, results }
-    });
   }
 );
 

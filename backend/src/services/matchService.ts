@@ -212,26 +212,32 @@ const ensureDefaultStadium = async (): Promise<number> => {
 
 // Helper: Ensure team is registered in season
 const ensureTeamInSeason = async (teamId: number, seasonId: number): Promise<number> => {
-  const existing = await query<{ season_team_id: number }>(
-    `SELECT season_team_id FROM season_team_participants 
-     WHERE season_id = @seasonId AND team_id = @teamId`,
-    { seasonId, teamId }
-  );
+  // Use centralized service (VALIDATES Requirement 2.2)
+  const { addTeamToSeason, assertGoverningBodyInVietnam } = await import("./seasonService");
 
-  if (existing.recordset.length > 0) {
-    return existing.recordset[0].season_team_id;
+  try {
+    const { seasonTeamId } = await addTeamToSeason(seasonId, teamId, 'active');
+    return seasonTeamId;
+  } catch (err: any) {
+    // If already participating, addTeamToSeason throws 409 but we just want the ID.
+    // However, addTeamToSeason attempts INSERT. If it fails with 409, it means it's already there?
+    // Wait, addTeamToSeason checks existence and throws 409. 
+    // We should check existence first or handle 409.
+
+    if (err.code === 'already_participating') {
+      // If it exists, we just need the ID. 
+      // addTeamToSeason throws error with seasonTeamId property if 409!
+      if (err.seasonTeamId) return err.seasonTeamId;
+
+      // Fallback query if not pending in error
+      const existing = await query<{ season_team_id: number }>(
+        `SELECT season_team_id FROM season_team_participants WHERE season_id = @seasonId AND team_id = @teamId`,
+        { seasonId, teamId }
+      );
+      return existing.recordset[0].season_team_id;
+    }
+    throw err;
   }
-
-  const result = await query<{ season_team_id: number }>(
-    `
-      INSERT INTO season_team_participants (season_id, team_id, status)
-      OUTPUT INSERTED.season_team_id
-      VALUES (@seasonId, @teamId, 'active');
-    `,
-    { seasonId, teamId }
-  );
-
-  return result.recordset[0].season_team_id;
 };
 
 export const createMatch = async (input: CreateMatchInput): Promise<MatchRecord> => {
@@ -1138,13 +1144,13 @@ export const syncMatchesFromUpstream = async (options: {
   skippedMatches: number;
 }> => {
   let matches: MatchSummary[] = [];
-  
+
   try {
     matches = await getCompetitionMatches(options);
   } catch (error: any) {
     const errorMessage = error?.message || String(error);
     console.error('Failed to fetch matches from Football-Data API:', errorMessage);
-    
+
     // Provide more specific error messages
     if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
       throw new Error('API key không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra FOOTBALL_DATA_API_TOKEN trong cấu hình.');
@@ -1158,7 +1164,7 @@ export const syncMatchesFromUpstream = async (options: {
       throw new Error(`Lỗi khi lấy dữ liệu từ API: ${errorMessage}`);
     }
   }
-  
+
   let syncedCount = 0;
   let skippedCount = 0;
 

@@ -201,19 +201,27 @@ export const importCLDataToInternal = async (options: {
         if (!internalHomeTeamId || !internalAwayTeamId) continue;
 
         // Ensure Season Team Participation
-        // Helper to get or create season_team_id
+        // Helper to get or create season_team_id (VALIDATES Requirement 2.2)
         const getSeasonTeamId = async (tid: number, sid: number) => {
-          let stid = await query<{ season_team_id: number }>(
-            "SELECT season_team_id FROM season_team_participants WHERE season_id = @sid AND team_id = @tid",
-            { sid, tid }
-          );
-          if (stid.recordset.length === 0) {
-            stid = await query<{ season_team_id: number }>(
-              "INSERT INTO season_team_participants (season_id, team_id) OUTPUT INSERTED.season_team_id VALUES (@sid, @tid)",
-              { sid, tid }
-            );
+          const { addTeamToSeason } = await import("./seasonService");
+          try {
+            // Try to add (this will validate Governing Body)
+            const { seasonTeamId } = await addTeamToSeason(sid, tid, 'active');
+            return seasonTeamId;
+          } catch (err: any) {
+            // If already participating, retrieve ID
+            if (err.code === 'already_participating') {
+              if (err.seasonTeamId) return err.seasonTeamId;
+
+              const existing = await query<{ season_team_id: number }>(
+                "SELECT season_team_id FROM season_team_participants WHERE season_id = @sid AND team_id = @tid",
+                { sid, tid }
+              );
+              return existing.recordset[0].season_team_id;
+            }
+            // If validation error (not in Vietnam), throw to skip this match import
+            throw err;
           }
-          return stid.recordset[0].season_team_id;
         };
 
         const homeSeasonTeamId = await getSeasonTeamId(internalHomeTeamId, seasonId);

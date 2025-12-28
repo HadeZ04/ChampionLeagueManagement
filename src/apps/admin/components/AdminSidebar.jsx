@@ -34,6 +34,7 @@ const MENU_SECTIONS = [
     disallowedRoles: ['super_admin'],
     items: [
       { name: 'Đội của tôi', path: '/admin/my-team', icon: Users, permission: 'view_own_team' },
+      { name: 'Lời mời tham gia', path: '/admin/team-invitations', icon: Mail, permission: 'view_own_team' },
       {
         name: 'Đăng ký cầu thủ',
         path: '/admin/players',
@@ -180,11 +181,10 @@ const AdminSidebar = ({ currentUser }) => {
                   <li key={item.name}>
                     <Link
                       to={item.path}
-                      className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 ${
-                        isActive
+                      className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 ${isActive
                           ? 'bg-gradient-to-r from-blue-600/30 via-blue-500/20 to-transparent text-white shadow-lg shadow-blue-500/10'
                           : 'text-blue-200/60 hover:text-white hover:bg-white/5'
-                      }`}
+                        }`}
                     >
                       {isActive && (
                         <>
@@ -192,11 +192,10 @@ const AdminSidebar = ({ currentUser }) => {
                           <span className="absolute inset-0 rounded-xl ring-1 ring-blue-500/30"></span>
                         </>
                       )}
-                      <span className={`relative z-10 p-1.5 rounded-lg transition-all duration-300 ${
-                        isActive 
+                      <span className={`relative z-10 p-1.5 rounded-lg transition-all duration-300 ${isActive
                           ? 'bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/30'
                           : 'bg-white/5 text-blue-300/70 group-hover:bg-white/10 group-hover:text-cyan-300'
-                      }`}>
+                        }`}>
                         <item.icon size={16} />
                       </span>
                       <span className={`font-medium text-sm transition-all duration-300 ${isActive ? 'translate-x-1' : 'group-hover:translate-x-1'}`}>
@@ -229,7 +228,7 @@ const AdminSidebar = ({ currentUser }) => {
             Xuất báo cáo
           </button>
         </div>
-        
+
         {/* UCL Badge */}
         <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-center gap-2 text-[10px] text-blue-400/40 uppercase tracking-widest">
           <Trophy size={12} />

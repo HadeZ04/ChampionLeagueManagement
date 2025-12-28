@@ -1,259 +1,230 @@
+// src/controllers/seasonInvitationController.ts
 import { Response } from "express";
 import { AuthenticatedRequest } from "../types";
 import * as invitationService from "../services/seasonInvitationService";
-import * as eligibilityService from "../services/teamEligibilityService";
 import { query } from "../db/sqlServer";
 
 /**
+ * Helper: parse seasonId param
+ */
+function parseSeasonId(req: AuthenticatedRequest, res: Response): number | null {
+  const seasonId = parseInt(req.params.seasonId, 10);
+  if (isNaN(seasonId)) {
+    res.status(400).json({ error: "Invalid season ID" });
+    return null;
+  }
+  return seasonId;
+}
+
+/**
  * GET /api/seasons/:seasonId/invitations
- * List all invitations for a season
+ * BTC/SuperAdmin: list invitations of a season
  */
 export async function list(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    const seasonId = parseInt(req.params.seasonId, 10);
-    if (isNaN(seasonId)) {
-      res.status(400).json({ error: "Invalid season ID" });
-      return;
-    }
+    const seasonId = parseSeasonId(req, res);
+    if (!seasonId) return;
 
-    const invitations = await invitationService.listSeasonInvitations(seasonId);
-    res.json({ data: invitations });
-  } catch (error) {
+    const invitations = await invitationService.getSeasonInvitations(seasonId);
+
+    // Transform to match FE format (đúng như bạn đang dùng)
+    const transformed = invitations.map((inv) => ({
+      invitationId: inv.invitation_id,
+      seasonId: inv.season_id,
+      teamId: inv.team_id,
+      teamName: inv.team_name,
+      shortName: null,
+      inviteType: inv.invite_type, // retained | promoted | replacement
+      status: inv.status, // pending | accepted | rejected | expired
+      invitedAt: inv.invited_at,
+      responseDeadline: inv.response_deadline,
+      respondedAt: inv.responded_at,
+      responseNotes: inv.response_notes,
+      replacementForId: inv.replacement_for_id,
+    }));
+
+    res.json({ data: transformed });
+  } catch (error: any) {
     res.status(500).json({ error: "Failed to list invitations" });
   }
 }
 
 /**
- * POST /api/seasons/:seasonId/invitations
- * Create a single invitation
- */
-export async function create(req: AuthenticatedRequest, res: Response): Promise<void> {
-  try {
-    const seasonId = parseInt(req.params.seasonId, 10);
-    if (isNaN(seasonId)) {
-      res.status(400).json({ error: "Invalid season ID" });
-      return;
-    }
-
-    const { teamId, inviteType, responseDeadline, previousSeasonRank } = req.body;
-
-    if (!teamId || !inviteType || !responseDeadline) {
-      res.status(400).json({ error: "Missing required fields: teamId, inviteType, responseDeadline" });
-      return;
-    }
-
-    if (!["retained", "promoted", "replacement"].includes(inviteType)) {
-      res.status(400).json({ error: "Invalid inviteType. Must be: retained, promoted, or replacement" });
-      return;
-    }
-
-    const invitation = await invitationService.createInvitation({
-      seasonId,
-      teamId: parseInt(teamId, 10),
-      inviteType,
-      responseDeadline,
-      invitedBy: req.user!.sub,
-      previousSeasonRank: previousSeasonRank ? parseInt(previousSeasonRank, 10) : null,
-    });
-
-    res.status(201).json({ data: invitation });
-  } catch (error: any) {
-    if (error.name === "BadRequestError" || error.name === "NotFoundError") {
-      res.status(400).json({ error: error.message });
-      return;
-    }
-    res.status(500).json({ error: "Failed to create invitation" });
-  }
-}
-
-/**
  * POST /api/seasons/:seasonId/invitations/auto-create
- * Automatically create invitations based on previous season standings
+ * BTC/SuperAdmin: create initial invitations from season_team_participants (Plan A)
+ * Body: (none)
  */
 export async function autoCreate(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    const seasonId = parseInt(req.params.seasonId, 10);
-    if (isNaN(seasonId)) {
-      res.status(400).json({ error: "Invalid season ID" });
-      return;
-    }
+    const seasonId = parseSeasonId(req, res);
+    if (!seasonId) return;
 
-    const { previousSeasonId, responseDeadlineDays, promotedTeamIds } = req.body;
+    const userId = req.user!.sub;
+    await invitationService.createSeasonInvitations(seasonId, userId);
 
-    if (!previousSeasonId) {
-      res.status(400).json({ error: "previousSeasonId is required" });
-      return;
-    }
-
-    const result = await invitationService.autoCreateInvitations({
-      seasonId,
-      previousSeasonId: parseInt(previousSeasonId, 10),
-      invitedBy: req.user!.sub,
-      responseDeadlineDays: responseDeadlineDays ? parseInt(responseDeadlineDays, 10) : undefined,
-      promotedTeamIds: promotedTeamIds
-        ? promotedTeamIds.map((id: string | number) => parseInt(String(id), 10))
-        : undefined,
-    });
-
-    res.status(201).json({ data: result });
+    res.status(201).json({ data: { message: "Invitations created successfully" } });
   } catch (error: any) {
-    if (error.name === "BadRequestError" || error.name === "NotFoundError") {
-      res.status(400).json({ error: error.message });
-      return;
-    }
-    res.status(500).json({ error: "Failed to auto-create invitations" });
+    res.status(500).json({ error: error?.message || "Failed to auto-create invitations" });
   }
 }
 
 /**
- * GET /api/seasons/:seasonId/invitations/:invitationId/eligibility
- * Check team eligibility based on requirements
+ * POST /api/seasons/:seasonId/invitations/auto-fill
+ * BTC/SuperAdmin: ensure pending+accepted reaches 10 by adding replacement invitations
  */
-export async function checkEligibility(req: AuthenticatedRequest, res: Response): Promise<void> {
+export async function autoFill(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    const seasonId = parseInt(req.params.seasonId, 10);
-    const invitationId = parseInt(req.params.invitationId, 10);
+    const seasonId = parseSeasonId(req, res);
+    if (!seasonId) return;
 
-    if (isNaN(seasonId) || isNaN(invitationId)) {
-      res.status(400).json({ error: "Invalid season ID or invitation ID" });
-      return;
-    }
+    const userId = req.user!.sub;
+    const result = await invitationService.sendReplacementInvitations(seasonId, userId);
 
-    // Get invitation to find teamId
-    const invitations = await invitationService.listSeasonInvitations(seasonId);
-    const invitation = invitations.find((inv) => inv.invitationId === invitationId);
-
-    if (!invitation) {
-      res.status(404).json({ error: "Invitation not found" });
-      return;
-    }
-
-    // Get team data
-    const teamData = await eligibilityService.getTeamEligibilityData(invitation.teamId, seasonId);
-
-    // Check if governing body is in Vietnam
-    const governingBodyInVietnam = await eligibilityService.checkGoverningBodyInVietnam(
-      invitation.teamId,
-      teamData.governingBody,
-      teamData.country
-    );
-
-    // Check participation fee status (this would typically come from season_team_registrations)
-    const feeStatusResult = await query<{ fee_status: string }>(
-      `
-      SELECT fee_status
-      FROM season_team_registrations
-      WHERE season_id = @seasonId AND team_id = @teamId
-      `,
-      { seasonId, teamId: invitation.teamId }
-    );
-
-    const feeStatus = feeStatusResult.recordset[0]?.fee_status || "unpaid";
-    const participationFeePaid = feeStatus === "paid" || feeStatus === "waived";
-
-    // Validate eligibility
-    const eligibility = await eligibilityService.validateTeamEligibility({
-      teamId: invitation.teamId,
-      seasonId,
-      participationFeePaid,
-      governingBodyInVietnam,
-      stadiumCapacity: teamData.stadiumCapacity,
-      stadiumRating: teamData.stadiumRating,
-      stadiumCity: teamData.stadiumCity,
-      stadiumCountry: teamData.stadiumCountry,
+    res.status(200).json({
+      data: {
+        message: "Auto fill completed",
+        created: result.created,
+        neededBefore: result.neededBefore,
+      },
     });
-
-    res.json({ data: eligibility });
   } catch (error: any) {
-    if (error.name === "BadRequestError" || error.name === "NotFoundError") {
-      res.status(400).json({ error: error.message });
-      return;
+    res.status(500).json({ error: "Failed to auto-fill invitations" });
+  }
+}
+
+/**
+ * POST /api/seasons/invitations/mark-expired
+ * BTC/SuperAdmin: mark expired invitations globally, then auto-fill affected seasons
+ */
+export async function markExpired(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const userId = req.user!.sub;
+
+    const affectedSeasonIds = await invitationService.markExpiredInvitations();
+
+    let totalCreated = 0;
+    for (const seasonId of affectedSeasonIds) {
+      const r = await invitationService.sendReplacementInvitations(seasonId, userId);
+      totalCreated += r.created;
     }
-    res.status(500).json({ error: "Failed to check eligibility" });
+
+    res.status(200).json({
+      data: {
+        message: "Expired invitations marked and auto-fill executed",
+        affectedSeasons: affectedSeasonIds,
+        totalCreated,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: "Failed to mark expired invitations" });
   }
 }
 
 /**
  * PATCH /api/seasons/:seasonId/invitations/:invitationId/status
- * Update invitation status (accept/decline)
+ * BTC/SuperAdmin override (khẩn cấp)
+ * Accepts: accepted | rejected | declined
+ * - declined (FE) => rejected (DB)
  */
 export async function updateStatus(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    const seasonId = parseInt(req.params.seasonId, 10);
-    const invitationId = parseInt(req.params.invitationId, 10);
+    const seasonId = parseSeasonId(req, res);
+    if (!seasonId) return;
 
-    if (isNaN(seasonId) || isNaN(invitationId)) {
-      res.status(400).json({ error: "Invalid season ID or invitation ID" });
+    const invitationId = parseInt(req.params.invitationId, 10);
+    if (isNaN(invitationId)) {
+      res.status(400).json({ error: "Invalid invitation ID" });
       return;
     }
 
-    const { status, responseNotes } = req.body;
+    const { status, responseNotes } = req.body as {
+      status: "accepted" | "rejected" | "declined" | "rescinded";
+      responseNotes?: string;
+    };
 
-    if (!status || !["accepted", "declined", "expired", "rescinded", "replaced"].includes(status)) {
+    if (!status || !["accepted", "rejected", "declined", "rescinded"].includes(status)) {
       res.status(400).json({
-        error: "Invalid status. Must be: accepted, declined, expired, rescinded, or replaced",
+        error: "Invalid status. Use 'accepted', 'declined' or 'rescinded'.",
       });
       return;
     }
 
-    await invitationService.updateInvitationStatus(
-      invitationId,
-      status as any,
-      req.user!.sub,
-      responseNotes
-    );
+    const userId = req.user!.sub;
+
+    if (status === "accepted") {
+      await invitationService.acceptInvitation(invitationId, userId, responseNotes);
+    } else if (status === "rescinded") {
+      await invitationService.rescindInvitation(invitationId, userId, responseNotes);
+    } else {
+      // declined/rejected => declined (handled by service)
+      await invitationService.rejectInvitation(invitationId, userId, responseNotes);
+    }
 
     res.json({ message: "Invitation status updated successfully" });
   } catch (error: any) {
-    if (error.name === "BadRequestError" || error.name === "NotFoundError") {
-      res.status(400).json({ error: error.message });
-      return;
-    }
     res.status(500).json({ error: "Failed to update invitation status" });
   }
 }
 
 /**
- * GET /api/seasons/:seasonId/invitations/stats
- * Get invitation statistics (accepted count, pending, etc.)
+ * POST /api/seasons/:seasonId/invitations/:invitationId/reinvite
+ * BTC/SuperAdmin: re-invite a team (creates new invitation)
  */
-export async function getStats(req: AuthenticatedRequest, res: Response): Promise<void> {
+export async function reinvite(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    const seasonId = parseInt(req.params.seasonId, 10);
-    if (isNaN(seasonId)) {
-      res.status(400).json({ error: "Invalid season ID" });
+    const seasonId = parseSeasonId(req, res);
+    if (!seasonId) return;
+
+    const invitationId = parseInt(req.params.invitationId, 10);
+    if (isNaN(invitationId)) {
+      res.status(400).json({ error: "Invalid invitation ID" });
       return;
     }
 
-    const acceptedCount = await invitationService.getAcceptedTeamsCount(seasonId);
+    const userId = req.user!.sub;
+    const inv = await invitationService.reinviteTeam(seasonId, invitationId, userId);
 
-    const statsResult = await query<{
-      status: string;
-      count: number;
-    }>(
+    res.status(200).json({ message: "Team re-invited successfully", data: inv });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || "Failed to re-invite team" });
+  }
+}
+
+/**
+ * GET /api/seasons/:seasonId/invitations/stats
+ * BTC/SuperAdmin: stats for UI cards
+ */
+export async function getStats(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const seasonId = parseSeasonId(req, res);
+    if (!seasonId) return;
+
+    // Summary by status (pending/accepted/rejected/expired)
+    const summary = await invitationService.getInvitationsSummary(seasonId);
+
+    // acceptedCount for FE (số đội accepted)
+    const acceptedCount = summary.accepted ?? 0;
+
+    // totalReplaced: đếm số invitation thuộc invite_type = 'replacement'
+    const replacedRs = await query<{ count: number }>(
       `
-      SELECT status, COUNT(*) AS count
+      SELECT COUNT(*) as count
       FROM season_invitations
       WHERE season_id = @seasonId
-      GROUP BY status
+        AND invite_type = 'replacement'
       `,
       { seasonId }
     );
-
-    const statsByStatus: Record<string, number> = {};
-    statsResult.recordset.forEach((row) => {
-      statsByStatus[row.status] = row.count;
-    });
+    const totalReplaced = replacedRs.recordset[0]?.count ?? 0;
 
     res.json({
       data: {
         acceptedCount,
-        totalPending: statsByStatus["pending"] ?? 0,
-        totalDeclined: statsByStatus["declined"] ?? 0,
-        totalExpired: statsByStatus["expired"] ?? 0,
-        totalAccepted: statsByStatus["accepted"] ?? 0,
-        totalReplaced: statsByStatus["replaced"] ?? 0,
-        byStatus: statsByStatus,
+        totalPending: summary.pending ?? 0,
+        totalDeclined: summary.rejected ?? 0,
+        totalRescinded: summary.rescinded ?? 0,
+        totalExpired: summary.expired ?? 0,
+        totalReplaced,
       },
     });
   } catch (error: any) {
@@ -262,101 +233,23 @@ export async function getStats(req: AuthenticatedRequest, res: Response): Promis
 }
 
 /**
- * POST /api/seasons/:seasonId/invitations/:invitationId/create-replacement
- * Manually create a replacement invitation for a declined/expired invitation
+ * Optional stubs (giữ để FE không vỡ nếu đang gọi nhầm)
  */
-export async function createReplacement(req: AuthenticatedRequest, res: Response): Promise<void> {
-  try {
-    const seasonId = parseInt(req.params.seasonId, 10);
-    const invitationId = parseInt(req.params.invitationId, 10);
-
-    if (isNaN(seasonId) || isNaN(invitationId)) {
-      res.status(400).json({ error: "Invalid season ID or invitation ID" });
-      return;
-    }
-
-    const { previousSeasonId, replacementTeamId, responseDeadlineDays } = req.body;
-
-    if (!previousSeasonId) {
-      res.status(400).json({ error: "previousSeasonId is required" });
-      return;
-    }
-
-    let replacementTeamIdToUse = replacementTeamId
-      ? parseInt(String(replacementTeamId), 10)
-      : null;
-
-    // If not specified, automatically find replacement team
-    if (!replacementTeamIdToUse) {
-      const replacementTeam = await invitationService.findReplacementTeam(
-        seasonId,
-        parseInt(previousSeasonId, 10),
-        invitationId
-      );
-
-      if (!replacementTeam) {
-        res.status(404).json({
-          error: "No available replacement team found from previous season",
-        });
-        return;
-      }
-
-      replacementTeamIdToUse = replacementTeam.teamId;
-    }
-
-    const replacement = await invitationService.createReplacementInvitation(
-      seasonId,
-      replacementTeamIdToUse,
-      invitationId,
-      req.user!.sub,
-      responseDeadlineDays ? parseInt(responseDeadlineDays, 10) : undefined
-    );
-
-    res.status(201).json({ data: replacement });
-  } catch (error: any) {
-    if (error.name === "BadRequestError" || error.name === "NotFoundError") {
-      res.status(400).json({ error: error.message });
-      return;
-    }
-    res.status(500).json({ error: "Failed to create replacement invitation" });
-  }
+export async function create(_req: AuthenticatedRequest, res: Response): Promise<void> {
+  res.status(501).json({ error: "Not implemented. Use auto-create/auto-fill." });
 }
 
-/**
- * POST /api/seasons/:seasonId/invitations/ensure-minimum-teams
- * Automatically create replacement invitations to ensure minimum accepted teams
- */
-export async function ensureMinimumTeams(req: AuthenticatedRequest, res: Response): Promise<void> {
-  try {
-    const seasonId = parseInt(req.params.seasonId, 10);
-    if (isNaN(seasonId)) {
-      res.status(400).json({ error: "Invalid season ID" });
-      return;
-    }
-
-    const { previousSeasonId, minimumTeams, responseDeadlineDays } = req.body;
-
-    if (!previousSeasonId) {
-      res.status(400).json({ error: "previousSeasonId is required" });
-      return;
-    }
-
-    const result = await invitationService.ensureMinimumAcceptedTeams(
-      seasonId,
-      parseInt(previousSeasonId, 10),
-      minimumTeams ? parseInt(minimumTeams, 10) : 10,
-      req.user!.sub,
-      responseDeadlineDays ? parseInt(responseDeadlineDays, 10) : undefined
-    );
-
-    res.json({ data: result });
-  } catch (error: any) {
-    if (error.name === "BadRequestError" || error.name === "NotFoundError") {
-      res.status(400).json({ error: error.message });
-      return;
-    }
-    res.status(500).json({ error: "Failed to ensure minimum teams" });
-  }
+export async function checkEligibility(_req: AuthenticatedRequest, res: Response): Promise<void> {
+  res.status(501).json({ error: "Not implemented in Plan A." });
 }
+
+export async function createReplacement(_req: AuthenticatedRequest, res: Response): Promise<void> {
+  res.status(501).json({ error: "Not implemented. Use auto-fill." });
+}
+
+export async function ensureMinimumTeams(_req: AuthenticatedRequest, res: Response): Promise<void> {
+  res.status(501).json({ error: "Not implemented. Use auto-fill." });
+}
+
 
 

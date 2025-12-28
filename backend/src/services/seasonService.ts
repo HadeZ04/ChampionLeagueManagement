@@ -781,3 +781,158 @@ export async function listSeasonTeamsByIdentifier(identifier: string | number) {
 
   return teamsRes.recordset;
 }
+
+// Helper: Validate Requirement 2.2
+export async function assertGoverningBodyInVietnam(teamId: number, tx?: any): Promise<void> {
+  const { getPool } = await import("../db/sqlServer");
+  const request = tx ? tx.request() : (await getPool()).request();
+
+  request.input("teamId", teamId);
+
+  const result = await request.query(`SELECT governing_body_in_vietnam FROM teams WHERE team_id = @teamId`);
+
+  const row = result.recordset[0];
+  if (!row) {
+    const error: any = new Error("Team not found");
+    error.status = 404;
+    error.code = "team_not_found";
+    throw error;
+  }
+
+  // Strict check: must be true or 1. undefined/null/0/false are invalid.
+  const isValid = row.governing_body_in_vietnam === true || row.governing_body_in_vietnam === 1;
+
+  if (!isValid) {
+    const error: any = new Error("Công ty/Cơ quan chủ quản phải có trụ sở tại Việt Nam để tham gia giải đấu.");
+    error.status = 400;
+    error.code = "not_in_vietnam";
+    throw error;
+  }
+}
+
+export async function addTeamToSeason(seasonId: number, teamId: number, status: string = 'active'): Promise<{ seasonTeamId: number }> {
+  // 1. Validate (independent query)
+  await assertGoverningBodyInVietnam(teamId);
+
+  const { getPool } = await import("../db/sqlServer");
+  const pool = await getPool();
+
+  // 2. Check existence 
+  const existing = await pool.request()
+    .input("seasonId", seasonId)
+    .input("teamId", teamId)
+    .query(`SELECT season_team_id FROM season_team_participants WHERE season_id = @seasonId AND team_id = @teamId`);
+
+  if (existing.recordset.length > 0) {
+    const error: any = new Error("Team already participating in this season");
+    error.status = 409; // Conflict
+    error.code = "already_participating";
+    error.seasonTeamId = existing.recordset[0].season_team_id;
+    throw error;
+  }
+
+  // 3. Insert
+  const result = await pool.request()
+    .input("seasonId", seasonId)
+    .input("teamId", teamId)
+    .input("status", status)
+    .query(`
+        INSERT INTO season_team_participants (season_id, team_id, status)
+        OUTPUT INSERTED.season_team_id
+        VALUES (@seasonId, @teamId, @status)
+      `);
+
+  return { seasonTeamId: result.recordset[0].season_team_id };
+}
+
+export async function bulkAddTeamsToSeason(
+  seasonId: number,
+  teamIds: number[],
+  status: string = 'active'
+): Promise<{ addedCount: number; results: any[] }> {
+  // 1. Validate ALL teams (Governing Body Requirement 2.2) - Read Only Check
+  const { getPool, transaction } = await import("../db/sqlServer");
+  const errors: any[] = [];
+  const validTeamIds: number[] = [];
+
+  // Pre-validate loop (Fast Fail)
+  for (const teamId of teamIds) {
+    try {
+      await assertGoverningBodyInVietnam(teamId);
+      validTeamIds.push(teamId);
+    } catch (err: any) {
+      let reason = err.code || "unknown";
+      let message = err.message;
+      if (!err.code) {
+        if (message.includes("not found")) reason = "team_not_found";
+        else if (message.includes("trụ sở tại Việt Nam")) reason = "not_in_vietnam";
+      }
+      errors.push({ teamId, reason, message });
+    }
+  }
+
+  // Fail fast if validation errors exist (All-or-Nothing)
+  if (errors.length > 0) {
+    const error: any = new Error("Một số đội không hợp lệ");
+    error.status = 400;
+    error.details = errors;
+    throw error;
+  }
+
+  // 2. Transactional Insert with Existence Check (Race Condition Protection)
+  return await transaction(async (tx) => {
+    let addedCount = 0;
+    const results = [];
+
+    for (const teamId of validTeamIds) {
+      try {
+        const request = tx.request();
+
+        // Strict duplicate check INSIDE transaction
+        const existing = await request
+          .input("sId_check_" + teamId, seasonId)
+          .input("tId_check_" + teamId, teamId)
+          .query(`SELECT season_team_id FROM season_team_participants WHERE season_id = @sId_check_${teamId} AND team_id = @tId_check_${teamId}`);
+
+        if (existing.recordset.length > 0) {
+          const err: any = new Error("Already participating");
+          err.code = "already_participating";
+          err.teamId = teamId;
+          throw err;
+        }
+
+        // Insert
+        const insReq = tx.request();
+        const result = await insReq
+          .input("seasonId", seasonId)
+          .input("teamId", teamId)
+          .input("status", status)
+          .query(`
+             INSERT INTO season_team_participants (season_id, team_id, status)
+             OUTPUT INSERTED.season_team_id
+             VALUES (@seasonId, @teamId, @status)
+           `);
+
+        const seasonTeamId = result.recordset[0].season_team_id;
+        results.push({ teamId, seasonTeamId });
+        addedCount++;
+
+      } catch (err: any) {
+        // If one fails, the whole transaction fails (All-or-Nothing)
+        if (err.code === "already_participating") {
+          const error: any = new Error("Một số đội không hợp lệ (Duplicate)");
+          error.status = 400;
+          error.details = [{
+            teamId: err.teamId,
+            reason: "already_participating",
+            message: "Team already participating in this season"
+          }];
+          throw error;
+        }
+        throw err;
+      }
+    }
+
+    return { addedCount, results };
+  });
+}
